@@ -16,9 +16,12 @@
 - 新增 `scripts/test_build_site.py`，覆盖索引元数据、多视图产物和公众号输出。
 - README 已记录借鉴 [eternityspring/article-tools](https://github.com/eternityspring/article-tools) 的范围与不复制原则。
 
+- 公众号复制已对齐 `starline-gzh-design`：复制与 `wechat.html` 只输出 `data-wechat-root` 内的纯 `<section>` 正文片段，不再复制工作台的 `<html>/<style>/<script>/<button>` 外壳；使用 `starline-gzh-design/scripts/validate_gzh_html.py` 校验通过。
+
 ## 当前边界
 
 - 静态 Pages 无后端、无 AI、无 Token，浏览器不直接写 GitHub；本地草稿编辑、远程发布和凭据服务未实现。
+- 当前微信公众号适配已使用 Apple Open Course 主题结构：任务封面、导读、STEP 章节、关键词标记、结论块、END/签名区；不再使用工作台页面样式作为公众号正文。
 - Markdown 渲染器仍是 MVP，不等同于 `starline-gzh-design` 完整主题组件库；真实微信粘贴、完整浏览器设备视口、真人可用性评审是 `missing evidence`。
 - `resume` 当前是分类与路线图内容，不是投递级简历编辑器；完整简历工作流仍归 `qiaomu-campus-resume`。
 - `study-note` 当前是模块路线图，不是来源分析成品；真实来源输入后应遵循 `starline-study-web` 证据与公开发布 gate。

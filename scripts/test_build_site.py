@@ -24,6 +24,7 @@ class BuildSiteTests(unittest.TestCase):
             index = (out / "index.html").read_text(encoding="utf-8")
             self.assertIn("Source / 编辑源文", index)
             self.assertIn("复制当前 HTML", index)
+            self.assertIn("data-wechat-root", index)
             self.assertIn("实时预览", index)
             self.assertTrue((out / "articles" / "one" / "wechat.html").exists())
             self.assertTrue((out / "articles" / "one" / "xiaohongshu.html").exists())

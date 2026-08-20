@@ -10,7 +10,7 @@
 - 公开仓库：`FreeCodeCampXYG/starline-gzh-publisher`；Pages：`https://freecodecampxyg.github.io/starline-gzh-publisher/`。
 - 保留 GitHub Actions 静态构建、9 个主题、`wechat.html` 输出和 `index.json` 索引。
 - 新增 `experience-brief.md`，明确首要任务、唯一主行动、移动端目标、渐进披露与视觉禁区。
-- `scripts/build_site.py` 重构为内容工作台构建器：支持 `type/category/tags/status/theme/summary` 元数据、类型筛选、搜索、排序、阅读视图、公众号预览和内容契约视图。
+- `scripts/build_site.py` 重构为可编辑的 Markdown → WeChat 工作台：左侧 textarea 编辑/粘贴，右侧实时公众号预览，主题切换、复制右侧 HTML、本地草稿保存；同时保留文章详情、内容索引和未来类型元数据。
 - 更新 `content/welcome.md`；新增 `content/resume-roadmap.md` 与 `content/study-note-roadmap.md`，用真实内容验证未来模块边界。
 - 新增 `scripts/test_build_site.py`，覆盖索引元数据、多视图产物和公众号输出。
 - README 已记录借鉴 [eternityspring/article-tools](https://github.com/eternityspring/article-tools) 的范围与不复制原则。
@@ -24,7 +24,10 @@
 
 ## 验证
 
-- 待本轮执行 Python 单测、静态构建、危险 URL 扫描、`git diff --check`，再提交推送。
+- 编辑—预览工作台构建成功。
+- Python 回归测试通过：1/1。
+- `git diff --check` 通过。
+- 生成 HTML 危险 URL、外部脚本和 `onclick` 扫描无命中。
 
 ## 下一步
 

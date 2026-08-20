@@ -21,7 +21,10 @@ class BuildSiteTests(unittest.TestCase):
             records = json.loads((out / "index.json").read_text(encoding="utf-8"))
             self.assertEqual(records[0]["type"], "study-note")
             self.assertEqual(records[0]["tags"], ["a", "b"])
-            self.assertIn("阅读视图", (out / "articles" / "one" / "index.html").read_text(encoding="utf-8"))
+            index = (out / "index.html").read_text(encoding="utf-8")
+            self.assertIn("Source / 编辑源文", index)
+            self.assertIn("复制公众号 HTML", index)
+            self.assertIn("实时预览", index)
             self.assertTrue((out / "articles" / "one" / "wechat.html").exists())
 
 

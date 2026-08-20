@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the Starline Content Studio static catalog and output adapters."""
+"""Build a polished static Markdown-to-WeChat editing workbench."""
 from __future__ import annotations
 
 import argparse
@@ -11,23 +11,33 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 THEMES = {
-    "moyu-green": {"name": "摸鱼绿", "accent": "#0c8f73", "soft": "#e7f7f1", "ink": "#12352f"},
-    "tech-cobalt": {"name": "科技钴蓝", "accent": "#2454d8", "soft": "#edf2ff", "ink": "#172554"},
-    "red-white": {"name": "红白色系", "accent": "#cf3e3e", "soft": "#fff0f0", "ink": "#3b1515"},
-    "graphite-minimal": {"name": "石墨极简风", "accent": "#555a66", "soft": "#f1f2f4", "ink": "#22252c"},
-    "apple-open-course": {"name": "公开课风", "accent": "#1769d2", "soft": "#eef5ff", "ink": "#10213a"},
-    "zen-whitespace": {"name": "留白禅意风", "accent": "#567064", "soft": "#edf4ef", "ink": "#263b2c"},
-    "moyu-ticket": {"name": "摸鱼票据风", "accent": "#147d65", "soft": "#e9f7f1", "ink": "#163c34"},
-    "olive-journal": {"name": "橄榄手记", "accent": "#c56b2e", "soft": "#fff3e6", "ink": "#452718"},
-    "klein-blue": {"name": "克莱因蓝册", "accent": "#123ab8", "soft": "#edf0ff", "ink": "#111b4a"},
+    "moyu-green": {"name": "摸鱼绿", "accent": "#0c8f73", "soft": "#e7f7f1", "ink": "#12352f", "paper": "#fffdf9"},
+    "tech-cobalt": {"name": "科技钴蓝", "accent": "#2454d8", "soft": "#edf2ff", "ink": "#172554", "paper": "#ffffff"},
+    "red-white": {"name": "红白色系", "accent": "#cf3e3e", "soft": "#fff0f0", "ink": "#3b1515", "paper": "#fffdfc"},
+    "graphite-minimal": {"name": "石墨极简", "accent": "#555a66", "soft": "#f1f2f4", "ink": "#22252c", "paper": "#ffffff"},
+    "apple-open-course": {"name": "公开课风", "accent": "#1769d2", "soft": "#eef5ff", "ink": "#10213a", "paper": "#ffffff"},
+    "zen-whitespace": {"name": "留白禅意", "accent": "#567064", "soft": "#edf4ef", "ink": "#263b2c", "paper": "#fffefa"},
+    "moyu-ticket": {"name": "摸鱼票据", "accent": "#147d65", "soft": "#e9f7f1", "ink": "#163c34", "paper": "#fffdf8"},
+    "olive-journal": {"name": "橄榄手记", "accent": "#c56b2e", "soft": "#fff3e6", "ink": "#452718", "paper": "#fffdf9"},
+    "klein-blue": {"name": "克莱因蓝册", "accent": "#123ab8", "soft": "#edf0ff", "ink": "#111b4a", "paper": "#ffffff"},
 }
 
-CONTENT_TYPES = {
-    "article": "文章",
-    "study-note": "学习笔记",
-    "resume": "简历草稿",
-    "project": "项目记录",
-}
+DEFAULT_MARKDOWN = """# 欢迎使用 Starline Content Studio
+
+> 在左侧编辑，右侧实时看到公众号排版效果。
+
+## 先写内容，再检查表达
+
+把 Markdown 或普通文字粘贴到左侧。标题、段落、引用、列表会在右侧自动整理成适合公众号阅读的样式。
+
+## 一次复制，直接发布
+
+确认视觉和内容后，点击右上角的「复制公众号 HTML」。复制的是右侧排版结果，不是编辑器里的 Markdown。
+
+- 左侧：源内容，可随时修改
+- 右侧：公众号视觉预览
+- 顶部：主题与复制操作
+"""
 
 
 def frontmatter(text: str):
@@ -44,130 +54,114 @@ def frontmatter(text: str):
     return meta, body
 
 
-def list_value(value: str | None):
-    if not value:
-        return []
-    return [item.strip() for item in value.split(",") if item.strip()]
-
-
 def first_title(body: str):
-    return next((m.group(1).strip() for m in re.finditer(r"^#\s+(.+)$", body, re.M)), "未命名内容")
+    return next((m.group(1).strip() for m in re.finditer(r"^#\s+(.+)$", body, re.M)), "未命名文章")
 
 
 def inline(text: str, accent: str) -> str:
     safe = html.escape(text, quote=False)
     safe = re.sub(r"\*\*(.+?)\*\*", rf'<strong style="color:{accent};">\1</strong>', safe)
     safe = re.sub(r"`(.+?)`", r"<code>\1</code>", safe)
+    safe = re.sub(r"\[(.+?)\]\((https?://[^)]+)\)", r'<a href="\2">\1</a>', safe)
     return safe
 
 
 def render_wechat(meta, body, theme):
     title = meta.get("title") or first_title(body)
     sections = [
-        '<section style="font-family:Arial,sans-serif;color:#1F2937;line-height:1.8;">',
-        f'<section style="background:{theme["soft"]};padding:28px 20px;margin:0 0 20px;border-radius:16px;"><h1 style="color:{theme["accent"]};font-size:28px;margin:0;"><span leaf="">{html.escape(title)}</span></h1></section>',
+        f'<section data-wechat-root="true" style="font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;color:#263238;line-height:1.85;background:{theme["paper"]};padding:28px 22px 34px;">',
+        f'<section style="background:{theme["soft"]};padding:26px 22px;margin:0 0 26px;border-radius:4px;border-left:5px solid {theme["accent"]};"><h1 style="color:{theme["ink"]};font-size:30px;line-height:1.25;letter-spacing:.01em;margin:0;"><span leaf="">{html.escape(title)}</span></h1></section>',
     ]
-    for line in body.splitlines():
+    lines = body.splitlines()
+    i = 0
+    while i < len(lines):
+        line = lines[i]
         if not line.strip() or line.startswith("# "):
+            i += 1
             continue
         if line.startswith("## "):
-            sections.append(f'<section style="background:{theme["soft"]};padding:14px 16px;margin:24px 0 12px;border-left:4px solid {theme["accent"]};"><p style="margin:0;font-weight:bold;color:{theme["accent"]};"><span leaf="">{html.escape(line[3:])}</span></p></section>')
+            sections.append(f'<section style="margin:30px 0 14px;padding:0 0 8px;border-bottom:2px solid {theme["accent"]};"><p style="margin:0;font-size:19px;font-weight:700;color:{theme["ink"]};"><span leaf="">{html.escape(line[3:])}</span></p></section>')
+        elif line.startswith("### "):
+            sections.append(f'<p style="margin:22px 0 8px;font-size:16px;font-weight:700;color:{theme["accent"]};"><span leaf="">{html.escape(line[4:])}</span></p>')
         elif line.startswith("> "):
-            sections.append(f'<section style="background:{theme["soft"]};padding:16px;margin:16px 0;border-radius:10px;"><p style="margin:0;"><span leaf="">{inline(line[2:], theme["accent"])}</span></p></section>')
+            sections.append(f'<section style="background:{theme["soft"]};padding:16px 18px;margin:20px 0;border-radius:3px;"><p style="margin:0;color:{theme["ink"]};"><span leaf="">{inline(line[2:], theme["accent"])}</span></p></section>')
         elif line.startswith("- "):
-            sections.append(f'<p style="margin:8px 0 8px 16px;"><span leaf="">• {inline(line[2:], theme["accent"])}</span></p>')
+            sections.append(f'<p style="margin:8px 0 8px 10px;padding-left:12px;border-left:3px solid {theme["accent"]};"><span leaf="">{inline(line[2:], theme["accent"])}</span></p>')
         elif line.startswith("!"):
-            match = re.match(r"!\[[^\]]*\]\((https?://[^)]+)\)", line)
+            match = re.match(r"!\[([^\]]*)\]\((https?://[^)]+)\)", line)
             if match:
-                sections.append(f'<img src="{html.escape(match.group(1), quote=True)}" alt="文章插图" style="max-width:100%;height:auto;display:block;margin:16px auto;border-radius:8px;" />')
+                sections.append(f'<img src="{html.escape(match.group(2), quote=True)}" alt="{html.escape(match.group(1), quote=True)}" style="max-width:100%;height:auto;display:block;margin:18px auto;border-radius:3px;" />')
         else:
-            sections.append(f'<p style="margin:0 0 16px;"><span leaf="">{inline(line, theme["accent"])}</span></p>')
+            sections.append(f'<p style="margin:0 0 18px;font-size:16px;"><span leaf="">{inline(line, theme["accent"])}</span></p>')
+        i += 1
     sections.append("</section>")
     return "\n".join(sections), title
 
 
-def render_reading(meta, body, theme):
-    title = meta.get("title") or first_title(body)
-    blocks = []
-    for line in body.splitlines():
-        if not line.strip():
-            continue
-        if line.startswith("# "):
-            continue
-        if line.startswith("## "):
-            blocks.append(f'<h2>{html.escape(line[3:])}</h2>')
-        elif line.startswith("> "):
-            blocks.append(f'<blockquote>{inline(line[2:], theme["accent"])}</blockquote>')
-        elif line.startswith("- "):
-            blocks.append(f'<li>{inline(line[2:], theme["accent"])}</li>')
-        else:
-            blocks.append(f'<p>{inline(line, theme["accent"])}</p>')
-    return f'<header class="reading-head"><p class="kicker">{html.escape(CONTENT_TYPES.get(meta.get("type", "article"), "内容"))}</p><h1>{html.escape(title)}</h1><p class="lede">{html.escape(meta.get("summary", "从 Markdown 源文件构建的可读内容。"))}</p></header><div class="reading-body">{"".join(blocks)}</div>'
-
-
-def record_for(source: Path, meta, body, slug, theme_id, updated_at):
-    title = meta.get("title") or first_title(body)
-    tags = list_value(meta.get("tags"))
-    return {
-        "slug": slug,
-        "title": title,
-        "summary": meta.get("summary", ""),
-        "type": meta.get("type", "article"),
-        "type_name": CONTENT_TYPES.get(meta.get("type", "article"), "文章"),
-        "category": meta.get("category", "未分类"),
-        "tags": tags,
-        "status": meta.get("status", "published"),
-        "theme": theme_id,
-        "theme_name": THEMES[theme_id]["name"],
-        "source": str(source).replace("\\", "/"),
-        "updated_at": updated_at,
-    }
+def preview_document(meta, body, theme_id):
+    theme = THEMES[theme_id]
+    rendered, title = render_wechat(meta, body, theme)
+    return {"title": title, "html": rendered, "theme": theme_id, "theme_name": theme["name"]}
 
 
 def build(args):
     out = Path(args.output)
     if out.exists():
         shutil.rmtree(out)
-    (out / "articles").mkdir(parents=True)
+    out.mkdir(parents=True)
+    (out / "articles").mkdir()
     records = []
-    updated_at = datetime.now(timezone.utc).isoformat()
     for source in sorted(Path(args.content).rglob("*.md")):
         meta, body = frontmatter(source.read_text(encoding="utf-8"))
         slug = meta.get("slug") or re.sub(r"[^a-z0-9-]+", "-", source.stem.lower()).strip("-") or source.stem
         theme_id = meta.get("theme", "moyu-green")
         if theme_id not in THEMES:
             theme_id = "moyu-green"
-        theme = THEMES[theme_id]
-        rendered, title = render_wechat(meta, body, theme)
-        reading = render_reading(meta, body, theme)
+        preview = preview_document(meta, body, theme_id)
+        record = {
+            "slug": slug,
+            "title": preview["title"],
+            "theme": theme_id,
+            "theme_name": preview["theme_name"],
+            "category": meta.get("category", "未分类"),
+            "type": meta.get("type", "article"),
+            "tags": [x.strip() for x in meta.get("tags", "").split(",") if x.strip()],
+            "status": meta.get("status", "published"),
+            "summary": meta.get("summary", meta.get("description", "")),
+            "source": str(source).replace("\\", "/"),
+            "markdown": body,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }
         article_dir = out / "articles" / slug
         article_dir.mkdir(parents=True, exist_ok=True)
-        record = record_for(source, meta, body, slug, theme_id, updated_at)
-        (article_dir / "index.html").write_text(article_page(record, rendered, reading, theme), encoding="utf-8")
-        (article_dir / "wechat.html").write_text(rendered, encoding="utf-8")
+        (article_dir / "index.html").write_text(article_page(record), encoding="utf-8")
+        (article_dir / "wechat.html").write_text(preview["html"], encoding="utf-8")
         records.append(record)
     (out / "index.json").write_text(json.dumps(records, ensure_ascii=False, indent=2), encoding="utf-8")
-    (out / "index.html").write_text(index_page(records), encoding="utf-8")
+    (out / "index.html").write_text(editor_page(records), encoding="utf-8")
 
 
-def shell_style():
+def base_css():
     return """<style>
-:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f5f7fa;color:#172033;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI","PingFang SC",sans-serif}a{color:inherit}button,input,select{font:inherit}button{cursor:pointer}.shell{max-width:1180px;margin:auto;padding:32px 22px 64px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:18px}.brand{display:flex;gap:12px;align-items:center;text-decoration:none}.mark{display:grid;place-items:center;width:36px;height:36px;border-radius:12px;background:#172033;color:#fff;font-weight:800}.brand strong{display:block;font-size:15px}.brand small{display:block;color:#758096;margin-top:2px}.eyebrow,.kicker{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:#637088;font-weight:750}.hero{padding:64px 0 32px;max-width:740px}.hero h1{font-size:clamp(34px,6vw,68px);line-height:1.04;letter-spacing:-.055em;margin:12px 0 16px}.hero p{font-size:17px;line-height:1.7;color:#607087;margin:0}.workspace{display:grid;grid-template-columns:220px minmax(0,1fr);gap:22px;align-items:start}.rail{position:sticky;top:18px}.rail h2{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:#7c8799;margin:0 0 12px}.nav-list{display:grid;gap:4px}.nav-list button{border:0;background:transparent;text-align:left;padding:10px 12px;border-radius:10px;color:#647089}.nav-list button.active,.nav-list button:hover{background:#e9edf3;color:#172033}.content-panel{min-width:0}.toolbar{display:flex;gap:10px;align-items:center;margin-bottom:14px}.toolbar input,.toolbar select{border:1px solid #dce2ea;background:#fff;border-radius:12px;padding:12px 14px;color:#172033}.toolbar input{flex:1;min-width:0}.count{color:#738098;font-size:13px;white-space:nowrap}.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.card{background:#fff;border:1px solid #e5e9ef;border-radius:16px;padding:18px;min-width:0;transition:transform .18s ease,box-shadow .18s ease}.card:hover{transform:translateY(-2px);box-shadow:0 12px 30px #17203312}.card h2{font-size:20px;line-height:1.3;margin:10px 0}.card h2 a{text-decoration:none}.card p{color:#69758a;line-height:1.6;margin:8px 0}.meta-row{display:flex;gap:8px;flex-wrap:wrap;color:#7b8798;font-size:12px}.tag{background:#f0f3f7;border-radius:999px;padding:4px 8px}.status{color:#19705b}.empty{padding:38px 12px;color:#758096;text-align:center;background:#fff;border:1px dashed #d7dde6;border-radius:16px}.footer{border-top:1px solid #e3e7ed;margin-top:60px;padding-top:18px;color:#7b8798;font-size:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.footer a{color:#52627b}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
-@media(max-width:760px){.shell{padding:20px 15px 40px}.hero{padding:38px 0 22px}.hero h1{font-size:42px}.workspace{display:block}.rail{position:static;margin-bottom:16px}.nav-list{display:flex;overflow:auto}.nav-list button{white-space:nowrap}.cards{grid-template-columns:1fr}.toolbar{flex-wrap:wrap}.toolbar input{flex-basis:100%}.count{width:100%}}
-@media(prefers-reduced-motion:reduce){.card{transition:none}.card:hover{transform:none}}
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI","PingFang SC",sans-serif;color:#172033;background:#eef1f5}*{box-sizing:border-box}body{margin:0;min-width:320px}button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:100vh;display:flex;flex-direction:column}.topbar{height:68px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;border-bottom:1px solid #dfe4eb;background:#fbfcfe}.brand{display:flex;align-items:center;gap:11px}.mark{display:grid;place-items:center;width:32px;height:32px;border-radius:9px;background:#172033;color:white;font-weight:800}.brand strong{font-size:14px;letter-spacing:.01em}.brand small{display:block;color:#8a94a5;font-size:11px;margin-top:2px}.top-actions{display:flex;align-items:center;gap:9px}.select,.ghost,.primary{border-radius:9px;border:1px solid #d9e0e8;padding:9px 13px;background:#fff;color:#344158}.select{min-width:130px}.primary{border-color:#172033;background:#172033;color:#fff;font-weight:700;box-shadow:0 4px 12px #17203320}.primary:active{transform:translateY(1px)}.status{font-size:12px;color:#7a8698}.workspace{flex:1;display:grid;grid-template-columns:minmax(320px,43%) minmax(420px,57%);min-height:calc(100vh - 68px)}.editor-pane{display:flex;flex-direction:column;min-width:0;background:#f5f7fa;border-right:1px solid #dce2ea}.pane-head{height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid #e1e6ed}.pane-title{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:800;color:#68758a}.pane-hint{font-size:12px;color:#929baa}.editor-wrap{flex:1;display:flex;min-height:0;padding:16px}.editor{width:100%;min-height:560px;resize:none;border:1px solid #dce3eb;border-radius:10px;outline:none;background:#fff;color:#283449;padding:22px;font:15px/1.85 ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;box-shadow:0 7px 24px #17203308}.editor:focus{border-color:#8ca5d4;box-shadow:0 0 0 3px #2454d815,0 7px 24px #17203308}.editor-footer{display:flex;justify-content:space-between;padding:0 20px 16px;color:#8994a5;font-size:12px}.preview-pane{min-width:0;background:#e9edf2;display:flex;flex-direction:column}.preview-head{height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;border-bottom:1px solid #d7dee7;background:#f7f9fb}.preview-label{display:flex;align-items:center;gap:9px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:800;color:#68758a}.live-dot{width:7px;height:7px;border-radius:50%;background:#16a175;box-shadow:0 0 0 4px #16a17518}.preview-tools{display:flex;gap:7px}.preview-tools button{border:1px solid #d8dfe8;background:white;border-radius:8px;padding:7px 10px;font-size:12px;color:#516078}.preview-tools button.active{background:#172033;color:#fff;border-color:#172033}.preview-area{flex:1;overflow:auto;padding:28px}.phone{max-width:760px;min-height:720px;margin:0 auto;background:#fff;box-shadow:0 16px 42px #1720331c;border-radius:3px;overflow:hidden}.phone-inner{max-width:680px;margin:0 auto}.toast{position:fixed;right:24px;bottom:24px;z-index:5;padding:12px 16px;border-radius:9px;background:#172033;color:#fff;font-size:13px;box-shadow:0 8px 28px #17203338}.hidden{display:none}@media(max-width:880px){.workspace{grid-template-columns:1fr}.editor-pane{min-height:620px;border-right:0;border-bottom:1px solid #dce2ea}.preview-pane{min-height:760px}.editor{min-height:500px}.preview-area{padding:18px}.topbar{padding:0 14px}.status{display:none}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 </style>"""
 
 
-def index_page(records):
-    data = html.escape(json.dumps(records, ensure_ascii=False), quote=True)
-    return f'''<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Starline Content Studio</title>{shell_style()}</head><body><main class="shell"><nav class="topbar"><a class="brand" href="./"><span class="mark">S</span><span><strong>Starline Content Studio</strong><small>内容资产 · 多端输出</small></span></a><span class="eyebrow">静态工作台</span></nav><header class="hero"><div class="eyebrow">CONTENT WORKSPACE</div><h1>把内容，放回它该在的地方。</h1><p>Markdown 是源资产，公众号只是第一个出口。先管理内容，再选择阅读、排版或未来的简历与学习模块。</p></header><section class="workspace"><aside class="rail"><h2>工作区</h2><div class="nav-list"><button class="active" data-filter="all">全部内容</button><button data-filter="article">文章</button><button data-filter="study-note">学习笔记</button><button data-filter="resume">简历草稿</button><button data-filter="project">项目记录</button></div></aside><section class="content-panel"><div class="toolbar"><label class="sr-only" for="search">搜索内容</label><input id="search" placeholder="搜索标题、标签、分类或来源" autocomplete="off"><label class="sr-only" for="sort">排序</label><select id="sort"><option value="updated">最近更新</option><option value="title">标题 A-Z</option><option value="type">内容类型</option></select><span id="count" class="count"></span></div><div id="list" class="cards"></div><div id="empty" class="empty" hidden>没有匹配内容。试试清除搜索或切换工作区。</div></section></section><footer class="footer"><span>Code by starline · 仅许可原创代码</span><a href="https://github.com/FreeCodeCampXYG/starline-gzh-publisher">查看源项目</a></footer></main><script type="application/json" id="records">{data}</script><script>const records=JSON.parse(document.getElementById('records').textContent);let active='all';const list=document.getElementById('list'),empty=document.getElementById('empty'),count=document.getElementById('count');function esc(s){{return String(s||'').replace(/[&<>"']/g,c=>({{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}}[c]))}}function draw(){{const q=document.getElementById('search').value.toLowerCase().trim();const sort=document.getElementById('sort').value;let rows=records.filter(r=>(active==='all'||r.type===active)&&(!q||JSON.stringify(r).toLowerCase().includes(q)));rows.sort((a,b)=>sort==='title'?a.title.localeCompare(b.title):sort==='type'?a.type_name.localeCompare(b.type_name):b.updated_at.localeCompare(a.updated_at));list.innerHTML=rows.map(r=>`<article class="card"><div class="meta-row"><span>${{esc(r.type_name)}}</span><span>·</span><span>${{esc(r.category)}}</span><span>·</span><span class="status">${{esc(r.status)}}</span></div><h2><a href="articles/${{encodeURIComponent(r.slug)}}/">${{esc(r.title)}}</a></h2><p>${{esc(r.summary||'打开内容详情，选择阅读或公众号预览。')}}</p><div class="meta-row">${{r.tags.map(t=>`<span class="tag">#${{esc(t)}}</span>`).join('')}}<span>${{esc(r.theme_name)}}</span></div></article>`).join('');count.textContent=`${{rows.length}} / ${{records.length}}`;empty.hidden=rows.length>0}}document.querySelectorAll('[data-filter]').forEach(b=>b.addEventListener('click',()=>{{active=b.dataset.filter;document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('active',x===b));draw()}}));document.getElementById('search').addEventListener('input',draw);document.getElementById('sort').addEventListener('change',draw);draw();</script></body></html>'''
+def editor_page(records):
+    payload = json.dumps({"records": records, "themes": THEMES, "default": DEFAULT_MARKDOWN}, ensure_ascii=False).replace("</", "<\\/")
+    return f'''<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Starline Content Studio · Markdown to WeChat</title>{base_css()}</head><body><div class="app"><header class="topbar"><div class="brand"><span class="mark">S</span><span><strong>Starline Content Studio</strong><small>Markdown → WeChat editorial workspace</small></span></div><div class="top-actions"><span id="save-status" class="status">本地工作区</span><select id="theme" class="select" aria-label="选择公众号主题"></select><button id="copy" class="primary">复制公众号 HTML</button></div></header><main class="workspace"><section class="editor-pane"><div class="pane-head"><span class="pane-title">Source / 编辑源文</span><span class="pane-hint">Markdown 或直接粘贴文字</span></div><div class="editor-wrap"><textarea id="editor" class="editor" spellcheck="false" aria-label="Markdown 编辑器"></textarea></div><div class="editor-footer"><span id="word-count">0 字符</span><span>内容只保存在当前浏览器</span></div></section><section class="preview-pane"><div class="preview-head"><span class="preview-label"><i class="live-dot"></i>WeChat / 实时预览</span><div class="preview-tools"><button id="desktop" class="active">阅读宽度</button><button id="reset">恢复示例</button></div></div><div class="preview-area"><div id="phone" class="phone"><div id="preview" class="phone-inner"></div></div></div></section></main><div id="toast" class="toast hidden" role="status"></div></div><script type="application/json" id="boot">{payload}</script><script>{editor_script()}</script></body></html>'''
 
 
-def article_page(record, rendered, reading, theme):
-    tags = " ".join(f'<span class="tag">#{html.escape(t)}</span>' for t in record["tags"])
-    css = '''<style>.article-shell{max-width:920px}.article-tools{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:30px 0 18px;flex-wrap:wrap}.back{color:#647089;text-decoration:none}.tool-btn{border:1px solid #dce2ea;background:#fff;border-radius:10px;padding:10px 13px;color:#172033}.article-meta{background:#fff;border:1px solid #e5e9ef;border-radius:16px;padding:20px;margin-bottom:14px}.article-meta h1{font-size:clamp(30px,5vw,54px);letter-spacing:-.045em;line-height:1.08;margin:10px 0}.article-meta p{color:#647089;line-height:1.7}.view-tabs{display:flex;gap:6px;border-bottom:1px solid #e0e5eb;margin-bottom:14px}.view-tabs button{border:0;background:transparent;padding:12px 14px;color:#758096;border-bottom:2px solid transparent}.view-tabs button.active{color:__ACCENT__;border-color:__ACCENT__}.view{background:#fff;border:1px solid #e5e9ef;border-radius:16px;padding:18px;overflow:hidden}.reading-head{padding:16px 8px 25px;border-bottom:1px solid #edf0f4}.reading-head h1{font-size:clamp(30px,5vw,52px);line-height:1.1;letter-spacing:-.045em;margin:8px 0 12px}.lede{color:#6c788b;line-height:1.7}.reading-body{max-width:700px;margin:28px auto;font-family:Georgia,"Songti SC",serif;font-size:18px;line-height:1.9}.reading-body h2{font-family:inherit;font-size:26px;line-height:1.3;margin-top:34px;color:__INK__}.reading-body p{margin:0 0 18px}.reading-body blockquote{border-left:3px solid __ACCENT__;background:__SOFT__;padding:12px 16px;margin:20px 0}.wechat-frame{max-width:740px;margin:auto}.notice{padding:12px 14px;background:#fff8e8;border:1px solid #f0dfb5;border-radius:10px;color:#715b2a;font-size:13px;line-height:1.6;margin-bottom:14px}.hidden{display:none}@media(max-width:600px){.article-tools{margin-top:20px}.view{padding:12px}}</style>'''.replace('__ACCENT__', theme['accent']).replace('__INK__', theme['ink']).replace('__SOFT__', theme['soft'])
-    script = '''<script>const tabs=document.querySelectorAll('[data-view]');tabs.forEach(tab=>tab.addEventListener('click',()=>{tabs.forEach(x=>x.classList.toggle('active',x===tab));document.querySelectorAll('.view').forEach(x=>x.classList.toggle('hidden',x.id!==tab.dataset.view))}));document.getElementById('copy').addEventListener('click',async()=>{const value=document.getElementById('wechat').querySelector('.wechat-frame').innerHTML;try{await navigator.clipboard.writeText(value);document.getElementById('copy').textContent='已复制 HTML';setTimeout(()=>document.getElementById('copy').textContent='复制公众号 HTML',1800)}catch(e){document.getElementById('copy').textContent='请手动打开 wechat.html'}});</script>'''
-    return f'''<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{html.escape(record["title"])} · Starline</title>{shell_style()}{css}</head><body><main class="shell article-shell"><div class="article-tools"><a class="back" href="../../">← 返回内容目录</a><div><button class="tool-btn" id="copy">复制公众号 HTML</button></div></div><section class="article-meta"><div class="eyebrow">{html.escape(record["type_name"])} · {html.escape(record["status"])}</div><h1>{html.escape(record["title"])}</h1><p>{html.escape(record["summary"] or "Markdown 源内容的多视图预览。")}</p><div class="meta-row"><span>{html.escape(record["category"])}</span><span>·</span><span>{html.escape(record["theme_name"])}</span><span>·</span><span>{html.escape(record["updated_at"][:10])}</span>{tags}</div></section><div class="view-tabs"><button class="active" data-view="reading">阅读视图</button><button data-view="wechat">公众号预览</button><button data-view="contract">内容契约</button></div><section id="reading" class="view">{reading}</section><section id="wechat" class="view hidden"><div class="notice">公众号 HTML 是输出适配器，不是源内容。复制后请在微信编辑器中人工检查图片、链接与粘贴效果。</div><div class="wechat-frame">{rendered}</div></section><section id="contract" class="view hidden"><div class="reading-body"><h2>当前内容契约</h2><p><strong>源文件：</strong>{html.escape(record["source"])}</p><p><strong>内容类型：</strong>{html.escape(record["type_name"])}。未来可在同一内容模型上接入学习笔记定位、简历事实块与其他输出适配器。</p><p><strong>安全边界：</strong>Pages 只读构建，不暴露 Token，不从浏览器直接写远程仓库。</p><p><strong>未来 AI：</strong>选区级操作应保留 before/after、版本锚点、接受/拒绝/回退，不直接覆盖源 Markdown。</p></div></section><footer class="footer"><span>Code by starline</span><a href="wechat.html">打开纯公众号 HTML</a></footer></main>{script}</body></html>'''
+def editor_script():
+    return r'''const boot=JSON.parse(document.getElementById('boot').textContent);const editor=document.getElementById('editor');const preview=document.getElementById('preview');const themeSelect=document.getElementById('theme');const count=document.getElementById('word-count');const toast=document.getElementById('toast');const saveStatus=document.getElementById('save-status');let currentTheme=localStorage.getItem('starline-theme')||'apple-open-course';const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));function fm(raw){let body=raw,meta={};if(raw.startsWith('---')){const p=raw.split('---');if(p.length>=3){p[1].split('\n').forEach(line=>{const i=line.indexOf(':');if(i>0)meta[line.slice(0,i).trim()]=line.slice(i+1).trim().replace(/^"|"$/g,'')});body=p.slice(2).join('---').trim()}}return{meta,body}}function inline(s,accent){let x=esc(s);x=x.replace(/\*\*(.+?)\*\*/g,`<strong style="color:${accent};">$1</strong>`);x=x.replace(/`(.+?)`/g,'<code>$1</code>');return x}function render(raw){const {meta,body}=fm(raw);const t=boot.themes[currentTheme]||boot.themes['apple-open-course'];const title=meta.title||(body.match(/^#\s+(.+)$/m)||[])[1]||'未命名文章';let out=[`<section data-wechat-root="true" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;color:#263238;line-height:1.85;background:${t.paper};padding:28px 22px 34px;"><section style="background:${t.soft};padding:26px 22px;margin:0 0 26px;border-radius:4px;border-left:5px solid ${t.accent};"><h1 style="color:${t.ink};font-size:30px;line-height:1.25;letter-spacing:.01em;margin:0;"><span leaf="">${esc(title)}</span></h1></section>`];body.split('\n').forEach(line=>{if(!line.trim()||line.startsWith('# '))return;if(line.startsWith('## '))out.push(`<section style="margin:30px 0 14px;padding:0 0 8px;border-bottom:2px solid ${t.accent};"><p style="margin:0;font-size:19px;font-weight:700;color:${t.ink};"><span leaf="">${esc(line.slice(3))}</span></p></section>`);else if(line.startsWith('### '))out.push(`<p style="margin:22px 0 8px;font-size:16px;font-weight:700;color:${t.accent};"><span leaf="">${esc(line.slice(4))}</span></p>`);else if(line.startsWith('> '))out.push(`<section style="background:${t.soft};padding:16px 18px;margin:20px 0;border-radius:3px;"><p style="margin:0;color:${t.ink};"><span leaf="">${inline(line.slice(2),t.accent)}</span></p></section>`);else if(line.startsWith('- '))out.push(`<p style="margin:8px 0 8px 10px;padding-left:12px;border-left:3px solid ${t.accent};"><span leaf="">${inline(line.slice(2),t.accent)}</span></p>`);else out.push(`<p style="margin:0 0 18px;font-size:16px;"><span leaf="">${inline(line,t.accent)}</span></p>`)});out.push('</section>');preview.innerHTML=out.join('\n');count.textContent=`${raw.length} 字符 · ${body.split(/\s+/).filter(Boolean).length} 词`;localStorage.setItem('starline-draft',raw);saveStatus.textContent='已保存到本地';}function flash(message){toast.textContent=message;toast.classList.remove('hidden');setTimeout(()=>toast.classList.add('hidden'),1800)}function copyWechat(){const value=preview.innerHTML;navigator.clipboard?.writeText(value).then(()=>flash('已复制右侧公众号 HTML')).catch(()=>flash('复制失败，请打开文章页手动复制'))}Object.entries(boot.themes).forEach(([id,t])=>{const o=document.createElement('option');o.value=id;o.textContent=t.name;themeSelect.appendChild(o)});themeSelect.value=currentTheme;editor.value=localStorage.getItem('starline-draft')||boot.default;editor.addEventListener('input',()=>render(editor.value));themeSelect.addEventListener('change',()=>{currentTheme=themeSelect.value;localStorage.setItem('starline-theme',currentTheme);render(editor.value)});document.getElementById('copy').addEventListener('click',copyWechat);document.getElementById('reset').addEventListener('click',()=>{editor.value=boot.default;render(editor.value);flash('已恢复示例内容')});render(editor.value);'''
+
+
+def article_page(record):
+    theme = THEMES[record["theme"]]
+    meta = {"title": record["title"]}
+    rendered, _ = render_wechat(meta, record["markdown"], theme)
+    script = "<script>document.getElementById('copy-article').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(document.querySelector('[data-wechat-root]').outerHTML);document.getElementById('copy-article').textContent='已复制 HTML'}catch(e){document.getElementById('copy-article').textContent='请打开 wechat.html'}});</script>"
+    return f'''<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{html.escape(record["title"])} · Starline</title>{base_css()}</head><body><div class="app"><header class="topbar"><div class="brand"><a href="../../" style="text-decoration:none;color:inherit">← 返回工作台</a></div><div class="top-actions"><a class="ghost" href="wechat.html">打开纯 HTML</a><button id="copy-article" class="primary">复制公众号 HTML</button></div></header><main class="preview-area"><div class="phone"><div class="phone-inner">{rendered}</div></div></main></div>{script}</body></html>'''
 
 
 if __name__ == "__main__":

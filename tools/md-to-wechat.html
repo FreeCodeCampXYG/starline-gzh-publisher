@@ -4,140 +4,144 @@
 ╔══════════════════════════════════════════════════════════════════════════╗
 ║  md-to-wechat.html — Markdown → 微信公众号富文本                       ║
 ║  ─────────────────────────────────────────────────────────────────────  ║
-║  功能：在左侧书写/粘贴 Markdown，右侧实时预览微信公众号样式，          ║
-║        一键复制富文本（含 text/html + text/plain 双格式），            ║
-║        支持 44 种主题风格，可发布到公众号草稿箱。                      ║
-║                                                                        ║
-║  设计原则：                                                             ║
-║  1. 零依赖 — 纯前端单文件 HTML + CDN marked.js                        ║
-║  2. 极简 — 每项功能只做一件事，不堆叠不耦合                            ║
-║  3. 安全 — 所有输入纯前端处理，不发送数据到第三方                      ║
-║  4. 容错 — 对异常 Markdown 自动修复，不崩溃                            ║
+║  设计：暖白基底 + 深海蓝 + 琥珀金，高级杂志感                          ║
 ╚══════════════════════════════════════════════════════════════════════════╝
 -->
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Markdown → 微信公众号</title>
-  <!-- marked.js：轻量级 Markdown 解析器，约 10KB gzip -->
   <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
-  <!-- Starline Markdown 过滤层：自动修复非标准格式，不支持的格式转 SVG -->
   <script src="md-filter.js"></script>
-
   <style>
-    /* ============================================================
-       全局重置 —— 保证各浏览器一致的盒模型
-       ============================================================ */
+    /* ================================================================
+       Starline Design System — Light & Premium
+       ================================================================ */
+    :root {
+      --bg: #f5f3ee;
+      --surface: #ffffff;
+      --surface-hover: #faf8f5;
+      --border: #e8e3dc;
+      --border-hover: #d4cdc2;
+      --text-primary: #1a1a2e;
+      --text-secondary: #6b6560;
+      --text-muted: #a09890;
+      --accent: #1a4a6e;
+      --accent-light: #e8f0f6;
+      --accent-soft: rgba(26,74,110,0.06);
+      --gold: #c4973f;
+      --gold-light: #faf3e6;
+      --gold-soft: rgba(196,151,63,0.10);
+      --success: #16a34a;
+      --error: #dc2626;
+      --radius: 10px;
+      --radius-sm: 6px;
+      --radius-full: 999px;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.06);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.08);
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #f5f5f5;
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--text-primary);
       height: 100vh;
       display: flex;
       flex-direction: column;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* ============================================================
-       顶栏（header）—— 工具名称、风格选择、操作按钮
-       ============================================================ */
+    /* ── 顶栏 ── */
     header {
-      background: #fff;
-      border-bottom: 1px solid #e5e7eb;
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(20px) saturate(1.5);
+      -webkit-backdrop-filter: blur(20px) saturate(1.5);
+      border-bottom: 1px solid var(--border);
       padding: 0 24px;
-      height: 52px;
+      height: 56px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-shrink: 0;
       z-index: 100;
     }
-
     .header-left { display: flex; align-items: center; min-width: 0; overflow: hidden; }
-    .home-btn { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; color: #6b7280; margin-right: 10px; flex-shrink: 0; text-decoration: none; transition: background 0.15s, color 0.15s; }
-    .home-btn:hover { background: #f3f4f6; color: #111; }
-    .header-title { font-size: 14px; font-weight: 600; color: #111; letter-spacing: 0.02em; white-space: nowrap; flex-shrink: 0; }
-    .header-title span { color: #9ca3af; font-weight: 400; margin: 0 6px; }
-    .doc-title-wrap { display: none; align-items: center; gap: 6px; margin-left: 14px; padding-left: 14px; border-left: 1px solid #e5e7eb; min-width: 0; max-width: 380px; }
-    .doc-title-text { font-size: 13px; color: #374151; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .doc-title-copy { flex-shrink: 0; background: none; border: none; cursor: pointer; color: #9ca3af; padding: 2px; border-radius: 3px; display: flex; align-items: center; transition: color 0.15s; }
-    .doc-title-copy:hover { color: #374151; }
-
-    .header-actions { display: flex; gap: 10px; align-items: center; }
+    .home-btn { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: var(--radius-sm); color: var(--text-muted); margin-right: 10px; flex-shrink: 0; text-decoration: none; transition: all 0.2s; }
+    .home-btn:hover { background: var(--surface-hover); color: var(--accent); }
+    .header-title { font-size: 14px; font-weight: 600; color: var(--text-primary); letter-spacing: 0.01em; white-space: nowrap; flex-shrink: 0; }
+    .header-title span { color: var(--text-muted); font-weight: 400; margin: 0 6px; }
+    .doc-title-wrap { display: none; align-items: center; gap: 6px; margin-left: 14px; padding-left: 14px; border-left: 1px solid var(--border); min-width: 0; max-width: 380px; }
+    .doc-title-text { font-size: 13px; color: var(--text-secondary); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .doc-title-copy { flex-shrink: 0; background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 2px; border-radius: 3px; display: flex; align-items: center; transition: color 0.15s; }
+    .doc-title-copy:hover { color: var(--accent); }
+    .header-actions { display: flex; gap: 8px; align-items: center; }
 
     .reload-btn {
-      padding: 6px 14px;
-      background: none;
-      color: #6b7280;
-      border: 1px solid #e5e7eb;
-      border-radius: 20px;
-      font-size: 12px;
-      cursor: pointer;
-      transition: color 0.15s, border-color 0.15s;
+      padding: 6px 14px; background: none; color: var(--text-secondary);
+      border: 1px solid var(--border); border-radius: var(--radius-full);
+      font-size: 12px; cursor: pointer; transition: all 0.2s;
     }
-    .reload-btn:hover { color: #111; border-color: #9ca3af; }
+    .reload-btn:hover { color: var(--text-primary); border-color: var(--border-hover); background: var(--surface-hover); }
 
     .sync-switch {
       display: flex; align-items: center; gap: 6px;
-      cursor: pointer; font-size: 12px; color: #6b7280;
+      cursor: pointer; font-size: 12px; color: var(--text-secondary);
       user-select: none;
     }
     .sync-switch-track {
       width: 32px; height: 18px; border-radius: 9px;
-      background: #e5e7eb; position: relative;
+      background: var(--border); position: relative;
       transition: background 0.2s; flex-shrink: 0;
     }
-    .sync-switch-track.on { background: #111; }
+    .sync-switch-track.on { background: var(--accent); }
     .sync-switch-thumb {
       position: absolute; top: 2px; left: 2px;
       width: 14px; height: 14px; border-radius: 50%;
-      background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+      background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.15);
       transition: transform 0.2s;
     }
     .sync-switch-track.on .sync-switch-thumb { transform: translateX(14px); }
 
     .copy-btn {
       display: flex; align-items: center; gap: 8px;
-      padding: 8px 20px; background: #07c160; color: #fff;
-      border: none; border-radius: 20px;
+      padding: 8px 20px; background: var(--accent); color: #fff;
+      border: none; border-radius: var(--radius-full);
       font-size: 13px; font-weight: 600; cursor: pointer;
-      letter-spacing: 0.02em;
-      transition: background 0.15s, transform 0.1s;
+      transition: all 0.2s;
     }
-    .copy-btn:hover { background: #06ad56; }
-    .copy-btn:active { transform: scale(0.97); }
-    .copy-btn.success { background: #16a34a; }
+    .copy-btn:hover { background: #1e5a84; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(26,74,110,0.2); }
+    .copy-btn:active { transform: translateY(0); }
+    .copy-btn.success { background: var(--success); }
     .copy-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
 
     .publish-btn {
       display: flex; align-items: center; gap: 8px;
-      padding: 8px 18px; background: #fff; color: #d1490b;
-      border: 1.5px solid #f0c9a8; border-radius: 20px;
+      padding: 8px 18px; background: var(--gold-light); color: #8a6d2b;
+      border: 1px solid rgba(196,151,63,0.3); border-radius: var(--radius-full);
       font-size: 13px; font-weight: 600; cursor: pointer;
-      letter-spacing: 0.02em;
-      transition: background 0.15s, border-color 0.15s, transform 0.1s, color 0.15s;
+      transition: all 0.2s;
     }
-    .publish-btn:hover { background: #fff7f0; border-color: #ff8a00; color: #b83e08; }
+    .publish-btn:hover { background: #f5e8ce; border-color: var(--gold); color: #7a5f24; }
     .publish-btn:active { transform: scale(0.97); }
-    .publish-btn:disabled { opacity: 0.55; cursor: default; }
-    .publish-btn.success { background: #16a34a; border-color: #16a34a; color: #fff; }
-    .publish-btn.error { background: #dc2626; border-color: #dc2626; color: #fff; }
+    .publish-btn:disabled { opacity: 0.5; cursor: default; }
+    .publish-btn.success { background: var(--success); border-color: var(--success); color: #fff; }
+    .publish-btn.error { background: var(--error); border-color: var(--error); color: #fff; }
     .publish-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
 
-    /* ── 设置按钮（齿轮图标） ── */
     .settings-btn {
       display: flex; align-items: center; justify-content: center;
-      width: 32px; height: 32px; border-radius: 8px;
-      background: none; border: 1px solid #e5e7eb;
-      color: #6b7280; cursor: pointer;
-      transition: background 0.15s, color 0.15s;
+      width: 34px; height: 34px; border-radius: var(--radius-sm);
+      background: none; border: 1px solid var(--border);
+      color: var(--text-muted); cursor: pointer;
+      transition: all 0.2s;
     }
-    .settings-btn:hover { background: #f3f4f6; color: #111; }
+    .settings-btn:hover { background: var(--surface-hover); color: var(--accent); border-color: var(--border-hover); }
     .settings-btn svg { width: 16px; height: 16px; }
 
-    /* ============================================================
-       Toast 通知（shadcn/sonner 风格）
-       ============================================================ */
+    /* ── Toast ── */
     .toast-viewport {
       position: fixed; bottom: 22px; right: 22px; z-index: 10000;
       display: flex; flex-direction: column; gap: 10px;
@@ -146,10 +150,10 @@
     .toast {
       pointer-events: auto;
       display: flex; align-items: flex-start; gap: 12px;
-      background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(15,23,42,0.12), 0 2px 6px rgba(15,23,42,0.05);
+      background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
       padding: 14px 15px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-family: var(--font-sans);
       animation: toast-in 0.24s cubic-bezier(0.22,1,0.36,1);
     }
     .toast.hide { animation: toast-out 0.16s ease forwards; }
@@ -159,76 +163,57 @@
     .toast-icon svg { width: 20px; height: 20px; display: block; }
     .toast-body { flex: 1; min-width: 0; }
     .toast-title { font-size: 13.5px; font-weight: 600; color: #0f172a; line-height: 1.45; }
-    .toast-desc { font-size: 12.5px; color: #64748b; line-height: 1.55; margin-top: 3px; word-break: break-word; white-space: pre-wrap; }
-    .toast-close { flex-shrink: 0; background: none; border: none; color: #9ca3af; cursor: pointer; padding: 2px; margin: -2px -3px -2px 0; border-radius: 6px; transition: color 0.15s, background 0.15s; }
-    .toast-close svg { width: 15px; height: 15px; display: block; }
-    .toast-close:hover { color: #0f172a; background: #f1f5f9; }
-    .toast.success .toast-icon { color: #16a34a; }
-    .toast.error .toast-icon { color: #dc2626; }
-    .toast.info .toast-icon { color: #0ea5e9; }
+    .toast-desc { font-size: 12.5px; color: var(--text-secondary); line-height: 1.55; margin-top: 3px; word-break: break-word; }
+    .toast-close { flex-shrink: 0; background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 2px; margin: -2px -3px -2px 0; border-radius: var(--radius-sm); transition: all 0.15s; }
+    .toast-close:hover { color: var(--text-primary); background: var(--surface-hover); }
+    .toast.success .toast-icon { color: var(--success); }
+    .toast.error .toast-icon { color: var(--error); }
+    .toast.info .toast-icon { color: var(--accent); }
 
-    /* ============================================================
-       风格选择（顶栏下拉）
-       ============================================================ */
+    /* ── 风格选择 ── */
     .style-select { position: relative; }
     .style-select-btn {
       display: flex; align-items: center; gap: 6px;
-      padding: 6px 12px;
-      background: none; color: #374151;
-      border: 1px solid #e5e7eb; border-radius: 20px;
-      font-size: 12px; cursor: pointer;
-      transition: color 0.15s, border-color 0.15s;
+      padding: 6px 14px; background: var(--surface); color: var(--text-secondary);
+      border: 1px solid var(--border); border-radius: var(--radius-full);
+      font-size: 12px; cursor: pointer; transition: all 0.2s;
     }
-    .style-select-btn:hover { color: #111; border-color: #9ca3af; }
-    .style-select-btn .label { color: #9ca3af; }
-    .style-select-btn .chev { transition: transform 0.15s; flex-shrink: 0; }
+    .style-select-btn:hover { color: var(--text-primary); border-color: var(--border-hover); background: var(--surface-hover); }
+    .style-select-btn .label { color: var(--text-muted); }
+    .style-select-btn .chev { transition: transform 0.2s; flex-shrink: 0; }
     .style-select.open .chev { transform: rotate(180deg); }
-
     .style-menu {
       position: absolute; top: calc(100% + 6px); right: 0;
       width: 620px; max-width: 90vw; max-height: 64vh; overflow-y: auto;
-      background: #fff; border: 1px solid #e5e7eb; border-radius: 10px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.14);
+      background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
       padding: 8px; z-index: 50; display: none;
-      scrollbar-width: thin;
     }
     .style-select.open .style-menu { display: block; }
     .style-menu-group {
-      font-size: 10px; font-weight: 700; color: #9ca3af;
+      font-size: 10px; font-weight: 700; color: var(--text-muted);
       letter-spacing: 0.1em; padding: 8px 6px 6px; text-transform: uppercase;
     }
-    .style-menu-grid {
-      display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
-    }
+    .style-menu-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
     .style-menu-item {
       display: flex; flex-direction: column; gap: 2px;
-      padding: 7px 9px; border-radius: 6px; cursor: pointer;
+      padding: 7px 9px; border-radius: var(--radius-sm); cursor: pointer;
       border: 1px solid transparent;
     }
-    .style-menu-item:hover { background: #f3f4f6; }
-    .style-menu-item.active { background: #eef2ff; border-color: #c7d2fe; }
-    .style-menu-item .name { font-size: 12px; color: #111; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .style-menu-item .desc {
-      font-size: 10px; color: #9ca3af; line-height: 1.3;
-      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-    }
-    .style-menu-item.active .name { color: #2563eb; }
-    .style-sw {
-      height: 32px; border-radius: 4px; border: 1px solid rgba(0,0,0,0.08);
-      padding: 5px 6px; margin-bottom: 4px;
-      display: flex; flex-direction: column; justify-content: center; gap: 3px; overflow: hidden;
-    }
+    .style-menu-item:hover { background: var(--surface-hover); }
+    .style-menu-item.active { background: var(--accent-light); border-color: rgba(26,74,110,0.15); }
+    .style-menu-item .name { font-size: 12px; color: var(--text-primary); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .style-menu-item .desc { font-size: 10px; color: var(--text-muted); line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .style-menu-item.active .name { color: var(--accent); }
+    .style-sw { height: 32px; border-radius: 4px; border: 1px solid var(--border); padding: 5px 6px; margin-bottom: 4px; display: flex; flex-direction: column; justify-content: center; gap: 3px; overflow: hidden; }
     .style-sw .bar { height: 3px; border-radius: 2px; }
 
-    /* ============================================================
-       设置面板（Table Settings / 列设置界面）
-       ── 点击齿轮按钮展开，用于配置表格的列宽、对齐方式等
-       ============================================================ */
+    /* ── 设置面板 ── */
     .settings-panel {
-      position: fixed; top: 52px; right: 0; bottom: 0;
+      position: fixed; top: 56px; right: 0; bottom: 0;
       width: 360px; max-width: 90vw;
-      background: #fff; border-left: 1px solid #e5e7eb;
-      box-shadow: -4px 0 20px rgba(0,0,0,0.08);
+      background: #fff; border-left: 1px solid var(--border);
+      box-shadow: -4px 0 24px rgba(0,0,0,0.06);
       z-index: 90;
       transform: translateX(100%);
       transition: transform 0.25s cubic-bezier(0.22,1,0.36,1);
@@ -236,229 +221,89 @@
       overflow: hidden;
     }
     .settings-panel.open { transform: translateX(0); }
-
     .settings-header {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 20px; border-bottom: 1px solid #e5e7eb;
+      padding: 16px 20px; border-bottom: 1px solid var(--border);
       flex-shrink: 0;
     }
-    .settings-title {
-      font-size: 14px; font-weight: 600; color: #111;
-    }
-    .settings-close {
-      background: none; border: none; color: #9ca3af;
-      cursor: pointer; padding: 4px; border-radius: 6px;
-      transition: color 0.15s, background 0.15s;
-    }
-    .settings-close:hover { color: #111; background: #f3f4f6; }
-
-    .settings-body {
-      flex: 1; overflow-y: auto; padding: 16px 20px;
-    }
-
-    /* 设置项分组 */
-    .setting-group {
-      margin-bottom: 20px;
-    }
-    .setting-group-label {
-      font-size: 11px; font-weight: 700; color: #9ca3af;
-      text-transform: uppercase; letter-spacing: 0.08em;
-      margin-bottom: 10px; padding-bottom: 6px;
-      border-bottom: 1px solid #f0f0f0;
-    }
-
-    .setting-row {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 10px;
-    }
-    .setting-label {
-      font-size: 13px; color: #374151; font-weight: 500;
-    }
-    .setting-hint {
-      font-size: 11px; color: #9ca3af; margin-top: 2px;
-    }
-
-    /* 开关 */
-    .toggle-track {
-      width: 36px; height: 20px; border-radius: 10px;
-      background: #e5e7eb; position: relative;
-      cursor: pointer; transition: background 0.2s;
-      flex-shrink: 0;
-    }
-    .toggle-track.on { background: #111; }
-    .toggle-thumb {
-      position: absolute; top: 2px; left: 2px;
-      width: 16px; height: 16px; border-radius: 50%;
-      background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-      transition: transform 0.2s;
-    }
+    .settings-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+    .settings-close { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: var(--radius-sm); transition: all 0.15s; }
+    .settings-close:hover { color: var(--text-primary); background: var(--surface-hover); }
+    .settings-body { flex: 1; overflow-y: auto; padding: 16px 20px; }
+    .setting-group { margin-bottom: 20px; }
+    .setting-group-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+    .setting-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .setting-label { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+    .setting-hint { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .toggle-track { width: 36px; height: 20px; border-radius: 10px; background: var(--border); position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
+    .toggle-track.on { background: var(--accent); }
+    .toggle-thumb { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.15); transition: transform 0.2s; }
     .toggle-track.on .toggle-thumb { transform: translateX(16px); }
-
-    /* 选择器 */
-    .setting-select {
-      padding: 6px 10px; border: 1px solid #e5e7eb;
-      border-radius: 6px; font-size: 12px; color: #374151;
-      background: #fff; cursor: pointer; outline: none;
-      min-width: 100px;
-    }
-    .setting-select:focus { border-color: #93c5fd; }
-
-    /* 输入框 */
-    .setting-input {
-      width: 70px; padding: 5px 8px; border: 1px solid #e5e7eb;
-      border-radius: 6px; font-size: 12px; color: #374151;
-      text-align: center; outline: none;
-    }
-    .setting-input:focus { border-color: #93c5fd; }
-
-    /* 列宽预览 */
-    .column-list {
-      margin-top: 8px;
-    }
-    .column-item {
-      display: flex; align-items: center; gap: 8px;
-      padding: 6px 8px; border-radius: 6px;
-      margin-bottom: 4px; font-size: 12px;
-    }
-    .column-item:hover { background: #f9fafb; }
-    .column-index {
-      width: 20px; height: 20px; border-radius: 4px;
-      background: #f3f4f6; color: #6b7280;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 10px; font-weight: 700; flex-shrink: 0;
-    }
-    .column-name {
-      flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis;
-      white-space: nowrap; color: #374151;
-    }
-    .column-width-input {
-      width: 50px; padding: 3px 6px; border: 1px solid #e5e7eb;
-      border-radius: 4px; font-size: 11px; text-align: center;
-      outline: none;
-    }
-    .column-width-input:focus { border-color: #93c5fd; }
-    .column-width-unit {
-      font-size: 10px; color: #9ca3af;
-    }
-
-    .no-table-hint {
-      display: flex; flex-direction: column; align-items: center;
-      justify-content: center; padding: 40px 20px;
-      text-align: center; color: #9ca3af; font-size: 13px; gap: 8px;
-    }
-    .no-table-hint svg { width: 40px; height: 40px; opacity: 0.4; }
-
-    /* ============================================================
-       诊断面板 —— 显示 Markdown 格式问题
-       ============================================================ */
-    .diagnosis-bar {
-      margin-top: 16px; padding: 10px 14px;
-      border-radius: 8px; font-size: 12px; line-height: 1.5;
-      display: none;
-    }
-    .diagnosis-bar.show { display: block; }
-    .diagnosis-bar.error { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
-    .diagnosis-bar.warn { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
-    .diagnosis-bar.info { background: #f0f9ff; color: #0ea5e9; border: 1px solid #bae6fd; }
-
-    .diagnosis-item { margin-bottom: 4px; }
+    .setting-select { padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 12px; color: var(--text-secondary); background: #fff; cursor: pointer; outline: none; min-width: 100px; transition: border-color 0.2s; }
+    .setting-select:focus { border-color: var(--accent); }
+    .column-list { margin-top: 8px; }
+    .column-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: var(--radius-sm); margin-bottom: 4px; font-size: 12px; }
+    .column-item:hover { background: var(--surface-hover); }
+    .column-index { width: 20px; height: 20px; border-radius: 4px; background: var(--accent-light); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+    .column-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary); }
+    .column-width-input { width: 50px; padding: 3px 6px; border: 1px solid var(--border); border-radius: 4px; font-size: 11px; text-align: center; outline: none; color: var(--text-primary); }
+    .column-width-input:focus { border-color: var(--accent); }
+    .no-table-hint { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; text-align: center; color: var(--text-muted); font-size: 13px; gap: 8px; }
+    .no-table-hint svg { width: 40px; height: 40px; opacity: 0.3; }
+    .diagnosis-item { margin-bottom: 4px; font-size: 12px; }
     .diagnosis-item:last-child { margin-bottom: 0; }
-    .diagnosis-severity { font-weight: 600; margin-right: 4px; }
 
-    /* ============================================================
-       主体双栏布局
-       ============================================================ */
+    /* ── 主体双栏 ── */
     .main {
       display: grid;
       grid-template-columns: 1fr 1fr;
       flex: 1;
       overflow: hidden;
       gap: 1px;
-      background: #e5e7eb;
+      background: var(--border);
     }
-
     .pane { background: #fff; display: flex; flex-direction: column; overflow: hidden; }
-
     .pane-header {
-      padding: 10px 20px;
-      font-size: 11px; font-weight: 600; color: #9ca3af;
-      letter-spacing: 0.12em; text-transform: uppercase;
-      border-bottom: 1px solid #f0f0f0; flex-shrink: 0;
+      padding: 12px 20px;
+      font-size: 10px; font-weight: 700; color: var(--text-muted);
+      letter-spacing: 0.15em; text-transform: uppercase;
+      border-bottom: 1px solid var(--border); flex-shrink: 0;
     }
-
     #md-input {
       flex: 1; padding: 20px;
-      font-size: 13px; font-family: 'JetBrains Mono', 'Fira Code', 'Menlo', monospace;
-      line-height: 1.7; color: #374151;
+      font-size: 13px; font-family: var(--font-mono);
+      line-height: 1.7; color: var(--text-primary);
       border: none; outline: none; resize: none;
-      background: #fafafa;
+      background: #faf8f5;
     }
-
+    #md-input::placeholder { color: var(--text-muted); }
     #preview { flex: 1; overflow-y: auto; }
-
-    /* ── 预览主题（由 JS 按所选风格注入到 #theme-css） ── */
     .wechat-body { min-height: 100%; }
-
-    /* ── 图片装饰 ── */
-    #preview img { max-width: 100%; height: auto; width: 100%; }
+    #preview img { max-width: 100%; height: auto; }
     .img-wrapper { position: relative; display: block; margin: 24px 0; }
     .img-wrapper img { border-radius: 4px; margin: 0; }
-    .img-overlay-left {
-      position: absolute; bottom: 0; left: 0;
-      display: flex; align-items: stretch;
-      max-width: 75%; border-radius: 0 4px 0 4px; overflow: hidden;
-    }
-    .img-alt-label {
-      background: rgba(0,0,0,0.5); color: #fff;
-      font-size: 11px; padding: 3px 8px;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .img-copy-alt-btn {
-      background: rgba(0,0,0,0.6); color: #fff;
-      border: none; border-left: 1px solid rgba(255,255,255,0.2);
-      font-size: 11px; padding: 2px 8px; cursor: pointer;
-      transition: background 0.15s; flex-shrink: 0;
-    }
+    .img-overlay-left { position: absolute; bottom: 0; left: 0; display: flex; align-items: stretch; max-width: 75%; border-radius: 0 4px 0 4px; overflow: hidden; }
+    .img-alt-label { background: rgba(0,0,0,0.5); color: #fff; font-size: 11px; padding: 3px 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .img-copy-alt-btn { background: rgba(0,0,0,0.6); color: #fff; border: none; border-left: 1px solid rgba(255,255,255,0.2); font-size: 11px; padding: 2px 8px; cursor: pointer; transition: background 0.15s; flex-shrink: 0; }
     .img-copy-alt-btn:hover { background: rgba(0,0,0,0.8); }
-    .img-copy-b64-btn {
-      position: absolute; bottom: 6px; right: 6px;
-      background: rgba(0,0,0,0.5); color: #fff;
-      border: none; border-radius: 4px; font-size: 11px;
-      padding: 2px 8px; cursor: pointer; transition: background 0.15s;
-    }
+    .img-copy-b64-btn { position: absolute; bottom: 6px; right: 6px; background: rgba(0,0,0,0.5); color: #fff; border: none; border-radius: 4px; font-size: 11px; padding: 2px 8px; cursor: pointer; transition: background 0.15s; }
     .img-copy-b64-btn:hover { background: rgba(0,0,0,0.75); }
-
-    /* ── SVG 占位样式（md-filter 转换后的 SVG 图片） ── */
-    #preview svg {
-      max-width: 100%; height: auto;
-      border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-      margin: 16px 0;
-    }
-
-    /* ── 底部统计 ── */
-    .stats { padding: 8px 20px; font-size: 11px; color: #9ca3af; border-top: 1px solid #f0f0f0; flex-shrink: 0; display: flex; justify-content: space-between; }
+    #preview svg { max-width: 100%; height: auto; border-radius: var(--radius-sm); box-shadow: var(--shadow-sm); margin: 16px 0; }
+    .stats { padding: 10px 20px; font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border); flex-shrink: 0; display: flex; justify-content: space-between; }
     .stats-left { display: flex; gap: 16px; }
     .stats-right { display: flex; gap: 12px; }
-    .stat-num { font-weight: 700; color: #374151; }
-    .stat-diagnosis-btn {
-      background: none; border: none; color: #9ca3af; cursor: pointer;
-      font-size: 11px; padding: 0; text-decoration: underline;
-      text-decoration-style: dotted; text-underline-offset: 2px;
-    }
-    .stat-diagnosis-btn:hover { color: #0ea5e9; }
+    .stat-num { font-weight: 700; color: var(--text-secondary); }
+    .stat-diagnosis-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 11px; padding: 0; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 2px; }
+    .stat-diagnosis-btn:hover { color: var(--accent); }
     .stat-diagnosis-btn.has-issue { color: #d97706; }
-    .stat-diagnosis-btn.has-error { color: #dc2626; }
-
-    .empty-hint { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #d1d5db; font-size: 14px; gap: 8px; background: #f8f6f0; }
-    .empty-hint svg { width: 36px; height: 36px; opacity: 0.4; }
+    .stat-diagnosis-btn.has-error { color: var(--error); }
+    .empty-hint { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 14px; gap: 8px; background: #faf8f5; }
+    .empty-hint svg { width: 36px; height: 36px; opacity: 0.3; }
   </style>
   <style id="theme-css"></style>
 </head>
-
 <body>
-  <!-- ============================================================
-       顶栏
-       ============================================================ -->
+
   <header>
     <div class="header-left">
       <a href="index.html" class="home-btn" title="返回 Starline">
@@ -490,7 +335,6 @@
         </button>
         <div class="style-menu" id="style-menu"></div>
       </div>
-      <!-- 设置按钮（齿轮图标）—— 打开列设置面板 -->
       <button class="settings-btn" onclick="toggleSettingsPanel()" title="表格列设置">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="3"/>
@@ -511,10 +355,6 @@
     </div>
   </header>
 
-  <!-- ============================================================
-       设置面板（列设置界面）
-       ── 点击齿轮按钮展开/收起，用于配置表格列宽、对齐方式、边框样式
-       ============================================================ -->
   <div class="settings-panel" id="settings-panel">
     <div class="settings-header">
       <span class="settings-title">表格列设置</span>
@@ -525,57 +365,30 @@
       </button>
     </div>
     <div class="settings-body" id="settings-body">
-      <!-- 当未检测到表格时显示提示 -->
       <div class="no-table-hint" id="no-table-hint">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M3 3h18v18H3z"/><path d="M3 9h18"/><path d="M9 3v18"/>
         </svg>
         <div>未检测到表格</div>
-        <div style="font-size: 12px; line-height: 1.6;">在左侧 Markdown 中输入表格（使用 | 分隔），<br>此面板将自动显示列配置。</div>
+        <div style="font-size: 12px; line-height: 1.6; color: var(--text-muted);">在左侧 Markdown 中输入表格（使用 | 分隔），<br>此面板将自动显示列配置。</div>
       </div>
-
-      <!-- 表格配置区域（当检测到表格时动态填充） -->
       <div id="table-settings" style="display: none;">
-        <!-- 全局设置 -->
         <div class="setting-group">
           <div class="setting-group-label">全局设置</div>
-
-          <!-- 表格样式：边框、斑马纹、悬停效果 -->
           <div class="setting-row">
-            <div>
-              <div class="setting-label">显示边框</div>
-              <div class="setting-hint">表格单元格轮廓线</div>
-            </div>
-            <div class="toggle-track on" id="toggle-border" onclick="toggleTableSetting('border')">
-              <div class="toggle-thumb"></div>
-            </div>
+            <div><div class="setting-label">显示边框</div><div class="setting-hint">表格单元格轮廓线</div></div>
+            <div class="toggle-track on" id="toggle-border" onclick="toggleTableSetting('border')"><div class="toggle-thumb"></div></div>
           </div>
-
           <div class="setting-row">
-            <div>
-              <div class="setting-label">斑马纹</div>
-              <div class="setting-hint">奇偶行交替背景色</div>
-            </div>
-            <div class="toggle-track on" id="toggle-zebra" onclick="toggleTableSetting('zebra')">
-              <div class="toggle-thumb"></div>
-            </div>
+            <div><div class="setting-label">斑马纹</div><div class="setting-hint">奇偶行交替背景色</div></div>
+            <div class="toggle-track on" id="toggle-zebra" onclick="toggleTableSetting('zebra')"><div class="toggle-thumb"></div></div>
           </div>
-
           <div class="setting-row">
-            <div>
-              <div class="setting-label">悬停高亮</div>
-              <div class="setting-hint">鼠标悬停行变色</div>
-            </div>
-            <div class="toggle-track" id="toggle-hover" onclick="toggleTableSetting('hover')">
-              <div class="toggle-thumb"></div>
-            </div>
+            <div><div class="setting-label">悬停高亮</div><div class="setting-hint">鼠标悬停行变色</div></div>
+            <div class="toggle-track" id="toggle-hover" onclick="toggleTableSetting('hover')"><div class="toggle-thumb"></div></div>
           </div>
-
           <div class="setting-row">
-            <div>
-              <div class="setting-label">表头对齐</div>
-              <div class="setting-hint">表头行文字对齐方式</div>
-            </div>
+            <div><div class="setting-label">表头对齐</div><div class="setting-hint">表头行文字对齐方式</div></div>
             <select class="setting-select" id="setting-header-align" onchange="onTableSettingChange()">
               <option value="left">左对齐</option>
               <option value="center" selected>居中</option>
@@ -583,17 +396,11 @@
             </select>
           </div>
         </div>
-
-        <!-- 列宽设置 -->
         <div class="setting-group">
           <div class="setting-group-label">列宽设置</div>
-          <div class="setting-hint" style="margin-bottom: 8px; font-size: 12px; color: #9ca3af;">
-            设置各列宽度百分比，总和应为 100%。若留空则自动均分。
-          </div>
+          <div class="setting-hint" style="margin-bottom: 8px;">设置各列宽度百分比，留空则自动均分。</div>
           <div class="column-list" id="column-list"></div>
         </div>
-
-        <!-- 诊断信息 -->
         <div class="setting-group">
           <div class="setting-group-label">Markdown 诊断</div>
           <div id="diagnosis-area"></div>
@@ -602,15 +409,10 @@
     </div>
   </div>
 
-  <!-- ============================================================
-       主体双栏
-       ============================================================ -->
   <div class="main">
-    <!-- 左栏：Markdown 输入区 -->
     <div class="pane">
       <div class="pane-header">Markdown 输入</div>
       <textarea id="md-input" placeholder="粘贴 Markdown…"></textarea>
-      <!-- 底部统计栏：字数、行数、诊断入口 -->
       <div class="stats" id="stats">
         <div class="stats-left">
           <span><span class="stat-num" id="stat-words">0</span> 字</span>
@@ -623,8 +425,6 @@
         </div>
       </div>
     </div>
-
-    <!-- 右栏：预览区 -->
     <div class="pane">
       <div class="pane-header" id="preview-pane-header">预览（微信公众号）</div>
       <div id="preview">
@@ -651,10 +451,10 @@
     marked.setOptions({ breaks: true });
 
     let docTitle = '';
-    let lastFilterResult = null; // 缓存最近一次 md-filter 处理结果
+    let lastFilterResult = null;
 
     // ================================================================
-    // 2. Toast 通知系统（替代 alert）
+    // 2. Toast 通知系统
     // ================================================================
 
     function showToast(title, opts = {}) {
@@ -690,10 +490,6 @@
     // 3. 标题提取与显示
     // ================================================================
 
-    /**
-     * 从 Markdown 中提取一级标题（# 标题）
-     * 控制原因：标题用于展示文档标题，也用于发布到公众号草稿时作为文章标题
-     */
     function extractTitle(md) {
       const m = md.match(/^# (.+)$/m);
       return m ? m[1].trim() : '';
@@ -719,10 +515,6 @@
     // 4. 图片处理
     // ================================================================
 
-    /**
-     * 将图片转换为 base64 内联
-     * 控制原因：微信公众号编辑器不支持外链图片，必须内联
-     */
     function toBase64(src) {
       return new Promise((resolve, reject) => {
         const img = new Image();
@@ -746,11 +538,6 @@
       }));
     }
 
-    /**
-     * 为图片添加操作按钮（复制 alt 文本、复制图片本身）
-     * 控制原因：微信公众号编辑器不支持直接右键复制图片，
-     * 用户需要便捷的方式将图片复制到公众号编辑器中
-     */
     function decorateImages() {
       preview.querySelectorAll('img:not([data-decorated])').forEach(img => {
         img.setAttribute('data-decorated', '1');
@@ -759,8 +546,6 @@
         wrapper.className = 'img-wrapper';
         img.parentNode.insertBefore(wrapper, img);
         wrapper.appendChild(img);
-
-        // 左下角：alt 文本 + 复制按钮
         if (alt) {
           const leftOverlay = document.createElement('div');
           leftOverlay.className = 'img-overlay-left';
@@ -779,8 +564,6 @@
           leftOverlay.appendChild(copyAltBtn);
           wrapper.appendChild(leftOverlay);
         }
-
-        // 右下角：复制图片本身
         const copyImgBtn = document.createElement('button');
         copyImgBtn.className = 'img-copy-b64-btn';
         copyImgBtn.textContent = '复制图片';
@@ -807,15 +590,6 @@
     // 5. 核心渲染
     // ================================================================
 
-    /**
-     * 主渲染函数 —— 将 Markdown 转为预览 HTML
-     * 流程：
-     *   1. MdFilter.process() 过滤/修复/转换非标准 Markdown
-     *   2. marked.parse() 解析为标准 HTML
-     *   3. MdFilter.injectSVG() 将 SVG 占位符替换为实际 SVG
-     *   4. 应用主题样式
-     *   5. 内联图片 + 装饰图片操作按钮
-     */
     async function render() {
       const rawMd = input.value.trim();
       if (!rawMd) {
@@ -831,54 +605,29 @@
         updateDiagnosisBtn(null);
         return;
       }
-
-      // 步骤 A：通过 MdFilter 处理 —— 自动修复格式问题
       const filterResult = MdFilter.process(rawMd, { convertSVG: true });
       lastFilterResult = filterResult;
       const md = filterResult.md;
-
-      // 步骤 B：提取标题
       updateTitleDisplay(extractTitle(rawMd));
-
-      // 步骤 C：marked 解析
       const parsedHtml = marked.parse(md);
-
-      // 步骤 D：注入 SVG（替换不支持的格式为 SVG 图片）
       const finalHtml = MdFilter.injectSVG(parsedHtml, filterResult.svgBlocks);
-
-      // 步骤 E：渲染到预览
       preview.innerHTML = `<div class="wechat-body">${finalHtml}</div>`;
-
-      // 步骤 F：更新统计信息
       const wordCount = rawMd.replace(/\s/g, '').length;
       const lineCount = rawMd.split('\n').length;
       updateStats(wordCount, lineCount);
-
-      // 步骤 G：更新设置面板（检测表格）
       updateSettingsPanel(md);
-
-      // 步骤 H：更新诊断按钮
       updateDiagnosisBtn(filterResult);
-
-      // 步骤 I：内联图片 + 装饰
       await inlineImages();
       decorateImages();
     }
 
-    // 输入事件绑定
     input.addEventListener('input', render);
 
-    /**
-     * 更新底部统计栏
-     */
     function updateStats(words, lines) {
       document.getElementById('stat-words').textContent = words;
       document.getElementById('stat-lines').textContent = lines;
     }
 
-    /**
-     * 更新诊断按钮显示状态
-     */
     function updateDiagnosisBtn(filterResult) {
       const btn = document.getElementById('diagnosis-btn');
       if (!filterResult || !filterResult.hasIssue) {
@@ -895,62 +644,40 @@
     // 6. 设置面板（列设置界面）
     // ================================================================
 
-    /**
-     * 表格列设置状态
-     * 控制原因：用户可自定义表格在公众号中的渲染方式，
-     * 包括边框、斑马纹、悬停效果、列宽、表头对齐等
-     */
     const tableSettings = {
       border: true,
       zebra: true,
       hover: false,
       headerAlign: 'center',
-      columns: [], // { name: string, width: number|null }
+      columns: [],
     };
 
-    let currentTableColumns = []; // 当前表格的列名（从 Markdown 解析）
+    let currentTableColumns = [];
 
-    /**
-     * 切换设置面板的打开/关闭
-     */
     function toggleSettingsPanel() {
       document.getElementById('settings-panel').classList.toggle('open');
     }
 
-    /**
-     * 切换表格设置开关
-     */
     function toggleTableSetting(key) {
       tableSettings[key] = !tableSettings[key];
       const el = document.getElementById('toggle-' + key);
       el.classList.toggle('on', tableSettings[key]);
-      // 重新渲染预览中的表格
       rerenderTables();
     }
 
-    /**
-     * 表格设置变更（选择器/输入框）
-     */
     function onTableSettingChange() {
       tableSettings.headerAlign = document.getElementById('setting-header-align').value;
       rerenderTables();
     }
 
-    /**
-     * 从 Markdown 文本中检测并解析表格
-     * 返回列名数组，如果没有表格则返回空数组
-     */
     function detectTableColumns(md) {
       if (!md) return [];
       const lines = md.split('\n');
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
-        // 检测表格行（以 | 开头或包含 | 分隔）
         if (line.startsWith('|') && line.endsWith('|')) {
-          // 检查下一行是否是对齐行
           if (i + 1 < lines.length && /^\|[\s:-]+\|$/.test(lines[i + 1].trim())) {
-            // 解析表头
-            const headerRow = line.slice(1, -1); // 去掉首尾 |
+            const headerRow = line.slice(1, -1);
             const columns = headerRow.split('|').map(c => c.trim()).filter(Boolean);
             return columns;
           }
@@ -959,32 +686,21 @@
       return [];
     }
 
-    /**
-     * 更新设置面板 —— 根据 Markdown 内容显示/隐藏表格配置
-     */
     function updateSettingsPanel(md) {
       const columns = detectTableColumns(md);
       const noTableHint = document.getElementById('no-table-hint');
       const tableSettingsEl = document.getElementById('table-settings');
-
       if (!columns.length) {
         noTableHint.style.display = 'flex';
         tableSettingsEl.style.display = 'none';
         currentTableColumns = [];
         return;
       }
-
       noTableHint.style.display = 'none';
       tableSettingsEl.style.display = 'block';
-
-      // 如果列没有变化，不重新生成列配置 UI
       if (JSON.stringify(columns) === JSON.stringify(currentTableColumns)) return;
       currentTableColumns = columns;
-
-      // 初始化列宽设置（默认 null = 自动均分）
       tableSettings.columns = columns.map(name => ({ name, width: null }));
-
-      // 渲染列宽设置 UI
       const columnList = document.getElementById('column-list');
       columnList.innerHTML = columns.map((name, i) =>
         `<div class="column-item">
@@ -993,17 +709,12 @@
           <input class="column-width-input" type="number" min="5" max="80" placeholder="自动"
             data-col-index="${i}" onchange="onColumnWidthChange(${i}, this.value)"
             title="列宽百分比（留空则自动均分）">
-          <span class="column-width-unit">%</span>
+          <span style="font-size:10px;color:var(--text-muted);">%</span>
         </div>`
       ).join('');
-
-      // 更新诊断区域
       updateDiagnosisArea();
     }
 
-    /**
-     * 列宽变更回调
-     */
     function onColumnWidthChange(index, value) {
       if (tableSettings.columns[index]) {
         tableSettings.columns[index].width = value ? Math.min(Math.max(parseInt(value) || 0, 5), 80) : null;
@@ -1011,28 +722,20 @@
       rerenderTables();
     }
 
-    /**
-     * 更新诊断区域 —— 显示 md-filter 的诊断结果
-     */
     function updateDiagnosisArea() {
       const area = document.getElementById('diagnosis-area');
       if (!lastFilterResult || !lastFilterResult.report.length) {
-        area.innerHTML = '<div style="color: #16a34a; font-size: 12px;">✓ 未检测到格式问题</div>';
+        area.innerHTML = '<div style="color:var(--success);font-size:12px;">✓ 未检测到格式问题</div>';
         return;
       }
       area.innerHTML = lastFilterResult.report.map(r =>
         `<div class="diagnosis-item">
-          <span class="diagnosis-severity" style="color: ${
-            r.severity === 'error' ? '#dc2626' : r.severity === 'warn' ? '#d97706' : '#0ea5e9'
-          }">[${r.severity.toUpperCase()}]</span>
+          <span style="font-weight:600;color:${r.severity === 'error' ? '#dc2626' : r.severity === 'warn' ? '#d97706' : '#0ea5e9'}">[${r.severity.toUpperCase()}]</span>
           ${escapeHtml(r.message)}
         </div>`
       ).join('');
     }
 
-    /**
-     * 显示诊断弹窗（点击底部诊断按钮）
-     */
     function showDiagnosis() {
       if (!lastFilterResult || !lastFilterResult.report.length) {
         showToast('未检测到格式问题', { type: 'success' });
@@ -1048,31 +751,19 @@
       });
     }
 
-    /**
-     * 重新渲染预览中的表格（根据用户设置调整样式）
-     *
-     * 控制原因：用户通过设置面板调整表格样式后，需要
-     * 实时更新预览中的表格渲染，确保所见即所得。
-     */
     function rerenderTables() {
       const tables = preview.querySelectorAll('.wechat-body table');
       if (!tables.length) return;
-
       tables.forEach(table => {
-        // 设置表格样式
         table.style.width = '100%';
         table.style.borderCollapse = 'collapse';
         table.style.margin = '16px 0';
         table.style.fontSize = '14px';
-
-        // 边框
         if (tableSettings.border) {
           table.style.border = '1px solid #d1d5db';
         } else {
           table.style.border = 'none';
         }
-
-        // 处理表头
         const ths = table.querySelectorAll('th');
         ths.forEach((th, i) => {
           th.style.padding = '10px 12px';
@@ -1086,13 +777,10 @@
           } else {
             th.style.borderBottom = '2px solid #d1d5db';
           }
-          // 列宽
           if (tableSettings.columns[i] && tableSettings.columns[i].width) {
             th.style.width = tableSettings.columns[i].width + '%';
           }
         });
-
-        // 处理单元格
         const rows = table.querySelectorAll('tr');
         rows.forEach((row, rowIdx) => {
           const cells = row.querySelectorAll('td');
@@ -1101,21 +789,16 @@
             td.style.color = '#374151';
             td.style.fontSize = '13px';
             td.style.lineHeight = '1.6';
-
             if (tableSettings.border) {
               td.style.border = '1px solid #d1d5db';
             } else {
               td.style.borderBottom = '1px solid #e5e7eb';
             }
-
-            // 斑马纹
             if (tableSettings.zebra && rowIdx % 2 === 1) {
               td.style.backgroundColor = '#f9fafb';
             } else {
               td.style.backgroundColor = '';
             }
-
-            // 悬停效果（用 CSS 实现）
             if (tableSettings.hover) {
               row.style.transition = 'background-color 0.15s';
               row.addEventListener('mouseenter', () => {
@@ -1133,8 +816,6 @@
                 });
               });
             }
-
-            // 列宽
             if (tableSettings.columns[colIdx] && tableSettings.columns[colIdx].width) {
               td.style.width = tableSettings.columns[colIdx].width + '%';
             }
@@ -1184,7 +865,6 @@
       document.getElementById('style-current').textContent = t.name;
       document.querySelectorAll('.style-menu-item').forEach(i => i.classList.toggle('active', i.dataset.theme === key));
       try { localStorage.setItem('md2wechat-theme', key); } catch (_) {}
-      // 切换主题后重新应用表格设置
       rerenderTables();
     }
 
@@ -1264,21 +944,16 @@
     function buildWechatHTML() {
       const body = preview.querySelector('.wechat-body');
       if (!body) return '';
-
       const clone = body.cloneNode(true);
-
-      // 移除预览用的装饰元素
       clone.querySelectorAll('.img-overlay-left, .img-copy-b64-btn').forEach(el => el.remove());
       clone.querySelectorAll('.img-wrapper').forEach(wrapper => {
         const img = wrapper.querySelector('img');
         if (img) wrapper.replaceWith(img);
       });
       clone.querySelectorAll('[data-decorated]').forEach(el => el.removeAttribute('data-decorated'));
-
       const parser = new DOMParser();
       const doc = parser.parseFromString(`<div>${clone.innerHTML}</div>`, 'text/html');
       const root = doc.body.firstChild;
-
       const t = THEME_MAP[currentThemeKey];
       const s = t.styles;
       const bg = themeBg(t);
@@ -1288,13 +963,10 @@
         if (BLOCK_BG.has(tag) && !/background-color/i.test(css)) css += `background-color:${bg};`;
         return css;
       };
-
       ['h1','h2','h3','h4','p','strong','em','a','ul','ol','li','blockquote','hr','table','th','td','tr'].forEach(tag => {
         root.querySelectorAll(tag).forEach(el => { el.style.cssText = styleFor(tag); });
       });
-      root.querySelectorAll('blockquote p').forEach(el => {
-        el.style.backgroundColor = 'transparent';
-      });
+      root.querySelectorAll('blockquote p').forEach(el => { el.style.backgroundColor = 'transparent'; });
       root.querySelectorAll('img').forEach(el => { el.style.cssText = s.img; });
       root.querySelectorAll('pre').forEach(pre => {
         pre.style.cssText = s.pre + 'white-space:pre-wrap;word-break:break-all;';
@@ -1314,10 +986,8 @@
 
     async function copyToWechat() {
       if (!input.value.trim()) { showToast('请先输入 Markdown 内容', { type: 'info' }); return; }
-
       const btn = document.getElementById('copy-btn');
       const html = buildWechatHTML();
-
       try {
         await navigator.clipboard.write([
           new ClipboardItem({
@@ -1348,17 +1018,14 @@
 
     async function publishToWechatDraft() {
       if (!input.value.trim()) { showToast('请先输入 Markdown 内容', { type: 'info' }); return; }
-
       const btn = document.getElementById('publish-btn');
       const html = buildWechatHTML();
       if (!html) { showToast('预览为空，无法发布', { type: 'info' }); return; }
-
       const restore = () => {
         btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg> 发布到草稿`;
         btn.classList.remove('success', 'error');
         btn.disabled = false;
       };
-
       btn.disabled = true;
       btn.textContent = '发布中…';
       try {

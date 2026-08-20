@@ -1,380 +1,141 @@
 <!DOCTYPE html>
 <html lang="zh">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Markdown → X 文章</title>
   <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
-  <!-- Starline Markdown 过滤层：自动修复非标准格式 -->
   <script src="md-filter.js"></script>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+    :root {
+      --bg: #f5f3ee;
+      --surface: #ffffff;
+      --surface-hover: #faf8f5;
+      --border: #e8e3dc;
+      --border-hover: #d4cdc2;
+      --text-primary: #1a1a2e;
+      --text-secondary: #6b6560;
+      --text-muted: #a09890;
+      --accent: #1a4a6e;
+      --accent-light: #e8f0f6;
+      --gold: #c4973f;
+      --gold-light: #faf3e6;
+      --success: #16a34a;
+      --error: #dc2626;
+      --radius: 10px;
+      --radius-sm: 6px;
+      --radius-full: 999px;
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', 'Menlo', Consolas, monospace;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.06);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.08);
     }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #f5f5f5;
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--text-primary);
       height: 100vh;
       display: flex;
       flex-direction: column;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* ── 顶栏 ── */
     header {
-      background: #fff;
-      border-bottom: 1px solid #e5e7eb;
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(20px) saturate(1.5);
+      -webkit-backdrop-filter: blur(20px) saturate(1.5);
+      border-bottom: 1px solid var(--border);
       padding: 0 24px;
-      height: 52px;
+      height: 56px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-shrink: 0;
+      z-index: 50;
     }
-
     .header-left { display: flex; align-items: center; min-width: 0; overflow: hidden; }
-    .home-btn { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; color: #6b7280; margin-right: 10px; flex-shrink: 0; text-decoration: none; transition: background 0.15s, color 0.15s; }
-    .home-btn:hover { background: #f3f4f6; color: #111; }
-    .header-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: #111;
-      letter-spacing: 0.02em;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-
-    .header-title span {
-      color: #9ca3af;
-      font-weight: 400;
-      margin: 0 6px;
-    }
-
-    .doc-title-wrap { display: none; align-items: center; gap: 6px; margin-left: 14px; padding-left: 14px; border-left: 1px solid #e5e7eb; min-width: 0; max-width: 380px; }
-    .doc-title-text { font-size: 13px; color: #374151; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .doc-title-copy { flex-shrink: 0; background: none; border: none; cursor: pointer; color: #9ca3af; padding: 2px; border-radius: 3px; display: flex; align-items: center; transition: color 0.15s; }
-    .doc-title-copy:hover { color: #374151; }
-
-    .copy-btn {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 20px;
-      background: #000;
-      color: #fff;
-      border: none;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      letter-spacing: 0.02em;
-      transition: background 0.15s, transform 0.1s;
-    }
-
-    .copy-btn:hover {
-      background: #222;
-    }
-
-    .copy-btn:active {
-      transform: scale(0.97);
-    }
-
-    .copy-btn.success {
-      background: #16a34a;
-    }
-
-    .copy-btn svg {
-      width: 14px;
-      height: 14px;
-      flex-shrink: 0;
-    }
-
-    .header-actions { display: flex; gap: 10px; align-items: center; }
+    .home-btn { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: var(--radius-sm); color: var(--text-muted); margin-right: 10px; flex-shrink: 0; text-decoration: none; transition: all 0.2s; }
+    .home-btn:hover { background: var(--surface-hover); color: var(--accent); }
+    .header-title { font-size: 14px; font-weight: 600; color: var(--text-primary); letter-spacing: 0.01em; white-space: nowrap; flex-shrink: 0; }
+    .header-title span { color: var(--text-muted); font-weight: 400; margin: 0 6px; }
+    .doc-title-wrap { display: none; align-items: center; gap: 6px; margin-left: 14px; padding-left: 14px; border-left: 1px solid var(--border); min-width: 0; max-width: 380px; }
+    .doc-title-text { font-size: 13px; color: var(--text-secondary); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .doc-title-copy { flex-shrink: 0; background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 2px; border-radius: 3px; display: flex; align-items: center; transition: color 0.15s; }
+    .doc-title-copy:hover { color: var(--accent); }
+    .header-actions { display: flex; gap: 8px; align-items: center; }
 
     .reload-btn {
-      padding: 6px 14px;
-      background: none;
-      color: #6b7280;
-      border: 1px solid #e5e7eb;
-      border-radius: 20px;
-      font-size: 12px;
-      cursor: pointer;
-      transition: color 0.15s, border-color 0.15s;
+      padding: 6px 14px; background: none; color: var(--text-secondary);
+      border: 1px solid var(--border); border-radius: var(--radius-full);
+      font-size: 12px; cursor: pointer; transition: all 0.2s;
     }
-
-    .reload-btn:hover {
-      color: #111;
-      border-color: #9ca3af;
-    }
+    .reload-btn:hover { color: var(--text-primary); border-color: var(--border-hover); background: var(--surface-hover); }
 
     .sync-switch {
       display: flex; align-items: center; gap: 6px;
-      cursor: pointer; font-size: 12px; color: #6b7280;
+      cursor: pointer; font-size: 12px; color: var(--text-secondary);
       user-select: none;
     }
-    .sync-switch-track {
-      width: 32px; height: 18px; border-radius: 9px;
-      background: #e5e7eb; position: relative;
-      transition: background 0.2s; flex-shrink: 0;
-    }
-    .sync-switch-track.on { background: #111; }
-    .sync-switch-thumb {
-      position: absolute; top: 2px; left: 2px;
-      width: 14px; height: 14px; border-radius: 50%;
-      background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.25);
-      transition: transform 0.2s;
-    }
+    .sync-switch-track { width: 32px; height: 18px; border-radius: 9px; background: var(--border); position: relative; transition: background 0.2s; flex-shrink: 0; }
+    .sync-switch-track.on { background: var(--accent); }
+    .sync-switch-thumb { position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.15); transition: transform 0.2s; }
     .sync-switch-track.on .sync-switch-thumb { transform: translateX(14px); }
 
-    /* ── 主体双栏 ── */
-    .main {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      flex: 1;
-      overflow: hidden;
-      gap: 1px;
-      background: #e5e7eb;
+    .copy-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 20px; background: var(--accent); color: #fff;
+      border: none; border-radius: var(--radius-full);
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: all 0.2s;
     }
+    .copy-btn:hover { background: #1e5a84; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(26,74,110,0.2); }
+    .copy-btn:active { transform: translateY(0); }
+    .copy-btn.success { background: var(--success); }
+    .copy-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
 
-    .pane {
-      background: #fff;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
+    .main { display: grid; grid-template-columns: 1fr 1fr; flex: 1; overflow: hidden; gap: 1px; background: var(--border); }
+    @media (max-width: 720px) { .main { grid-template-columns: 1fr; } }
 
-    .pane-header {
-      padding: 10px 20px;
-      font-size: 11px;
-      font-weight: 600;
-      color: #9ca3af;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      border-bottom: 1px solid #f0f0f0;
-      flex-shrink: 0;
-    }
+    .pane { background: #fff; display: flex; flex-direction: column; overflow: hidden; }
+    .pane-header { padding: 12px 20px; font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.15em; text-transform: uppercase; border-bottom: 1px solid var(--border); flex-shrink: 0; }
 
-    /* ── 左侧输入 ── */
-    #md-input {
-      flex: 1;
-      padding: 20px;
-      font-size: 13px;
-      font-family: 'JetBrains Mono', 'Fira Code', 'Menlo', monospace;
-      line-height: 1.7;
-      color: #374151;
-      border: none;
-      outline: none;
-      resize: none;
-      background: #fafafa;
-    }
+    #md-input { flex: 1; padding: 20px; font-size: 13px; font-family: var(--font-mono); line-height: 1.7; color: var(--text-primary); border: none; outline: none; resize: none; background: #faf8f5; }
+    #md-input::placeholder { color: var(--text-muted); }
 
-    #md-input::placeholder {
-      color: #d1d5db;
-    }
-
-    /* ── 右侧预览 ── */
-    #preview {
-      flex: 1;
-      padding: 24px 28px;
-      overflow-y: auto;
-      font-size: 15px;
-      line-height: 1.8;
-      color: #0f0f0f;
-    }
-
-    /* X 文章排版风格 */
-    #preview h1 {
-      font-size: 28px;
-      font-weight: 800;
-      line-height: 1.3;
-      margin-bottom: 20px;
-      color: #0f0f0f;
-    }
-
-    #preview h2 {
-      font-size: 20px;
-      font-weight: 700;
-      margin-top: 32px;
-      margin-bottom: 12px;
-      color: #0f0f0f;
-    }
-
-    #preview h3 {
-      font-size: 17px;
-      font-weight: 600;
-      margin-top: 24px;
-      margin-bottom: 8px;
-      color: #0f0f0f;
-    }
-
-    #preview p {
-      margin-bottom: 16px;
-    }
-
-    #preview ul,
-    #preview ol {
-      padding-left: 24px;
-      margin-bottom: 16px;
-    }
-
-    #preview li {
-      margin-bottom: 6px;
-    }
-
-    #preview strong {
-      font-weight: 700;
-    }
-
-    #preview em {
-      font-style: italic;
-    }
-
-    #preview code {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      background: #f3f4f6;
-      padding: 2px 6px;
-      border-radius: 4px;
-      color: #dc2626;
-    }
-
-    #preview pre {
-      background: #1e1e2e;
-      color: #cdd6f4;
-      padding: 16px 20px;
-      border-radius: 8px;
-      overflow-x: auto;
-      margin-bottom: 16px;
-      font-size: 12px;
-      line-height: 1.6;
-    }
-
-    #preview pre code {
-      background: none;
-      color: inherit;
-      padding: 0;
-      font-size: inherit;
-    }
-
-    #preview blockquote {
-      border-left: 3px solid #e5e7eb;
-      padding-left: 16px;
-      color: #6b7280;
-      margin-bottom: 16px;
-      font-style: italic;
-    }
-
-    #preview hr {
-      border: none;
-      border-top: 1px solid #e5e7eb;
-      margin: 28px 0;
-    }
-
-    #preview a {
-      color: #1d9bf0;
-      text-decoration: none;
-    }
-
+    #preview { flex: 1; padding: 24px 28px; overflow-y: auto; font-size: 15px; line-height: 1.8; color: #0f0f0f; }
+    #preview h1 { font-size: 28px; font-weight: 800; line-height: 1.3; margin-bottom: 20px; color: #0f0f0f; }
+    #preview h2 { font-size: 20px; font-weight: 700; margin-top: 32px; margin-bottom: 12px; color: #0f0f0f; }
+    #preview h3 { font-size: 17px; font-weight: 600; margin-top: 24px; margin-bottom: 8px; color: #0f0f0f; }
+    #preview p { margin-bottom: 16px; }
+    #preview ul, #preview ol { padding-left: 24px; margin-bottom: 16px; }
+    #preview li { margin-bottom: 6px; }
+    #preview strong { font-weight: 700; }
+    #preview em { font-style: italic; }
+    #preview code { font-family: var(--font-mono); font-size: 12px; background: #f3f4f6; padding: 2px 6px; border-radius: 4px; color: #dc2626; }
+    #preview pre { background: #1e1e2e; color: #cdd6f4; padding: 16px 20px; border-radius: 8px; overflow-x: auto; margin-bottom: 16px; font-size: 12px; line-height: 1.6; }
+    #preview pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+    #preview blockquote { border-left: 3px solid var(--border); padding-left: 16px; color: var(--text-secondary); margin-bottom: 16px; font-style: italic; }
+    #preview hr { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+    #preview a { color: var(--accent); text-decoration: none; }
     #preview img { max-width: 100%; height: auto; width: 100%; display: block; }
-    .img-wrapper {
-      position: relative;
-      display: block;
-      margin: 16px 0;
-    }
+    #preview svg { max-width: 100%; height: auto; border-radius: var(--radius-sm); box-shadow: var(--shadow-sm); margin: 16px 0; }
 
-    .img-wrapper img {
-      border-radius: 6px;
-      margin: 0;
-    }
+    .img-wrapper { position: relative; display: block; margin: 16px 0; }
+    .img-wrapper img { border-radius: 6px; margin: 0; }
+    .img-overlay-left { position: absolute; bottom: 0; left: 0; display: flex; align-items: stretch; max-width: 75%; border-radius: 0 4px 0 6px; overflow: hidden; }
+    .img-alt-label { background: rgba(0,0,0,0.5); color: #fff; font-size: 11px; padding: 3px 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .img-copy-alt-btn { background: rgba(0,0,0,0.6); color: #fff; border: none; border-left: 1px solid rgba(255,255,255,0.2); font-size: 11px; padding: 2px 8px; cursor: pointer; transition: background 0.15s; flex-shrink: 0; }
+    .img-copy-alt-btn:hover { background: rgba(0,0,0,0.8); }
+    .img-copy-b64-btn { position: absolute; bottom: 6px; right: 6px; background: rgba(0,0,0,0.5); color: #fff; border: none; border-radius: 4px; font-size: 11px; padding: 2px 8px; cursor: pointer; transition: background 0.15s; }
+    .img-copy-b64-btn:hover { background: rgba(0,0,0,0.75); }
 
-    .img-overlay-left {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      display: flex;
-      align-items: stretch;
-      max-width: 75%;
-      border-radius: 0 4px 0 6px;
-      overflow: hidden;
-    }
-
-    .img-alt-label {
-      background: rgba(0, 0, 0, 0.5);
-      color: #fff;
-      font-size: 11px;
-      line-height: 1.4;
-      padding: 3px 8px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .img-copy-alt-btn {
-      background: rgba(0, 0, 0, 0.6);
-      color: #fff;
-      border: none;
-      border-left: 1px solid rgba(255, 255, 255, 0.2);
-      font-size: 11px;
-      padding: 2px 8px;
-      cursor: pointer;
-      transition: background 0.15s;
-      flex-shrink: 0;
-    }
-
-    .img-copy-alt-btn:hover {
-      background: rgba(0, 0, 0, 0.8);
-    }
-
-    .img-copy-b64-btn {
-      position: absolute;
-      bottom: 6px;
-      right: 6px;
-      background: rgba(0, 0, 0, 0.5);
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      font-size: 11px;
-      padding: 2px 8px;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-
-    .img-copy-b64-btn:hover {
-      background: rgba(0, 0, 0, 0.75);
-    }
-
-    /* 字数统计 */
-    .stats {
-      padding: 8px 20px;
-      font-size: 11px;
-      color: #9ca3af;
-      border-top: 1px solid #f0f0f0;
-      flex-shrink: 0;
-    }
-
-    /* 空状态 */
-    .empty-hint {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      color: #d1d5db;
-      font-size: 14px;
-      gap: 8px;
-    }
-
-    .empty-hint svg {
-      width: 36px;
-      height: 36px;
-      opacity: 0.4;
-    }
+    .stats { padding: 10px 20px; font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border); flex-shrink: 0; }
+    .empty-hint { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 14px; gap: 8px; background: #faf8f5; }
+    .empty-hint svg { width: 36px; height: 36px; opacity: 0.3; }
   </style>
 </head>
-
 <body>
 
   <header>
@@ -411,28 +172,22 @@
   </header>
 
   <div class="main">
-
-    <!-- 左：Markdown 输入 -->
     <div class="pane">
       <div class="pane-header">Markdown 输入</div>
       <textarea id="md-input"></textarea>
       <div class="stats" id="stats">0 字</div>
     </div>
-
-    <!-- 右：预览 -->
     <div class="pane">
       <div class="pane-header">预览（X 文章样式）</div>
       <div id="preview">
         <div class="empty-hint">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
           </svg>
           <span>左侧粘贴 Markdown，这里实时预览</span>
         </div>
       </div>
     </div>
-
   </div>
 
   <script>
@@ -492,13 +247,10 @@
       preview.querySelectorAll('img:not([data-decorated])').forEach(img => {
         img.setAttribute('data-decorated', '1');
         const alt = img.getAttribute('alt') || '';
-
         const wrapper = document.createElement('div');
         wrapper.className = 'img-wrapper';
         img.parentNode.insertBefore(wrapper, img);
         wrapper.appendChild(img);
-
-        // 左下：alt 文本 + 复制 alt 按钮
         if (alt) {
           const leftOverlay = document.createElement('div');
           leftOverlay.className = 'img-overlay-left';
@@ -517,8 +269,6 @@
           leftOverlay.appendChild(copyAltBtn);
           wrapper.appendChild(leftOverlay);
         }
-
-        // 右下：复制图片本身（等同于浏览器右键「复制图片」）
         const copyImgBtn = document.createElement('button');
         copyImgBtn.className = 'img-copy-b64-btn';
         copyImgBtn.textContent = '复制图片';
@@ -554,11 +304,9 @@
         stats.textContent = '0 字';
         return;
       }
-      // 通过 MdFilter 过滤 —— 自动修复格式问题
       const filterResult = MdFilter.process(rawMd, { convertSVG: false });
       const md = filterResult.md.replace(/^# .+\n?/m, '').trim();
       let html = marked.parse(md);
-      // 注入 SVG（如果有转换）
       html = MdFilter.injectSVG(html, filterResult.svgBlocks);
       preview.innerHTML = html;
       const charCount = rawMd.replace(/\s/g, '').length;
@@ -575,10 +323,8 @@
         alert('请先粘贴 Markdown 内容');
         return;
       }
-
       const html = preview.innerHTML;
       const btn = document.getElementById('copy-btn');
-
       try {
         await navigator.clipboard.write([
           new ClipboardItem({
@@ -596,7 +342,6 @@
           btn.classList.remove('success');
         }, 3000);
       } catch (err) {
-        // 降级：复制纯文本
         await navigator.clipboard.writeText(md);
         alert('富文本复制不支持，已复制纯文本（需手动格式化）');
       }
@@ -607,7 +352,6 @@
         const res = await fetch('./draft.md');
         if (!res.ok) return;
         const text = await res.text();
-        // 从封面配置 JSON 块读取标题
         const jsonM = text.match(/```json\s*([\s\S]*?)```/);
         if (jsonM) {
           try {
@@ -616,20 +360,16 @@
           } catch (_) {}
         }
         const m = text.match(/^## 正文\s*\n([\s\S]*)/m);
-        // 去掉末尾的 footer（--- 后跟 *运行...）
         const body = m
           ? m[1].replace(/\n---\n\*运行[\s\S]*$/, '').trimEnd()
           : text.trimEnd();
         input.value = body;
-      } catch (_) {
-        // file:// 协议下 fetch 被拦截，保留 textarea 现有内容
-      }
+      } catch (_) {}
       await render();
     }
 
     loadDraft();
 
-    // ── 滚动同步 ──
     let syncScroll = true;
     let syncing = false;
 
@@ -654,9 +394,5 @@
       syncing = false;
     });
   </script>
-
-  
-
 </body>
-
 </html>

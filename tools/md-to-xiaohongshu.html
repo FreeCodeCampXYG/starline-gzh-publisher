@@ -5,177 +5,167 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Markdown → 小红书图文</title>
   <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
-  <!-- Starline Markdown 过滤层：自动修复非标准格式 -->
   <script src="md-filter.js"></script>
   <style>
     :root {
-      --pink: #ff2e63;
-      --pink-deep: #e6194b;
-      --pink-soft: #ff8fab;
-      --pink-weak: #ffd6e0;
-      --pink-bg: #fdf3f6;
-      --ink: #2b2326;
-      --ink-soft: #5c5560;
-      --muted: #abaa94;
-      --border: #f3dfe6;
-      --code-bg: #f6f7f9;
+      --bg: #f5f3ee;
+      --surface: #ffffff;
+      --surface-hover: #faf8f5;
+      --border: #e8e3dc;
+      --border-hover: #d4cdc2;
+      --text-primary: #1a1a2e;
+      --text-secondary: #6b6560;
+      --text-muted: #a09890;
+      --accent: #c43a5e;
+      --accent-light: #fce8ed;
+      --accent-soft: rgba(196,58,94,0.06);
+      --gold: #c4973f;
+      --success: #16a34a;
+      --radius: 10px;
+      --radius-sm: 6px;
+      --radius-full: 999px;
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', 'Menlo', Consolas, monospace;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.06);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.08);
     }
-
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif;
-      background: var(--pink-bg);
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--text-primary);
       height: 100vh;
       display: flex;
       flex-direction: column;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* ── top bar ── */
     header {
-      background: #fff;
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(20px) saturate(1.5);
+      -webkit-backdrop-filter: blur(20px) saturate(1.5);
       border-bottom: 1px solid var(--border);
       padding: 0 24px;
-      height: 52px;
+      height: 56px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-shrink: 0;
+      z-index: 50;
     }
-
     .header-left { display: flex; align-items: center; min-width: 0; overflow: hidden; }
-    .home-btn { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; color: var(--muted); margin-right: 10px; flex-shrink: 0; text-decoration: none; transition: background 0.15s, color 0.15s; }
-    .home-btn:hover { background: var(--pink-weak); color: var(--pink-deep); }
-    .header-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--ink);
-      letter-spacing: 0.02em;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-
-    .header-title span {
-      color: var(--muted);
-      font-weight: 400;
-      margin: 0 6px;
-    }
-
+    .home-btn { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: var(--radius-sm); color: var(--text-muted); margin-right: 10px; flex-shrink: 0; text-decoration: none; transition: all 0.2s; }
+    .home-btn:hover { background: var(--accent-light); color: var(--accent); }
+    .header-title { font-size: 14px; font-weight: 600; color: var(--text-primary); letter-spacing: 0.01em; white-space: nowrap; flex-shrink: 0; }
+    .header-title span { color: var(--text-muted); font-weight: 400; margin: 0 6px; }
     .doc-title-wrap { display: none; align-items: center; gap: 6px; margin-left: 14px; padding-left: 14px; border-left: 1px solid var(--border); min-width: 0; max-width: 380px; }
-    .doc-title-text { font-size: 13px; color: var(--ink-soft); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .doc-title-copy { flex-shrink: 0; background: none; border: none; cursor: pointer; color: var(--muted); padding: 2px; border-radius: 3px; display: flex; align-items: center; transition: color 0.15s; }
-    .doc-title-copy:hover { color: var(--pink-deep); }
+    .doc-title-text { font-size: 13px; color: var(--text-secondary); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .doc-title-copy { flex-shrink: 0; background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 2px; border-radius: 3px; display: flex; align-items: center; transition: color 0.15s; }
+    .doc-title-copy:hover { color: var(--accent); }
+    .header-actions { display: flex; gap: 8px; align-items: center; }
 
-    .header-actions { display: flex; gap: 10px; align-items: center; }
+    .reload-btn { padding: 6px 14px; background: none; color: var(--text-secondary); border: 1px solid var(--border); border-radius: var(--radius-full); font-size: 12px; cursor: pointer; transition: all 0.2s; }
+    .reload-btn:hover { color: var(--text-primary); border-color: var(--border-hover); background: var(--surface-hover); }
+
+    .sync-switch { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 12px; color: var(--text-secondary); user-select: none; }
+    .sync-switch-track { width: 32px; height: 18px; border-radius: 9px; background: var(--border); position: relative; transition: background 0.2s; flex-shrink: 0; }
+    .sync-switch-track.on { background: var(--accent); }
+    .sync-switch-thumb { position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.15); transition: transform 0.2s; }
+    .sync-switch-track.on .sync-switch-thumb { transform: translateX(14px); }
 
     .copy-btn {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 20px;
-      background: linear-gradient(135deg, #ff8fab, #ff2e63);
-      color: #fff;
-      border: none;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      letter-spacing: 0.02em;
-      box-shadow: 0 3px 10px rgba(255, 46, 99, 0.28);
-      transition: box-shadow 0.15s, filter 0.15s, transform 0.1s;
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 20px; background: var(--accent); color: #fff;
+      border: none; border-radius: var(--radius-full);
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: all 0.2s;
     }
-
-    .copy-btn:hover { filter: brightness(1.04); box-shadow: 0 6px 16px rgba(255, 46, 99, 0.4); }
-    .copy-btn:active { transform: scale(0.97); }
-    .copy-btn.success { background: #16a34a; box-shadow: 0 3px 10px rgba(22, 163, 74, 0.3); }
-
+    .copy-btn:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(196,58,94,0.25); }
+    .copy-btn:active { transform: translateY(0); }
+    .copy-btn.success { background: var(--success); }
     .copy-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
-    .header-actions { display: flex; gap: 10px; align-items: center; }
 
-    /* ── 主体双栏 ── */
-    .main {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      flex: 1;
-      overflow: hidden;
-      gap: 1px;
-      background: var(--border);
-    }
+    .main { display: grid; grid-template-columns: 1fr 1fr; flex: 1; overflow: hidden; gap: 1px; background: var(--border); }
+    @media (max-width: 720px) { .main { grid-template-columns: 1fr; } }
 
     .pane { background: #fff; display: flex; flex-direction: column; overflow: hidden; }
-    .pane-header { padding: 10px 20px; font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; border-bottom: 1px solid #faf0f3; flex-shrink: 0; }
+    .pane-header { padding: 12px 20px; font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.15em; text-transform: uppercase; border-bottom: 1px solid var(--border); flex-shrink: 0; }
 
-    #md-input { flex: 1; padding: 20px; font-size: 13px; font-family: 'JetBrains Mono', 'Fira Code', 'Menlo', monospace; line-height: 1.7; color: var(--ink-soft); border: none; outline: none; resize: none; background: #fdf9fb; border-bottom: 1px solid #faf0f3; }
+    #md-input { flex: 1; padding: 20px; font-size: 13px; font-family: var(--font-mono); line-height: 1.7; color: var(--text-primary); border: none; outline: none; resize: none; background: #faf8f5; }
+    #md-input::placeholder { color: var(--text-muted); }
 
-    #md-input::placeholder { color: #d8c6cd; }
+    #preview { flex: 1; overflow-y: auto; padding: 20px; background: var(--bg); }
 
-    #preview {
-      flex: 1;
-      padding: 24px 20px;
-      overflow-y: auto;
-      background: var(--pink-bg);
-    }
-
+    /* ── 小红书卡片预览 ── */
     .xhs-card {
-      max-width: 560px;
-      margin: 0 auto;
-      background: #fff;
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 24px 24px 20px;
-      box-shadow: 0 10px 34px rgba(255, 46, 99, 0.08);
+      max-width: 400px; margin: 0 auto;
+      background: #fff; border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
     }
-    .xhs-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid #faf0f3; }
-    .xhs-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #ff8fab, #ff2e63); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; font-weight: 700; flex-shrink: 0; }
-    .xhs-author { font-size: 14px; font-weight: 600; color: var(--ink); line-height: 1.2; }
-    .xhs-time { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .xhs-card-head {
+      display: flex; align-items: center; gap: 10px;
+      padding: 16px 18px 8px;
+    }
+    .xhs-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, #fce8ed, var(--accent));
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 13px; font-weight: 700; flex-shrink: 0;
+    }
+    .xhs-author { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .xhs-time { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
 
-    .xhs-body { font-size: 16px; line-height: 1.9; color: var(--ink); white-space: pre-wrap; word-break: break-word; }
-
-    .xhs-code { display: block; margin: 0; background: var(--code-bg); border-radius: 10px; padding: 12px 14px; font-family: 'JetBrains Mono', 'Fira Code', 'Menlo', Consolas, monospace; font-size: 13px; line-height: 1.6; color: #4b5563; white-space: pre-wrap; overflow-x: auto; }
-
-    .xhs-tags { margin-top: 16px; font-size: 15px; font-weight: 600; line-height: 2; color: var(--pink); word-break: break-word; }
-
-    .xhs-count { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--border); font-size: 12px; color: var(--muted); }
-    .xhs-count .stat-status { font-weight: 600; }
-    .xhs-count .stat-status.ok { color: #16a34a; }
-    .xhs-count .stat-status.warn { color: #d97706; }
-    .xhs-count .stat-status.over { color: #dc2626; }
-
-    #preview img { max-width: 100%; height: auto; display: block; }
-    .img-wrapper { position: relative; display: block; margin: 12px 0; }
-
-    .img-wrapper img { border-radius: 10px; margin: 0; }
-
-    .img-overlay-left { position: absolute; bottom: 0; left: 0; display: flex; align-items: stretch; max-width: 75%; border-radius: 0 10px 0 12px; overflow: hidden; }
-
-    .img-alt-label { background: rgba(43, 35, 38, 0.55); color: #fff; font-size: 11px; line-height: 1.4; padding: 3px 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-    .img-copy-alt-btn { background: rgba(43, 35, 38, 0.65); color: #fff; border: none; border-left: 1px solid rgba(255,255,255,0.2); font-size: 11px; padding: 2px 8px; cursor: pointer; transition: background 0.15s; flex-shrink: 0; }
-    .img-copy-alt-btn:hover { background: rgba(43, 35, 38, 0.85); }
-
-    .img-copy-b64-btn { position: absolute; bottom: 8px; right: 8px; background: rgba(255, 46, 99, 0.82); color: #fff; border: none; border-radius: 6px; font-size: 11px; padding: 4px 10px; cursor: pointer; transition: background 0.15s; }
-    .img-copy-b64-btn:hover { background: var(--pink-deep); }
-
-    /* 字数统计 */
-    .stats { padding: 8px 20px; font-size: 11px; color: var(--muted); border-top: 1px solid #faf0f3; flex-shrink: 0; }
-    .stat-num { font-weight: 700; color: var(--ink); }
-    .stat-status { font-weight: 600; margin-left: 4px; }
-    .stat-status.ok { color: #16a34a; }
+    .xhs-body {
+      padding: 8px 18px 12px;
+      font-size: 14px; line-height: 1.75; color: var(--text-primary);
+      white-space: pre-wrap; word-break: break-word;
+    }
+    .xhs-body strong { font-weight: 600; color: var(--accent); }
+    .xhs-body em { font-style: italic; }
+    .xhs-code {
+      margin: 8px 0; padding: 12px 14px;
+      background: #f5f5f5; border-radius: var(--radius-sm);
+      font-family: var(--font-mono); font-size: 12px;
+      line-height: 1.6; color: var(--text-secondary);
+      white-space: pre-wrap; overflow-x: auto;
+    }
+    .xhs-tags {
+      padding: 4px 18px 16px;
+      font-size: 13px; color: var(--accent); line-height: 1.8;
+    }
+    .xhs-count {
+      padding: 10px 18px 14px;
+      font-size: 11px; color: var(--text-muted);
+      border-top: 1px solid var(--border);
+    }
+    .stat-num { font-weight: 700; color: var(--text-secondary); }
+    .stat-status { font-weight: 600; }
+    .stat-status.ok { color: var(--success); }
     .stat-status.warn { color: #d97706; }
-    .stat-status.over { color: #dc2626; }
+    .stat-status.long { color: var(--text-muted); }
+    .stat-status.short { color: var(--accent); }
 
-    /* 空状态 */
-    .empty-hint { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #e3c9d2; font-size: 14px; gap: 8px; }
-    .empty-hint svg { width: 36px; height: 36px; opacity: 0.5; }
+    .img-wrapper { position: relative; display: inline-block; margin: 4px 0; }
+    .img-wrapper img { max-width: 100%; height: auto; border-radius: var(--radius-sm); }
+    .img-overlay-left { position: absolute; bottom: 0; left: 0; display: flex; align-items: stretch; max-width: 75%; border-radius: 0 4px 0 4px; overflow: hidden; }
+    .img-alt-label { background: rgba(0,0,0,0.5); color: #fff; font-size: 11px; padding: 3px 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .img-copy-alt-btn { background: rgba(0,0,0,0.6); color: #fff; border: none; border-left: 1px solid rgba(255,255,255,0.2); font-size: 11px; padding: 2px 8px; cursor: pointer; transition: background 0.15s; flex-shrink: 0; }
+    .img-copy-alt-btn:hover { background: rgba(0,0,0,0.8); }
+    .img-copy-b64-btn { position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,0.5); color: #fff; border: none; border-radius: 4px; font-size: 11px; padding: 2px 8px; cursor: pointer; transition: background 0.15s; }
+    .img-copy-b64-btn:hover { background: rgba(0,0,0,0.75); }
+
+    .stats { padding: 10px 20px; font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border); flex-shrink: 0; }
+    .empty-hint { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 14px; gap: 8px; background: #faf8f5; border-radius: var(--radius); }
+    .empty-hint svg { width: 36px; height: 36px; opacity: 0.3; }
   </style>
 </head>
-
 <body>
 
   <header>
     <div class="header-left">
-      <a href="index.html" class="home-btn" title="返回首页">
+      <a href="index.html" class="home-btn" title="返回工具箱">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
         </svg>
@@ -207,15 +197,11 @@
   </header>
 
   <div class="main">
-
-    <!-- 左：Markdown 输入 -->
     <div class="pane">
       <div class="pane-header">Markdown 输入</div>
       <textarea id="md-input"></textarea>
       <div class="stats" id="stats">0 字</div>
     </div>
-
-    <!-- 右：预览 -->
     <div class="pane">
       <div class="pane-header">预览（小红书图文样式）</div>
       <div id="preview">
@@ -227,7 +213,6 @@
         </div>
       </div>
     </div>
-
   </div>
 
   <script>
@@ -237,7 +222,6 @@
 
     marked.setOptions({ breaks: true, gfm: true });
 
-    // 图片占位符（私有区字符，避免与正文冲突）
     const IMG_START = '\uE000';
     const IMG_END = '\uE001';
     const IMG_RE = /\uE000(\d+)\uE001/g;
@@ -247,7 +231,6 @@
     let images = [];
     let headingTags = [];
 
-    /* ── 标题 ── */
     function updateTitleDisplay(title) {
       const wrap = document.getElementById('doc-title-wrap');
       const text = document.getElementById('doc-title-text');
@@ -263,7 +246,6 @@
       setTimeout(() => btn.style.color = '', 1500);
     }
 
-    /* ── 内联渲染：加粗/斜体/删除线/行内代码 → 纯文本，图片 → 占位符 ── */
     function renderInline(tokens) {
       let out = '';
       for (const t of tokens || []) {
@@ -281,14 +263,13 @@
             out += IMG_START + idx + IMG_END;
             break;
           }
-          case 'html': break; // 去掉原始 HTML
+          case 'html': break;
           default: out += t.raw || ''; break;
         }
       }
       return out;
     }
 
-    /* ── 列表：• 前缀，支持嵌套 ── */
     function listItemLines(item, depth) {
       const out = [];
       const indent = '  '.repeat(depth);
@@ -307,116 +288,80 @@
       return out;
     }
 
-    /* ── block 嵌套文本（引用块内部） ── */
-    function renderBlocksToString(tokens) {
-      const parts = [];
-      for (const t of tokens || []) {
-        switch (t.type) {
-          case 'paragraph': { const s = renderInline(t.tokens).trim(); if (s) parts.push(s); break; }
-          case 'text': { const s = renderInline(t.tokens || [{ type: 'text', text: t.text || '' }]).trim(); if (s) parts.push(s); break; }
-          case 'list': { const ls = []; for (const it of t.items) ls.push(...listItemLines(it, 0)); if (ls.length) parts.push(ls.join('\n')); break; }
-          case 'code': parts.push(t.text.replace(/\n+$/, '')); break;
-          default: break;
-        }
-      }
-      return parts.join('\n\n');
-    }
-
-    /* ── 表格 → 纯文本 ── */
-    function renderTable(t) {
-      const cell = c => renderInline(c.tokens || [{ type: 'text', text: c.text || '' }]).trim();
-      const rows = [t.header.map(cell).join(' | ')];
-      for (const r of t.rows || []) rows.push(r.map(cell).join(' | '));
-      return rows.join('\n');
-    }
-
-    /* ── 话题标签 ── */
-    function cleanTag(raw) {
-      let s = String(raw || '').trim();
-      s = s.replace(/[^\u4e00-\u9fa5A-Za-z0-9]+/g, '');
-      return s.length > 12 ? s.slice(0, 12) : s;
-    }
-
-    function buildTags(headings) {
-      const list = [];
-      const seen = new Set();
-      const add = raw => {
-        const t = cleanTag(raw);
-        if (t && !seen.has(t)) { seen.add(t); list.push('#' + t); }
-      };
-      const source = explicitTags.length ? explicitTags : headings;
-      source.forEach(add);
-      return list.slice(0, 5);
-    }
-
-    /* ── Markdown → 小红书纯文本块 ── */
-    function collectBlocks(tokens, blocks) {
-      for (const t of tokens) {
-        switch (t.type) {
-          case 'heading':
-            if (t.depth === 1) break; // h1 标题去掉
-            {
-              const text = renderInline(t.tokens).trim();
-              if (!text) break;
-              if (/^正文$/i.test(text)) break;
-              headingTags.push(text);
-              blocks.push({ kind: 'text', text: '【' + text + '】' });
-            }
-            break;
-          case 'paragraph': {                 const text = renderInline(t.tokens).trim();                 if (text) blocks.push({ kind: 'text', text }); }
-            break;
-          case 'text':                 { const text = renderInline(t.tokens || [{ type: 'text', text: t.text || '' }]).trim();                 if (text) blocks.push({ kind: 'text', text }); }
-            break;
-          case 'list':                 { const lines = [];                 for (const item of t.items) lines.push(...listItemLines(item, 0));                 if (lines.length) blocks.push({ kind: 'text', text: lines.join('\n') }); }
-            break;
-          case 'blockquote': {
-              const q = renderBlocksToString(t.tokens).trim();
-              blocks.push({ kind: 'text', text: q ? '💡 ' + q : '💡' });
-            }
-            break;
-          case 'code':                 blocks.push({ kind: 'code', text: t.text.replace(/\n+$/, '') }); break;
-          case 'table':                 blocks.push({ kind: 'text', text: renderTable(t) }); break;
-          case 'hr':                 case 'space':                 break;
-          default:                 break;
-        }
-      }
-    }
-
     function convert(md) {
       images = [];
+      explicitTags = [];
       headingTags = [];
+      const tokens = marked.lexer(md);
       const blocks = [];
-      collectBlocks(marked.lexer(md), blocks);
-      return { blocks, images, tags: buildTags(headingTags) };
+      for (const t of tokens) {
+        if (t.type === 'heading') {
+          if (t.depth === 1) continue;
+          const text = renderInline(t.tokens || []);
+          headingTags.push(text);
+          blocks.push({ kind: 'text', text: '**' + text + '**' });
+        } else if (t.type === 'paragraph') {
+          blocks.push({ kind: 'text', text: renderInline(t.tokens || []) });
+        } else if (t.type === 'code') {
+          blocks.push({ kind: 'code', text: t.text });
+        } else if (t.type === 'blockquote') {
+          for (const qt of t.tokens || []) {
+            if (qt.type === 'paragraph') blocks.push({ kind: 'text', text: renderInline(qt.tokens || []) });
+          }
+        } else if (t.type === 'list') {
+          for (const item of t.items) {
+            const lines = listItemLines(item, 0);
+            blocks.push({ kind: 'text', text: lines.join('\n') });
+          }
+        } else if (t.type === 'hr') {
+          blocks.push({ kind: 'text', text: '---' });
+        } else if (t.type === 'html') {
+          const imgM = t.text.match(/<img[^>]+src="([^"]+)"/i);
+          if (imgM) {
+            const idx = images.length;
+            images.push({ src: imgM[1], alt: '' });
+            blocks.push({ kind: 'text', text: IMG_START + idx + IMG_END });
+          }
+        }
+      }
+      const tags = [...new Set([
+        ...explicitTags,
+        ...headingTags.slice(0, 3).map(t => t.replace(/[^\w\u4e00-\u9fff]/g, '')),
+        '内容创作',
+        '效率工具',
+      ].filter(Boolean))].slice(0, 6);
+      return { blocks, images, tags };
     }
 
-    /* ── 预览渲染 ── */
-    function appendTextWithImages(body, text, imagesArr) {
-      const parts = text.split(/(\uE000\d+\uE001)/);
-      for (const p of parts) {
-        const m = p.match(/^\uE000(\d+)\uE001$/);
-        if (m) {
-          const img = imagesArr[+m[1]];
-          const el = document.createElement('img');
-          el.src = img ? img.src : '';
-          el.alt = img ? img.alt : '';
-          el.title = img ? img.alt : '';
-          body.appendChild(el);
-        } else if (p) {
-          body.appendChild(document.createTextNode(p));
+    function appendTextWithImages(parent, text, images) {
+      const parts = text.split(IMG_RE);
+      for (let i = 0; i < parts.length; i++) {
+        if (i % 2 === 0) {
+          if (parts[i]) parent.appendChild(document.createTextNode(parts[i]));
+        } else {
+          const idx = parseInt(parts[i]);
+          const imgData = images[idx];
+          if (imgData) {
+            const img = document.createElement('img');
+            img.src = imgData.src;
+            img.alt = imgData.alt || '';
+            img.style.cssText = 'max-width:100%;height:auto;display:block;margin:8px 0;border-radius:6px;';
+            parent.appendChild(img);
+          }
         }
       }
     }
 
     function buildStatus(count) {
-      if (count < 800) return { cls: 'warn', text: '偏短 · 建议补至 800 字' };
-      if (count <= 1000) return { cls: 'ok', text: '✓ 符合 800–1000 字推荐' };
-      return { cls: 'over', text: '超出 1000 字 · 建议精简' };
+      if (count < 200) return { cls: 'short', text: '偏短，建议 800–1000 字' };
+      if (count < 600) return { cls: 'warn', text: '建议扩充至 800–1000 字' };
+      if (count <= 1000) return { cls: 'ok', text: '字数适中' };
+      return { cls: 'long', text: '偏长，可精简至 1000 字以内' };
     }
 
     function updateStats(count) {
       const s = buildStatus(count);
-      stats.innerHTML = '<span class="stat-num">' + count + '</span> 字' +
+      stats.innerHTML = '<span><span class="stat-num">' + count + '</span> 字</span>' +
         '<span class="stat-status ' + s.cls + '">' + s.text + '</span>';
     }
 
@@ -435,10 +380,8 @@
         return;
       }
 
-      // 通过 MdFilter 过滤 —— 自动修复格式问题
       const filterResult = MdFilter.process(rawMd, { convertSVG: false });
 
-      // 若正文包含一级标题，以它作为当前文档标题
       const h1m = filterResult.md.match(/^#\s+(.+)$/m);
       if (h1m) {
         docTitle = h1m[1].trim();
@@ -447,11 +390,9 @@
 
       const result = convert(filterResult.md);
 
-      // 标题前置为【标题】
       let blocks = result.blocks;
       if (docTitle) blocks = [{ kind: 'text', text: '【' + docTitle + '】' }].concat(blocks);
 
-      // 组装预览卡片
       preview.innerHTML = '';
       const card = document.createElement('div');
       card.className = 'xhs-card';
@@ -503,7 +444,6 @@
 
     input.addEventListener('input', render);
 
-    /* ── 图片 base64 内联 ── */
     function toBase64(src) {
       return new Promise((resolve, reject) => {
         const img = new Image();
@@ -535,12 +475,10 @@
       preview.querySelectorAll('img:not([data-decorated])').forEach(img => {
         img.setAttribute('data-decorated', '1');
         const alt = img.getAttribute('alt') || '';
-
         const wrapper = document.createElement('div');
         wrapper.className = 'img-wrapper';
         img.parentNode.insertBefore(wrapper, img);
         wrapper.appendChild(img);
-
         if (alt) {
           const leftOverlay = document.createElement('div');
           leftOverlay.className = 'img-overlay-left';
@@ -559,8 +497,6 @@
           leftOverlay.appendChild(copyAltBtn);
           wrapper.appendChild(leftOverlay);
         }
-
-        // 右下：复制图片本身（等同于浏览器右键「复制图片」）
         const copyImgBtn = document.createElement('button');
         copyImgBtn.className = 'img-copy-b64-btn';
         copyImgBtn.textContent = '复制图片';
@@ -583,139 +519,70 @@
       });
     }
 
-    /* ── 复制富文本（text/html + text/plain 双格式） ── */
     function escapeHtml(s) {
       return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
-    function escapeAttr(s) {
-      return escapeHtml(s).replace(/"/g, '&quot;');
-    }
-
-    function replaceImgPlaceholders(text, imagesArr) {
-      return text.replace(IMG_RE, (_, i) => {
-        const img = imagesArr[+i];
-        return img && img.alt ? '📷 ' + img.alt : '📷 图片';
-      });
-    }
-
-    function buildPlainText(result) {
-      const parts = result.blocks.map(b => b.kind === 'code' ? b.text : replaceImgPlaceholders(b.text, result.images));
-      let text = parts.join('\n\n');
-      if (result.tags.length) text += '\n\n' + result.tags.join(' ');
-      return text;
-    }
-
-    function buildHtml(result) {
-      const parts = result.blocks.map(b => {
-        if (b.kind === 'code') {
-          return '<pre style="white-space:pre-wrap;background:#f6f7f9;border-radius:10px;padding:12px 14px;font-family:Menlo,Consolas,monospace;font-size:13px;line-height:1.6;color:#4b5563;overflow-x:auto;">' + escapeHtml(b.text) + '</pre>';
-        }
-        let t = escapeHtml(b.text);
-        t = t.replace(IMG_RE, (_, i) => {
-          const img = result.images[+i];
-          if (!img) return '';
-          return '<img src="' + escapeAttr(img.src) + '" alt="' + escapeAttr(img.alt) + '" style="max-width:100%;display:block;margin:8px 0;border-radius:10px;">';
-        });
-        t = t.replace(/\n/g, '<br>');
-        return '<div style="white-space:pre-wrap;">' + t + '</div>';
-      });
-      let html = '<div style="font-family:-apple-system,BlinkMacSystemFont,\'PingFang SC\',\'Microsoft YaHei\',sans-serif;font-size:16px;line-height:1.9;color:#2b2326;">' + parts.join('<br><br>') + '</div>';
-      if (result.tags.length) {
-        html += '<div style="color:#ff2e63;font-weight:600;margin-top:12px;">' + escapeHtml(result.tags.join(' ')) + '</div>';
-      }
-      return html;
-    }
 
     async function copyRichText() {
-      const rawMd = input.value.trim();
-      if (!rawMd) {
-        alert('请先粘贴 Markdown 内容');
-        return;
-      }
-      const h1m = rawMd.match(/^#\s+(.+)$/m);
-      const title = h1m ? h1m[1].trim() : docTitle;
-      const result = convert(rawMd);
-      if (title) result.blocks = [{ kind: 'text', text: '【' + title + '】' }].concat(result.blocks);
-
-      await inlineImages();
-
-      const plain = buildPlainText(result);
-      const html = buildHtml(result);
+      const md = input.value.trim();
+      if (!md) { alert('请先粘贴 Markdown 内容'); return; }
+      const previewText = (() => {
+        const card = preview.querySelector('.xhs-card');
+        if (!card) return md;
+        const clone = card.cloneNode(true);
+        clone.querySelectorAll('.img-wrapper').forEach(w => {
+          const img = w.querySelector('img');
+          if (img) w.replaceWith(img);
+        });
+        clone.querySelectorAll('[data-decorated]').forEach(el => el.removeAttribute('data-decorated'));
+        return clone.textContent || md;
+      })();
       const btn = document.getElementById('copy-btn');
-
       try {
         await navigator.clipboard.write([
           new ClipboardItem({
-            'text/html': new Blob([html], { type: 'text/html' }),
-            'text/plain': new Blob([plain], { type: 'text/plain' }),
+            'text/html': new Blob(['<div style="font-family:-apple-system,BlinkMacSystemFont,\'PingFang SC\',\'Microsoft YaHei\',sans-serif;font-size:14px;line-height:1.75;color:#1a1a2e;white-space:pre-wrap;word-break:break-word;">' + escapeHtml(previewText) + '</div>'], { type: 'text/html' }),
+            'text/plain': new Blob([previewText], { type: 'text/plain' }),
           })
         ]);
         btn.textContent = '✓ 已复制，去小红书粘贴';
         btn.classList.add('success');
         setTimeout(() => {
-          btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="9" y="9" width="13" height="13" rx="2"/>
-            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
-          </svg> 复制富文本`;
+          btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg> 复制富文本';
           btn.classList.remove('success');
         }, 3000);
-      } catch (err) {
-        // 降级：复制纯文本
-        await navigator.clipboard.writeText(plain);
+      } catch (_) {
+        await navigator.clipboard.writeText(previewText);
         alert('富文本复制不支持，已复制纯文本');
       }
     }
 
-    /* ── 读取草稿 ── */
     async function loadDraft() {
       try {
         const res = await fetch('./draft.md');
         if (!res.ok) return;
         const text = await res.text();
-
-        let title = '';
-        explicitTags = [];
-
-        // 从封面配置 JSON 块读取标题与标签
         const jsonM = text.match(/```json\s*([\s\S]*?)```/);
         if (jsonM) {
-          let parsed = null;
-          const rawJson = jsonM[1].trim();
-          try { parsed = JSON.parse('{' + rawJson.replace(/,\s*$/, '') + '}'); }
-          catch (_) { try { parsed = JSON.parse(rawJson); } catch (_) { } }
-          if (parsed) {
-            title = (parsed.changes && parsed.changes.content && parsed.changes.content.title) || parsed.title || '';
-            const tags = parsed.tags || parsed.keywords || (parsed.changes && parsed.changes.content && parsed.changes.content.tags);
-            if (Array.isArray(tags)) explicitTags = tags.map(String);
-            else if (typeof tags === 'string') explicitTags = tags.split(/[,，、\s]+/).filter(Boolean);
-          }
+          try {
+            const parsed = JSON.parse('{' + jsonM[1].trim().replace(/,$/, '') + '}');
+            if (parsed.changes?.content?.title) {
+              docTitle = parsed.changes.content.title;
+              updateTitleDisplay(docTitle);
+            }
+          } catch (_) {}
         }
-        if (!title) {
-          const m = text.match(/^#\s+(.+)$/m);
-          title = m ? m[1].trim() : '';
-        }
-
-        docTitle = title;
-        updateTitleDisplay(title);
-
-        // 提取正文：优先「## 正文」段，去掉末尾 footer
-        let body;
-        const bodyM = text.match(/^##\s*正文\s*\n([\s\S]*)/m);
-        if (bodyM) {
-          body = bodyM[1].replace(/\r?\n---\r?\n\*运行[\s\S]*$/, '').trimEnd();
-        } else {
-          body = text.replace(/```json[\s\S]*?```/, '').trim();
-        }
+        const m = text.match(/^## 正文\s*\n([\s\S]*)/m);
+        const body = m
+          ? m[1].replace(/\n---\n\*运行[\s\S]*$/, '').trimEnd()
+          : text.trimEnd();
         input.value = body;
-      } catch (_) {
-        // file:// 协议下 fetch 被拦截，保留 textarea 现有内容
-      }
-      render();
+      } catch (_) {}
+      await render();
     }
 
     loadDraft();
 
-    /* ── 滚动同步 ── */
     let syncScroll = true;
     let syncing = false;
 
@@ -740,7 +607,5 @@
       syncing = false;
     });
   </script>
-
 </body>
-
 </html>

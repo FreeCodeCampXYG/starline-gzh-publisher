@@ -25,6 +25,8 @@ class BuildSiteTests(unittest.TestCase):
             self.assertIn("Source / 编辑源文", index)
             self.assertIn("复制当前 HTML", index)
             self.assertIn("data-wechat-root", index)
+            self.assertIn("ClipboardItem", index)
+            self.assertIn("text/html", index)
             self.assertIn("实时预览", index)
             self.assertTrue((out / "articles" / "one" / "wechat.html").exists())
             self.assertTrue((out / "articles" / "one" / "xiaohongshu.html").exists())

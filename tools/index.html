@@ -2,697 +2,1462 @@
 <html lang="zh">
 <!--
 ╔══════════════════════════════════════════════════════════════════════════╗
-║  Starline Content Studio 首页                                           ║
+║  Starline Content Studio — 数字杂志风格首页                            ║
 ║  ─────────────────────────────────────────────────────────────────────  ║
-║  一个源内容，多种输出。                                                 ║
-║  按照 Markdown 格式写作，剩下的交给工具。                              ║
+║  设计理念：                                                             ║
+║  以「数字杂志」为设计语言，融合瑞士平面设计的严谨网格                  ║
+║  与东方美学的留白气韵。大字重对比、玻璃拟态卡片、                      ║
+║  细腻的微交互相结合，营造一种沉静而有力量的高级感。                    ║
 ║                                                                        ║
-║  工具列表：                                                             ║
-║    1. 封面生成器   — 快速生成文章封面图                                ║
-║    2. 二维码工具   — 生成与解析二维码                                  ║
-║    3. MD→微信排版  — 转微信公众号富文本，44 种主题                     ║
-║    4. MD→小红书    — 转小红书图文格式                                  ║
-║    5. MD→X 排版    — 转 X（Twitter）长文格式                           ║
-║    6. 简历排版（即将上线）                                              ║
+║  字体层次：                                                             ║
+║  标题 → Noto Serif SC（衬线，书卷气）                                  ║
+║  正文 → Inter（无衬线，现代感）                                        ║
+║  代码 → JetBrains Mono（等宽，技术感）                                 ║
+║                                                                        ║
+║  配色：                                                                 ║
+║  主色 → 午夜蓝 #0a1628 → #1a365d 渐变                                ║
+║  强调 → 琥珀金 #d4a855                                                ║
+║  文字 → 象牙白 #f8f6f0 → 深灰 #1a1a1a                                ║
 ╚══════════════════════════════════════════════════════════════════════════╝
 -->
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Starline Content Studio</title>
+  <title>Starline Content Studio — 一个源内容，多种输出</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
-  <style>
-    /* ============================================================
-       全局重置
-       ============================================================ */
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- 衬线体：Noto Serif SC — 用于标题，营造书卷气 -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- 无衬线体：Inter — 用于正文，干净现代 -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- 等宽体：JetBrains Mono — 用于代码 -->
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
+  <style>
+    /*
+    ┌────────────────────────────────────────────────────────────────┐
+    │  0. CSS 自定义属性                                              │
+    └────────────────────────────────────────────────────────────────┘
+    */
     :root {
-      --bg: #f5f6f8;
-      --card-bg: #fff;
-      --border: #e5e7eb;
-      --text-primary: #111;
-      --text-secondary: #6b7280;
-      --text-muted: #9ca3af;
-      --accent: #2563eb;
-      --accent-light: #93c5fd;
-      --radius: 12px;
-      --shadow: 0 1px 3px rgba(0,0,0,0.04);
+      /* 色彩系统 — 午夜蓝 + 琥珀金 */
+      --color-bg: #0b1219;
+      --color-bg-alt: #0f1a26;
+      --color-surface: rgba(255, 255, 255, 0.04);
+      --color-surface-hover: rgba(255, 255, 255, 0.08);
+      --color-border: rgba(255, 255, 255, 0.08);
+      --color-border-light: rgba(255, 255, 255, 0.04);
+      --color-primary: #1a4972;
+      --color-primary-light: #2d6da8;
+      --color-accent: #d4a855;
+      --color-accent-soft: rgba(212, 168, 85, 0.15);
+      --color-accent-glow: rgba(212, 168, 85, 0.08);
+      --color-text-primary: #f0ede8;
+      --color-text-secondary: rgba(240, 237, 232, 0.6);
+      --color-text-muted: rgba(240, 237, 232, 0.35);
+      --color-text-accent: #d4a855;
+      --color-white: #ffffff;
+
+      /* 字体 */
+      --font-serif: 'Noto Serif SC', 'Source Han Serif SC', serif;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+      /* 间距 */
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 32px;
+      --space-2xl: 48px;
+      --space-3xl: 64px;
+      --space-4xl: 96px;
+
+      /* 圆角 */
+      --radius-sm: 6px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+
+      /* 阴影 */
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.25);
+      --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.35);
+      --shadow-glow: 0 0 40px rgba(212, 168, 85, 0.06);
+    }
+
+    /*
+    ┌────────────────────────────────────────────────────────────────┐
+    │  1. 全局重置 & 基础样式                                         │
+    └────────────────────────────────────────────────────────────────┘
+    */
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
     body {
       min-height: 100vh;
-      background: var(--bg);
-      font-family: 'Noto Serif SC', serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      -webkit-font-smoothing: antialiased;
+      background: var(--color-bg);
+      color: var(--color-text-primary);
+      font-family: var(--font-sans);
+      font-weight: 400;
+      line-height: 1.6;
+      overflow-x: hidden;
     }
 
-    /* ============================================================
-       顶栏
-       ============================================================ */
-    header {
-      width: 100%;
-      background: var(--card-bg);
-      border-bottom: 1px solid var(--border);
-      padding: 0 32px;
-      height: 56px;
+    /* 背景纹理 — 微妙的噪点效果 */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* 渐变背景光晕 */
+    .bg-glow {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .bg-glow-1 {
+      top: -20%;
+      right: -10%;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(26, 73, 114, 0.3), transparent 70%);
+    }
+    .bg-glow-2 {
+      bottom: -10%;
+      left: -5%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(212, 168, 85, 0.08), transparent 70%);
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+
+    /*
+    ┌────────────────────────────────────────────────────────────────┐
+    │  2. 导航栏                                                      │
+    └────────────────────────────────────────────────────────────────┘
+    */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 0 var(--space-xl);
+      height: 64px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      background: rgba(11, 18, 25, 0.8);
+      backdrop-filter: blur(20px) saturate(1.5);
+      -webkit-backdrop-filter: blur(20px) saturate(1.5);
+      border-bottom: 1px solid var(--color-border);
+      transition: background 0.3s;
+    }
+
+    .navbar-logo {
+      display: flex;
+      align-items: center;
       gap: 10px;
-      position: sticky;
-      top: 0;
-      z-index: 50;
     }
 
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .logo-icon {
-      width: 28px;
-      height: 28px;
-      background: linear-gradient(135deg, #1e3a8a, #2563eb);
-      border-radius: 7px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      font-size: 14px;
-      font-weight: 700;
-      flex-shrink: 0;
-    }
-
-    .logo-text {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--text-primary);
-      letter-spacing: 0.02em;
-    }
-
-    .github-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 12px;
-      border: 1px solid var(--border);
+    .navbar-logo-icon {
+      width: 32px;
+      height: 32px;
       border-radius: 8px;
-      background: var(--card-bg);
-      color: var(--text-primary);
-      font-size: 13px;
-      font-family: sans-serif;
-      font-weight: 600;
-      text-decoration: none;
-      transition: border-color 0.15s, box-shadow 0.15s;
-    }
-    .github-btn:hover {
-      border-color: var(--text-primary);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    }
-    .github-btn svg { flex: none; }
-
-    .github-star {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding-left: 8px;
-      border-left: 1px solid var(--border);
-      color: var(--text-secondary);
-      font-size: 12px;
-    }
-    .github-star.hidden { display: none; }
-
-    .header-actions {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    /* ============================================================
-       Hero 区域
-       ============================================================ */
-    .hero {
-      padding: 64px 32px 32px;
-      text-align: center;
-      max-width: 720px;
-    }
-
-    .hero h1 {
-      font-size: 32px;
-      font-weight: 700;
-      color: var(--text-primary);
-      letter-spacing: -0.01em;
-      margin-bottom: 12px;
-      line-height: 1.3;
-    }
-
-    .hero h1 span {
-      background: linear-gradient(135deg, #1e3a8a, #2563eb);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .hero p {
-      font-size: 14px;
-      color: var(--text-secondary);
-      line-height: 1.8;
-      font-family: sans-serif;
-      max-width: 520px;
-      margin: 0 auto;
-    }
-
-    /* ============================================================
-       工作流指引
-       ============================================================ */
-    .workflow {
-      width: 100%;
-      max-width: 720px;
-      padding: 0 32px 32px;
-    }
-
-    .workflow-steps {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px 24px;
-    }
-
-    @media (max-width: 600px) {
-      .workflow-steps { grid-template-columns: 1fr; }
-    }
-
-    .workflow-step {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-    }
-
-    .workflow-step-num {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background: #eef2ff;
-      color: var(--accent);
+      background: linear-gradient(135deg, #1a4972, #2d6da8);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 11px;
+      color: var(--color-white);
+      font-family: var(--font-serif);
+      font-size: 16px;
       font-weight: 700;
-      font-family: sans-serif;
       flex-shrink: 0;
-      margin-top: 1px;
-    }
-
-    .workflow-step-body {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .workflow-step-title {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin-bottom: 3px;
-    }
-
-    .workflow-step-desc {
-      font-size: 11px;
-      color: var(--text-muted);
-      line-height: 1.5;
-      font-family: sans-serif;
-    }
-
-    /* ============================================================
-       工具网格
-       ============================================================ */
-    .section-title {
-      width: 100%;
-      max-width: 720px;
-      padding: 8px 32px 16px;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text-muted);
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      font-family: sans-serif;
-    }
-
-    .grid {
-      width: 100%;
-      max-width: 720px;
-      padding: 0 32px 48px;
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
-    }
-
-    @media (max-width: 480px) {
-      .grid { grid-template-columns: 1fr; }
-    }
-
-    /* ── 卡片 ── */
-    .card {
-      background: var(--card-bg);
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius);
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      text-decoration: none;
       position: relative;
       overflow: hidden;
     }
+    .navbar-logo-icon::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
 
-    a.card {
-      transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+    .navbar-logo-text {
+      font-family: var(--font-serif);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      letter-spacing: 0.03em;
+    }
+    .navbar-logo-text span {
+      color: var(--color-text-accent);
+    }
+
+    .navbar-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    /* 导航按钮 */
+    .nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 100px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-text-secondary);
+      background: transparent;
+      border: 1px solid var(--color-border);
       cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+      white-space: nowrap;
+    }
+    .nav-btn:hover {
+      color: var(--color-text-primary);
+      background: var(--color-surface-hover);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+    .nav-btn svg {
+      flex-shrink: 0;
     }
 
-    a.card:hover {
-      border-color: var(--accent-light);
-      box-shadow: 0 4px 16px rgba(37,99,235,0.08);
-      transform: translateY(-2px);
+    .nav-btn-primary {
+      background: var(--color-accent-soft);
+      border-color: rgba(212, 168, 85, 0.3);
+      color: var(--color-text-accent);
+    }
+    .nav-btn-primary:hover {
+      background: rgba(212, 168, 85, 0.2);
+      border-color: rgba(212, 168, 85, 0.5);
+      box-shadow: 0 0 20px rgba(212, 168, 85, 0.1);
     }
 
-    .card.disabled {
-      opacity: 0.48;
-      cursor: not-allowed;
+    .github-star-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: var(--color-text-muted);
+    }
+    .github-star-badge.hidden {
+      display: none;
     }
 
-    /* ── 卡片图标 ── */
-    .card-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: 11px;
+    /*
+    ┌────────────────────────────────────────────────────────────────┐
+    │  3. Hero 区域 — 全屏沉浸式开篇                                  │
+    └────────────────────────────────────────────────────────────────┘
+    */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 120px var(--space-xl) var(--space-3xl);
+      text-align: center;
+      z-index: 1;
+    }
+
+    /* Hero 装饰性背景网格 */
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+      -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* Hero 顶部标签 */
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 100px;
+      background: rgba(212, 168, 85, 0.1);
+      border: 1px solid rgba(212, 168, 85, 0.2);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--color-text-accent);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: var(--space-xl);
+      animation: fadeInUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    .hero-badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--color-accent);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .hero h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(2.4rem, 6vw, 4.5rem);
+      font-weight: 700;
+      line-height: 1.15;
+      color: var(--color-text-primary);
+      max-width: 800px;
+      margin: 0 auto var(--space-lg);
+      letter-spacing: -0.02em;
+      animation: fadeInUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+    }
+
+    .hero h1 .highlight {
+      background: linear-gradient(135deg, #d4a855, #f0d68a, #d4a855);
+      background-size: 200% 200%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 4s ease-in-out infinite;
+    }
+    @keyframes shimmer {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    .hero p {
+      font-family: var(--font-sans);
+      font-size: clamp(1rem, 1.8vw, 1.2rem);
+      font-weight: 300;
+      color: var(--color-text-secondary);
+      max-width: 540px;
+      margin: 0 auto var(--space-2xl);
+      line-height: 1.7;
+      animation: fadeInUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+    }
+
+    .hero-actions {
       display: flex;
       align-items: center;
       justify-content: center;
-      flex: none;
-    }
-
-    .icon-blue   { background: linear-gradient(135deg, #1e3a8a, #2563eb); }
-    .icon-violet { background: linear-gradient(135deg, #4c1d95, #7c3aed); }
-    .icon-slate  { background: linear-gradient(135deg, #334155, #64748b); }
-    .icon-green  { background: linear-gradient(135deg, #065f46, #059669); }
-    .icon-rose   { background: linear-gradient(135deg, #9d174d, #ec4899); }
-    .icon-orange { background: linear-gradient(135deg, #9a3412, #ea580c); }
-    .icon-teal   { background: linear-gradient(135deg, #0f766e, #14b8a6); }
-
-    /* ── 卡片内容 ── */
-    .card-body { display: flex; flex-direction: column; gap: 5px; }
-
-    .card-name {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--text-primary);
-      letter-spacing: 0.01em;
-    }
-
-    .card-desc {
-      font-size: 12px;
-      color: var(--text-secondary);
-      line-height: 1.6;
-      font-family: sans-serif;
-    }
-
-    .card-features {
-      display: flex;
+      gap: var(--space-md);
       flex-wrap: wrap;
-      gap: 4px;
-      margin-top: 2px;
+      animation: fadeInUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
     }
 
-    .card-feature {
-      font-size: 10px;
-      font-family: sans-serif;
-      color: var(--text-muted);
-      background: #f3f4f6;
-      padding: 2px 6px;
-      border-radius: 4px;
-      white-space: nowrap;
-    }
-
-    .card-tag {
+    .hero-btn {
       display: inline-flex;
       align-items: center;
+      gap: 10px;
+      padding: 14px 32px;
+      border-radius: 100px;
+      font-family: var(--font-sans);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+      border: none;
+      white-space: nowrap;
+    }
+    .hero-btn-primary {
+      background: linear-gradient(135deg, #d4a855, #c4973f);
+      color: #0b1219;
+      box-shadow: 0 4px 20px rgba(212, 168, 85, 0.25);
+    }
+    .hero-btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(212, 168, 85, 0.35);
+    }
+    .hero-btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .hero-btn-secondary {
+      background: transparent;
+      color: var(--color-text-primary);
+      border: 1px solid var(--color-border);
+    }
+    .hero-btn-secondary:hover {
+      background: var(--color-surface-hover);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+
+    /* 滚动指示器 */
+    .scroll-indicator {
+      position: absolute;
+      bottom: var(--space-xl);
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      color: var(--color-text-muted);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      animation: fadeInUp 0.8s 0.6s both;
+    }
+    .scroll-indicator-line {
+      width: 1px;
+      height: 40px;
+      background: linear-gradient(to bottom, var(--color-text-muted), transparent);
+      animation: scrollPulse 2s ease-in-out infinite;
+    }
+    @keyframes scrollPulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 0.2; }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /*
+    ┌────────────────────────────────────────────────────────────────┐
+    │  4. 工作流 — 三步骤指引                                         │
+    └────────────────────────────────────────────────────────────────┘
+    */
+    .section {
+      position: relative;
+      z-index: 1;
+      padding: 0 var(--space-xl);
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: var(--space-3xl);
+    }
+
+    .section-label {
+      display: inline-block;
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--color-text-accent);
+      margin-bottom: var(--space-md);
+      padding: 4px 12px;
+      border-radius: 100px;
+      background: var(--color-accent-soft);
+      border: 1px solid rgba(212, 168, 85, 0.15);
+    }
+
+    .section-title {
+      font-family: var(--font-serif);
+      font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      line-height: 1.3;
+      margin-bottom: var(--space-sm);
+    }
+
+    .section-subtitle {
+      font-family: var(--font-sans);
+      font-size: 1rem;
+      color: var(--color-text-secondary);
+      font-weight: 300;
+      max-width: 480px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    .workflow-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-lg);
+      margin-bottom: var(--space-4xl);
+    }
+
+    @media (max-width: 768px) {
+      .workflow-grid {
+        grid-template-columns: 1fr;
+        gap: var(--space-lg);
+      }
+    }
+
+    .workflow-card {
+      position: relative;
+      padding: var(--space-xl);
+      border-radius: var(--radius-lg);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      backdrop-filter: blur(10px);
+      transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+      overflow: hidden;
+    }
+    .workflow-card:hover {
+      background: var(--color-surface-hover);
+      border-color: rgba(255, 255, 255, 0.12);
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-glow);
+    }
+
+    .workflow-card-number {
+      font-family: var(--font-sans);
+      font-size: 48px;
+      font-weight: 800;
+      line-height: 1;
+      color: rgba(212, 168, 85, 0.1);
+      margin-bottom: var(--space-lg);
+      letter-spacing: -0.04em;
+    }
+
+    .workflow-card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-md);
+      background: var(--color-accent-soft);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text-accent);
+      margin-bottom: var(--space-md);
+    }
+
+    .workflow-card-title {
+      font-family: var(--font-serif);
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-sm);
+    }
+
+    .workflow-card-desc {
+      font-family: var(--font-sans);
+      font-size: 0.9rem;
+      color: var(--color-text-secondary);
+      line-height: 1.7;
+      font-weight: 300;
+    }
+
+    /* 步骤之间的连接线 */
+    .workflow-connector {
+      display: none;
+    }
+    @media (min-width: 769px) {
+      .workflow-connector {
+        display: block;
+        position: absolute;
+        top: 50%;
+        right: -24px;
+        width: 24px;
+        height: 1px;
+        background: linear-gradient(to right, var(--color-border), transparent);
+      }
+      .workflow-card {
+        position: relative;
+      }
+    }
+
+    /*
+    ┌────────────────────────────────────────────────────────────────┐
+    │  5. 工具集 — 玻璃拟态卡片网格                                   │
+    └────────────────────────────────────────────────────────────────┘
+    */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-lg);
+      margin-bottom: var(--space-4xl);
+    }
+
+    @media (max-width: 900px) {
+      .tools-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (max-width: 560px) {
+      .tools-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .tool-card {
+      position: relative;
+      padding: var(--space-xl);
+      border-radius: var(--radius-lg);
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.04),
+        rgba(255, 255, 255, 0.02)
+      );
+      border: 1px solid var(--color-border);
+      backdrop-filter: blur(10px);
+      transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+      cursor: pointer;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+
+    .tool-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+    .tool-card:hover::before {
+      opacity: 1;
+    }
+
+    .tool-card:hover {
+      border-color: rgba(212, 168, 85, 0.25);
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.06),
+        rgba(255, 255, 255, 0.03)
+      );
+      transform: translateY(-4px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), var(--shadow-glow);
+    }
+
+    .tool-card.disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    .tool-card.disabled::before {
+      display: none;
+    }
+
+    .tool-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-sm);
+    }
+
+    .tool-card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .tool-card-icon svg {
+      width: 20px;
+      height: 20px;
+      color: var(--color-white);
+      position: relative;
+      z-index: 1;
+    }
+    .tool-card-icon::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .icon-blue { background: linear-gradient(135deg, #1a4972, #2d6da8); }
+    .icon-violet { background: linear-gradient(135deg, #4c1d95, #7c3aed); }
+    .icon-slate { background: linear-gradient(135deg, #334155, #64748b); }
+    .icon-rose { background: linear-gradient(135deg, #9d174d, #ec4899); }
+    .icon-orange { background: linear-gradient(135deg, #9a3412, #ea580c); }
+    .icon-teal { background: linear-gradient(135deg, #0f766e, #14b8a6); }
+
+    .tool-card-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 100px;
       font-size: 10px;
-      font-family: sans-serif;
       font-weight: 600;
       letter-spacing: 0.06em;
       text-transform: uppercase;
-      padding: 2px 8px;
-      border-radius: 20px;
-      width: fit-content;
+      font-family: var(--font-sans);
+      flex-shrink: 0;
+    }
+    .tag-live {
+      background: rgba(22, 163, 74, 0.15);
+      color: #4ade80;
+      border: 1px solid rgba(22, 163, 74, 0.2);
+    }
+    .tag-soon {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--color-text-muted);
+      border: 1px solid var(--color-border);
     }
 
-    .tag-live    { background: #dcfce7; color: #16a34a; }
-    .tag-soon    { background: #f3f4f6; color: var(--text-muted); }
-
-    /* ============================================================
-       快速开始区域
-       ============================================================ */
-    .quickstart {
-      width: 100%;
-      max-width: 720px;
-      padding: 0 32px 48px;
-    }
-
-    .quickstart-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 28px;
-    }
-
-    .quickstart-title {
-      font-size: 15px;
+    .tool-card-name {
+      font-family: var(--font-serif);
+      font-size: 1.1rem;
       font-weight: 700;
-      color: var(--text-primary);
-      margin-bottom: 16px;
+      color: var(--color-text-primary);
+      line-height: 1.3;
     }
 
-    .quickstart-code {
-      background: #1e293b;
-      border-radius: 8px;
-      padding: 16px 20px;
-      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    .tool-card-desc {
+      font-family: var(--font-sans);
+      font-size: 0.85rem;
+      color: var(--color-text-secondary);
+      line-height: 1.7;
+      font-weight: 300;
+      flex: 1;
+    }
+
+    .tool-card-features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: auto;
+    }
+    .tool-card-feature {
+      font-size: 10px;
+      font-family: var(--font-sans);
+      font-weight: 500;
+      color: rgba(240, 237, 232, 0.5);
+      background: rgba(255, 255, 255, 0.04);
+      padding: 3px 10px;
+      border-radius: 100px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      white-space: nowrap;
+    }
+
+    /* 卡片悬停时的光晕跟随 */
+    .tool-card-glow {
+      position: absolute;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(212, 168, 85, 0.06), transparent 70%);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+      transform: translate(-50%, -50%);
+    }
+    .tool-card:hover .tool-card-glow {
+      opacity: 1;
+    }
+
+    /*
+    ┌────────────────────────────────────────────────────────────────┐
+    │  6. 快速开始 — 代码展示区域                                     │
+    └────────────────────────────────────────────────────────────────┘
+    */
+    .quickstart-section {
+      margin-bottom: var(--space-4xl);
+    }
+
+    .quickstart-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-xl);
+    }
+
+    @media (max-width: 768px) {
+      .quickstart-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .quickstart-info {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+      justify-content: center;
+    }
+
+    .quickstart-info-title {
+      font-family: var(--font-serif);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      line-height: 1.3;
+    }
+
+    .quickstart-info-desc {
+      font-family: var(--font-sans);
+      font-size: 0.95rem;
+      color: var(--color-text-secondary);
+      line-height: 1.8;
+      font-weight: 300;
+    }
+
+    .quickstart-info-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+    .quickstart-info-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-md);
+      font-family: var(--font-sans);
+      font-size: 0.9rem;
+      color: var(--color-text-secondary);
+      line-height: 1.6;
+      font-weight: 300;
+    }
+    .quickstart-info-list li .check {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--color-accent-soft);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .quickstart-info-list li .check svg {
+      width: 10px;
+      height: 10px;
+      color: var(--color-accent);
+    }
+
+    .quickstart-code-block {
+      background: #0d1117;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--color-border);
+      overflow: hidden;
+    }
+
+    .quickstart-code-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      background: rgba(0, 0, 0, 0.2);
+    }
+    .quickstart-code-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .quickstart-code-dot:nth-child(1) { background: #ff5f56; }
+    .quickstart-code-dot:nth-child(2) { background: #ffbd2e; }
+    .quickstart-code-dot:nth-child(3) { background: #27c93f; }
+
+    .quickstart-code-body {
+      padding: 20px 24px;
+      font-family: var(--font-mono);
       font-size: 13px;
       line-height: 1.8;
       color: #e2e8f0;
       overflow-x: auto;
-      margin-bottom: 16px;
       white-space: pre-wrap;
     }
+    .quickstart-code-body .comment { color: #636e7b; }
+    .quickstart-code-body .keyword { color: #7dd3fc; }
+    .quickstart-code-body .string { color: #a7f3d0; }
+    .quickstart-code-body .number { color: #fbbf24; }
+    .quickstart-code-body .operator { color: #d4a855; }
 
-    .quickstart-code .comment { color: #64748b; }
-    .quickstart-code .keyword { color: #93c5fd; }
-    .quickstart-code .string { color: #a7f3d0; }
-
-    .quickstart-hint {
-      font-size: 12px;
-      color: var(--text-muted);
-      line-height: 1.6;
-      font-family: sans-serif;
+    /*
+    ┌────────────────────────────────────────────────────────────────┐
+    │  7. 特性展示 — 数据指标                                         │
+    └────────────────────────────────────────────────────────────────┘
+    */
+    .stats-section {
+      margin-bottom: var(--space-4xl);
     }
 
-    /* ============================================================
-       底部
-       ============================================================ */
-    footer {
-      margin-top: auto;
-      padding: 24px 32px;
-      font-size: 11px;
-      font-family: sans-serif;
-      color: var(--text-muted);
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-lg);
+    }
+
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (max-width: 400px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .stat-card {
       text-align: center;
-      letter-spacing: 0.04em;
-      width: 100%;
-      border-top: 1px solid var(--border);
+      padding: var(--space-xl);
+      border-radius: var(--radius-lg);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      transition: all 0.3s;
+    }
+    .stat-card:hover {
+      background: var(--color-surface-hover);
+      transform: translateY(-2px);
     }
 
-    footer a { color: var(--text-muted); text-decoration: none; }
-    footer a:hover { color: var(--text-secondary); }
+    .stat-number {
+      font-family: var(--font-sans);
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--color-text-accent);
+      line-height: 1.2;
+      margin-bottom: var(--space-xs);
+    }
 
+    .stat-label {
+      font-family: var(--font-sans);
+      font-size: 0.8rem;
+      color: var(--color-text-muted);
+      font-weight: 400;
+      letter-spacing: 0.04em;
+    }
+
+    /*
+    ┌────────────────────────────────────────────────────────────────┐
+    │  8. 底部导航 & 页脚                                             │
+    └────────────────────────────────────────────────────────────────┘
+    */
+    .footer {
+      position: relative;
+      z-index: 1;
+      padding: var(--space-3xl) var(--space-xl) var(--space-xl);
+      border-top: 1px solid var(--color-border);
+      text-align: center;
+    }
+
+    .footer-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .footer-brand {
+      font-family: var(--font-serif);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-sm);
+    }
+    .footer-brand span {
+      color: var(--color-text-accent);
+    }
+
+    .footer-desc {
+      font-family: var(--font-sans);
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
+      font-weight: 300;
+      margin-bottom: var(--space-lg);
+    }
+
+    .footer-links {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-lg);
+      flex-wrap: wrap;
+    }
+    .footer-links a {
+      font-family: var(--font-sans);
+      font-size: 0.83rem;
+      color: var(--color-text-secondary);
+      transition: color 0.2s;
+    }
+    .footer-links a:hover {
+      color: var(--color-text-accent);
+    }
+
+    .footer-divider {
+      width: 40px;
+      height: 1px;
+      background: var(--color-border);
+      margin: var(--space-lg) auto;
+    }
+
+    .footer-copy {
+      font-family: var(--font-sans);
+      font-size: 0.78rem;
+      color: var(--color-text-muted);
+      font-weight: 300;
+    }
+
+    /*
+    ┌────────────────────────────────────────────────────────────────┐
+    │  9. 响应式微调                                                  │
+    └────────────────────────────────────────────────────────────────┘
+    */
     @media (max-width: 640px) {
-      header { padding: 0 20px; }
-      .hero { padding: 48px 20px 24px; }
-      .hero h1 { font-size: 26px; }
-      .workflow { padding: 0 20px 24px; }
-      .section-title { padding: 8px 20px 12px; }
-      .grid { padding-left: 20px; padding-right: 20px; }
-      .quickstart { padding: 0 20px 32px; }
+      .navbar {
+        padding: 0 var(--space-md);
+        height: 56px;
+      }
+      .navbar-logo-text {
+        font-size: 14px;
+      }
+      .nav-btn span {
+        display: none;
+      }
+      .nav-btn {
+        padding: 8px 12px;
+      }
+
+      .hero {
+        padding: 100px var(--space-md) var(--space-2xl);
+        min-height: 90vh;
+      }
+      .hero h1 {
+        font-size: clamp(1.8rem, 8vw, 2.4rem);
+      }
+      .hero-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+
+      .section {
+        padding: 0 var(--space-md);
+      }
+
+      .tool-card {
+        padding: var(--space-lg);
+      }
+
+      .quickstart-code-body {
+        padding: 14px 16px;
+        font-size: 12px;
+      }
+    }
+
+    @media (min-width: 641px) and (max-width: 1024px) {
+      .section {
+        padding: 0 var(--space-lg);
+      }
     }
   </style>
 </head>
-
 <body>
+
+  <!-- 背景光晕 -->
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+
   <!-- ============================================================
-       顶栏
+       导航栏
        ============================================================ -->
-  <header>
-    <div class="logo">
-      <div class="logo-icon">S</div>
-      <span class="logo-text">Starline Content Studio</span>
-    </div>
-    <div class="header-actions">
-      <!-- 使用说明按钮（快速滚动到快速开始区域） -->
-      <a class="github-btn" href="#quickstart" style="border: none; background: #f3f4f6; font-weight: 500;">
+  <nav class="navbar" role="navigation">
+    <a href="#" class="navbar-logo">
+      <div class="navbar-logo-icon">S</div>
+      <span class="navbar-logo-text">Starline <span>·</span> 墨点星痕</span>
+    </a>
+    <div class="navbar-actions">
+      <a href="#quickstart" class="nav-btn">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
         </svg>
-        使用说明
+        <span>快速开始</span>
       </a>
-      <a class="github-btn" href="https://github.com/FreeCodeCampXYG/starline-gzh-publisher" target="_blank" rel="noopener">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+      <a href="https://github.com/FreeCodeCampXYG/starline-gzh-publisher" target="_blank" rel="noopener" class="nav-btn nav-btn-primary">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
           <path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 005.47 7.59c.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.42 7.42 0 014 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/>
         </svg>
         <span>GitHub</span>
-        <span class="github-star hidden" id="github-star">
-          <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+        <span class="github-star-badge hidden" id="github-star">
+          <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor">
             <path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/>
           </svg>
           <span id="github-star-count">—</span>
         </span>
       </a>
     </div>
-  </header>
+  </nav>
 
   <!-- ============================================================
-       Hero
+       Hero 区域 — 沉浸式全屏
        ============================================================ -->
   <section class="hero">
-    <h1>一个源内容，<span>多种输出</span></h1>
+    <div class="hero-grid"></div>
+
+    <div class="hero-badge">
+      <span class="hero-badge-dot"></span>
+      v2.0 · 开源内容创作工具集
+    </div>
+
+    <h1>
+      一个源内容，<br>
+      <span class="highlight">多种输出</span>
+    </h1>
+
     <p>
-      按照 Markdown 格式写作，剩下的交给工具。
-      封面、公众号排版、小红书图文、X 文章——打开即用，点击完成。
+      按照 Markdown 格式写作，封面、公众号、小红书、X 文章——<br>
+      打开即用，一键完成。零安装，零依赖，纯本地。
     </p>
+
+    <div class="hero-actions">
+      <a href="#tools" class="hero-btn hero-btn-primary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+        </svg>
+        探索工具
+      </a>
+      <a href="https://github.com/FreeCodeCampXYG/starline-gzh-publisher" target="_blank" class="hero-btn hero-btn-secondary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 22v-4a4.8 4.8 0 00-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 004 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/>
+          <path d="M9 18c-4.51 2-5-2-7-2"/>
+        </svg>
+        GitHub
+      </a>
+    </div>
+
+    <div class="scroll-indicator">
+      <span>向下滚动</span>
+      <div class="scroll-indicator-line"></div>
+    </div>
   </section>
 
   <!-- ============================================================
-       工作流指引
+       工作流 — 三步骤
        ============================================================ -->
-  <div class="workflow">
-    <div class="workflow-steps">
-      <div class="workflow-step">
-        <div class="workflow-step-num">1</div>
-        <div class="workflow-step-body">
-          <div class="workflow-step-title">写 Markdown</div>
-          <div class="workflow-step-desc">在 draft.md 中按规范写作，顶部配置封面元数据</div>
+  <div class="section" id="workflow">
+    <div class="section-header">
+      <div class="section-label">工作流</div>
+      <h2 class="section-title">三步完成内容发布</h2>
+      <p class="section-subtitle">从写作到发布，每一步都有对应的工具，无缝衔接。</p>
+    </div>
+
+    <div class="workflow-grid">
+      <div class="workflow-card">
+        <div class="workflow-card-number">01</div>
+        <div class="workflow-card-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
         </div>
+        <h3 class="workflow-card-title">写 Markdown</h3>
+        <p class="workflow-card-desc">在 draft.md 中按规范写作，顶部配置封面元数据。工具自动读取，无需手动复制。</p>
       </div>
-      <div class="workflow-step">
-        <div class="workflow-step-num">2</div>
-        <div class="workflow-step-body">
-          <div class="workflow-step-title">打开工具</div>
-          <div class="workflow-step-desc">选择下方工具，自动读取草稿，实时预览效果</div>
+
+      <div class="workflow-card">
+        <div class="workflow-card-number">02</div>
+        <div class="workflow-card-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+          </svg>
         </div>
+        <h3 class="workflow-card-title">打开工具</h3>
+        <p class="workflow-card-desc">选择下方工具，自动加载草稿，实时预览各平台效果。不满意可立即调整。</p>
       </div>
-      <div class="workflow-step">
-        <div class="workflow-step-num">3</div>
-        <div class="workflow-step-body">
-          <div class="workflow-step-title">一键输出</div>
-          <div class="workflow-step-desc">复制富文本/图片，直接粘贴到对应平台发布</div>
+
+      <div class="workflow-card">
+        <div class="workflow-card-number">03</div>
+        <div class="workflow-card-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+          </svg>
         </div>
+        <h3 class="workflow-card-title">一键输出</h3>
+        <p class="workflow-card-desc">复制富文本或图片，直接粘贴到对应平台。也支持一键推送到公众号草稿箱。</p>
       </div>
     </div>
   </div>
 
   <!-- ============================================================
-       工具网格
+       工具集 — 网格卡片
        ============================================================ -->
-  <div class="section-title">工具集</div>
+  <div class="section" id="tools">
+    <div class="section-header">
+      <div class="section-label">工具集</div>
+      <h2 class="section-title">精选创作工具</h2>
+      <p class="section-subtitle">五个工具，覆盖内容创作全流程。</p>
+    </div>
 
-  <div class="grid">
-    <!-- 封面生成器 -->
-    <a class="card" href="cover.html">
-      <div class="card-icon icon-blue">
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="2" y="3" width="18" height="14" rx="2"/>
-          <path d="M2 13.5l4.5-4.5 3.5 3.5 3.5-4.5 6.5 6.5"/>
-          <line x1="6" y1="20" x2="16" y2="20"/>
-          <line x1="11" y1="17" x2="11" y2="20"/>
-        </svg>
-      </div>
-      <div class="card-body">
-        <span class="card-name">封面生成器</span>
-        <span class="card-desc">快速生成文章封面图，支持 13 种配色、4 种装饰风格、8 个预设模板，可导出 PNG 或复制图片。</span>
-        <div class="card-features">
-          <span class="card-feature">13 配色</span>
-          <span class="card-feature">4 装饰</span>
-          <span class="card-feature">8 预设</span>
-          <span class="card-feature">PNG 导出</span>
+    <div class="tools-grid">
+
+      <!-- 封面生成器 -->
+      <a href="cover.html" class="tool-card" data-glow="true">
+        <div class="tool-card-glow"></div>
+        <div class="tool-card-header">
+          <div class="tool-card-icon icon-blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
+            </svg>
+          </div>
+          <span class="tool-card-tag tag-live">已上线</span>
+        </div>
+        <h3 class="tool-card-name">封面生成器</h3>
+        <p class="tool-card-desc">13 种配色、4 种装饰风格、8 个预设模板。快速生成文章封面图，导出 PNG 或复制图片。</p>
+        <div class="tool-card-features">
+          <span class="tool-card-feature">13 配色</span>
+          <span class="tool-card-feature">4 装饰</span>
+          <span class="tool-card-feature">8 预设</span>
+          <span class="tool-card-feature">PNG 导出</span>
+        </div>
+      </a>
+
+      <!-- 二维码工具 -->
+      <a href="qrcode.html" class="tool-card" data-glow="true">
+        <div class="tool-card-glow"></div>
+        <div class="tool-card-header">
+          <div class="tool-card-icon icon-violet">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+              <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/>
+              <rect x="19" y="14" width="2" height="2"/><rect x="14" y="19" width="2" height="2"/>
+              <rect x="19" y="19" width="2" height="2"/>
+            </svg>
+          </div>
+          <span class="tool-card-tag tag-live">已上线</span>
+        </div>
+        <h3 class="tool-card-name">二维码工具</h3>
+        <p class="tool-card-desc">生成带 Logo 的二维码，支持拖放/粘贴图片解析。纯本地处理，不上传任何数据。</p>
+        <div class="tool-card-features">
+          <span class="tool-card-feature">生成</span>
+          <span class="tool-card-feature">解析</span>
+          <span class="tool-card-feature">Logo 嵌入</span>
+          <span class="tool-card-feature">纯本地</span>
+        </div>
+      </a>
+
+      <!-- MD → 微信排版 -->
+      <a href="md-to-wechat.html" class="tool-card" data-glow="true">
+        <div class="tool-card-glow"></div>
+        <div class="tool-card-header">
+          <div class="tool-card-icon icon-slate">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+              <line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="14" y2="11"/>
+            </svg>
+          </div>
+          <span class="tool-card-tag tag-live">已上线</span>
+        </div>
+        <h3 class="tool-card-name">MD → 微信排版</h3>
+        <p class="tool-card-desc">44 种主题风格，一键复制富文本。内置 Markdown 过滤层，自动修复格式，不支持的格式转 SVG 图片。</p>
+        <div class="tool-card-features">
+          <span class="tool-card-feature">44 主题</span>
+          <span class="tool-card-feature">富文本复制</span>
+          <span class="tool-card-feature">格式修复</span>
+          <span class="tool-card-feature">草稿发布</span>
+        </div>
+      </a>
+
+      <!-- MD → 小红书图文 -->
+      <a href="md-to-xiaohongshu.html" class="tool-card" data-glow="true">
+        <div class="tool-card-glow"></div>
+        <div class="tool-card-header">
+          <div class="tool-card-icon icon-rose">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+              <line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="14" y2="11"/>
+            </svg>
+          </div>
+          <span class="tool-card-tag tag-live">已上线</span>
+        </div>
+        <h3 class="tool-card-name">MD → 小红书图文</h3>
+        <p class="tool-card-desc">自动生成 #话题标签，800–1000 字推荐。纯文本展示，图片单独复制，适配小红书平台风格。</p>
+        <div class="tool-card-features">
+          <span class="tool-card-feature">话题标签</span>
+          <span class="tool-card-feature">字数建议</span>
+          <span class="tool-card-feature">图片复制</span>
+        </div>
+      </a>
+
+      <!-- MD → X 排版 -->
+      <a href="md-to-x.html" class="tool-card" data-glow="true">
+        <div class="tool-card-glow"></div>
+        <div class="tool-card-header">
+          <div class="tool-card-icon icon-teal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+              <line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="14" y2="11"/>
+            </svg>
+          </div>
+          <span class="tool-card-tag tag-live">已上线</span>
+        </div>
+        <h3 class="tool-card-name">MD → X 排版</h3>
+        <p class="tool-card-desc">粗体保留、代码块转纯文本、图片单独复制。适配 X（Twitter）长文格式，一键复制粘贴。</p>
+        <div class="tool-card-features">
+          <span class="tool-card-feature">长文格式</span>
+          <span class="tool-card-feature">粗体保留</span>
+          <span class="tool-card-feature">图片复制</span>
+        </div>
+      </a>
+
+      <!-- 简历排版（即将上线） -->
+      <div class="tool-card disabled">
+        <div class="tool-card-header">
+          <div class="tool-card-icon icon-orange">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+          </div>
+          <span class="tool-card-tag tag-soon">即将上线</span>
+        </div>
+        <h3 class="tool-card-name">简历排版</h3>
+        <p class="tool-card-desc">将结构化简历排版为可投递格式，支持多种模板风格。</p>
+        <div class="tool-card-features">
+          <span class="tool-card-feature">开发中</span>
         </div>
       </div>
-      <span class="card-tag tag-live">已上线</span>
-    </a>
 
-    <!-- 二维码工具 -->
-    <a class="card" href="qrcode.html">
-      <div class="card-icon icon-violet">
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="2" y="2" width="7" height="7" rx="1"/>
-          <rect x="3.5" y="3.5" width="4" height="4" rx="0.5" fill="white" stroke="none"/>
-          <rect x="13" y="2" width="7" height="7" rx="1"/>
-          <rect x="14.5" y="3.5" width="4" height="4" rx="0.5" fill="white" stroke="none"/>
-          <rect x="2" y="13" width="7" height="7" rx="1"/>
-          <rect x="3.5" y="14.5" width="4" height="4" rx="0.5" fill="white" stroke="none"/>
-          <rect x="13" y="13" width="2" height="2" fill="white" stroke="none"/>
-          <rect x="17" y="13" width="2" height="2" fill="white" stroke="none"/>
-          <rect x="13" y="17" width="2" height="2" fill="white" stroke="none"/>
-          <rect x="17" y="17" width="2" height="2" fill="white" stroke="none"/>
-        </svg>
-      </div>
-      <div class="card-body">
-        <span class="card-name">二维码工具</span>
-        <span class="card-desc">生成带 Logo 的二维码，支持解析（拖放/粘贴图片），纯本地处理，不上传任何数据。</span>
-        <div class="card-features">
-          <span class="card-feature">生成</span>
-          <span class="card-feature">解析</span>
-          <span class="card-feature">Logo 嵌入</span>
-          <span class="card-feature">纯本地</span>
-        </div>
-      </div>
-      <span class="card-tag tag-live">已上线</span>
-    </a>
+    </div>
+  </div>
 
-    <!-- MD → 微信排版 -->
-    <a class="card" href="md-to-wechat.html">
-      <div class="card-icon icon-slate">
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M5 3h8l4 4v12H5V3z"/>
-          <path d="M13 3v4h4"/>
-          <line x1="8" y1="11" x2="14" y2="11"/>
-          <line x1="8" y1="14" x2="12" y2="14"/>
-        </svg>
+  <!-- ============================================================
+       数据指标
+       ============================================================ -->
+  <div class="section stats-section">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number">5</div>
+        <div class="stat-label">创作工具</div>
       </div>
-      <div class="card-body">
-        <span class="card-name">MD → 微信排版</span>
-        <span class="card-desc">将 Markdown 转换为微信公众号富文本，支持 44 种主题风格，一键复制粘贴。自动修复格式问题，不支持的格式转 SVG 图片。</span>
-        <div class="card-features">
-          <span class="card-feature">44 主题</span>
-          <span class="card-feature">富文本复制</span>
-          <span class="card-feature">格式修复</span>
-          <span class="card-feature">草稿发布</span>
-        </div>
+      <div class="stat-card">
+        <div class="stat-number">44</div>
+        <div class="stat-label">微信主题</div>
       </div>
-      <span class="card-tag tag-live">已上线</span>
-    </a>
-
-    <!-- MD → 小红书图文 -->
-    <a class="card" href="md-to-xiaohongshu.html">
-      <div class="card-icon icon-rose">
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M5 3h8l4 4v12H5V3z"/>
-          <path d="M13 3v4h4"/>
-          <line x1="8" y1="11" x2="14" y2="11"/>
-          <line x1="8" y1="14" x2="12" y2="14"/>
-        </svg>
+      <div class="stat-card">
+        <div class="stat-number">13</div>
+        <div class="stat-label">封面配色</div>
       </div>
-      <div class="card-body">
-        <span class="card-name">MD → 小红书图文</span>
-        <span class="card-desc">将 Markdown 转换为适合小红书发布的图文格式，自动生成 #话题标签，800-1000 字推荐。</span>
-        <div class="card-features">
-          <span class="card-feature">话题标签</span>
-          <span class="card-feature">字数建议</span>
-          <span class="card-feature">图片复制</span>
-        </div>
+      <div class="stat-card">
+        <div class="stat-number">0</div>
+        <div class="stat-label">依赖安装</div>
       </div>
-      <span class="card-tag tag-live">已上线</span>
-    </a>
-
-    <!-- MD → X 排版 -->
-    <a class="card" href="md-to-x.html">
-      <div class="card-icon icon-slate">
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M5 3h8l4 4v12H5V3z"/>
-          <path d="M13 3v4h4"/>
-          <line x1="8" y1="11" x2="14" y2="11"/>
-          <line x1="8" y1="14" x2="12" y2="14"/>
-        </svg>
-      </div>
-      <div class="card-body">
-        <span class="card-name">MD → X 排版</span>
-        <span class="card-desc">将 Markdown 转换为适合 X（Twitter）发布的长文格式，粗体保留、代码块转纯文本、图片单独复制。</span>
-        <div class="card-features">
-          <span class="card-feature">长文格式</span>
-          <span class="card-feature">粗体保留</span>
-          <span class="card-feature">图片复制</span>
-        </div>
-      </div>
-      <span class="card-tag tag-live">已上线</span>
-    </a>
-
-    <!-- 简历排版（即将上线） -->
-    <a class="card disabled" href="#">
-      <div class="card-icon icon-orange">
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M5 3h8l4 4v12H5V3z"/>
-          <path d="M13 3v4h4"/>
-          <line x1="8" y1="11" x2="14" y2="11"/>
-          <line x1="8" y1="14" x2="12" y2="14"/>
-        </svg>
-      </div>
-      <div class="card-body">
-        <span class="card-name">简历排版</span>
-        <span class="card-desc">将结构化简历排版为可投递格式（即将上线）。</span>
-      </div>
-      <span class="card-tag tag-soon">即将上线</span>
-    </a>
+    </div>
   </div>
 
   <!-- ============================================================
        快速开始
        ============================================================ -->
-  <div class="section-title" id="quickstart" style="padding-top: 0;">快速开始</div>
+  <div class="section quickstart-section" id="quickstart">
+    <div class="section-header">
+      <div class="section-label">快速开始</div>
+      <h2 class="section-title">写作规范</h2>
+      <p class="section-subtitle">遵循这个模板，所有工具自动识别并渲染。</p>
+    </div>
 
-  <div class="quickstart">
-    <div class="quickstart-card">
-      <div class="quickstart-title">写作规范</div>
-      <div class="quickstart-code">
-        <span class="comment">```json</span>
-        <span class="comment">"changes": {</span>
-        <span class="comment">  "content": {</span>
-        <span class="comment">    "title": "文章标题",</span>
-        <span class="comment">    "author": "@starline · 墨点星痕"</span>
-        <span class="comment">  }</span>
-        <span class="comment">}</span>
-        <span class="comment">```</span>
-        <span> </span>
-        <span class="comment">## 正文</span>
-        <span> </span>
-        <span>从这里开始写文章内容……</span>
+    <div class="quickstart-grid">
+      <div class="quickstart-info">
+        <h3 class="quickstart-info-title">一份稿子，处处可用</h3>
+        <p class="quickstart-info-desc">
+          在 Markdown 文件顶部用 JSON 块配置封面元数据，
+          正文从 `## 正文` 开始。打开任意工具，自动读取并渲染。
+        </p>
+        <ul class="quickstart-info-list">
+          <li>
+            <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+            零安装，打开浏览器即可使用
+          </li>
+          <li>
+            <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+            所有处理在本地完成，不上传任何数据
+          </li>
+          <li>
+            <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+            自动修复非标准 Markdown 格式，不支持的格式转 SVG 图片
+          </li>
+          <li>
+            <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+            支持直接粘贴任意 Markdown 内容处理
+          </li>
+        </ul>
       </div>
-      <div class="quickstart-hint">
-        💡 Markdown 稿件存放在 <code>tools/draft.md</code>，工具会自动加载。
-        顶部用 <code>```json</code> 块配置封面元数据，<code>## 正文</code> 之后写正文。
-        也支持直接粘贴任意 Markdown 内容到工具中处理。
+
+      <div class="quickstart-code-block">
+        <div class="quickstart-code-header">
+          <span class="quickstart-code-dot"></span>
+          <span class="quickstart-code-dot"></span>
+          <span class="quickstart-code-dot"></span>
+        </div>
+        <div class="quickstart-code-body">
+          <span class="comment">```json</span>
+          <span class="comment">"changes": {</span>
+          <span class="comment">  "content": {</span>
+          <span class="string">    "title"</span>: <span class="string">"文章标题"</span>,
+          <span class="string">    "author"</span>: <span class="string">"@starline · 墨点星痕"</span>
+          <span class="comment">  }</span>
+          <span class="comment">}</span>
+          <span class="comment">```</span>
+
+          <span class="comment">## 正文</span>
+
+          从这里开始写文章内容……
+        </div>
       </div>
     </div>
   </div>
 
   <!-- ============================================================
-       底部
+       页脚
        ============================================================ -->
-  <footer>
-    由 <a href="https://github.com/FreeCodeCampXYG" target="_blank">Starline</a> 构建 · 墨点星痕 · 更多工具持续上线中
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">Starline <span>·</span> 墨点星痕</div>
+      <p class="footer-desc">一个源内容，多种输出。专注写作，剩下的交给工具。</p>
+      <div class="footer-links">
+        <a href="https://github.com/FreeCodeCampXYG/starline-gzh-publisher" target="_blank">GitHub 仓库</a>
+        <a href="https://github.com/FreeCodeCampXYG" target="_blank">关于作者</a>
+        <a href="https://github.com/FreeCodeCampXYG/starline-gzh-publisher/blob/main/LICENSE" target="_blank">MIT 许可证</a>
+      </div>
+      <div class="footer-divider"></div>
+      <p class="footer-copy">© 2025 Starline Content Studio · 更多工具持续上线中</p>
+    </div>
   </footer>
 
   <!-- ============================================================
-       GitHub Star 计数
+       JavaScript — 微交互 & 数据获取
        ============================================================ -->
   <script>
-    (function () {
+    (function() {
+      'use strict';
+
+      /* ── GitHub Star 计数 ── */
       fetch('https://api.github.com/repos/FreeCodeCampXYG/starline-gzh-publisher')
         .then(r => r.ok ? r.json() : null)
         .then(data => {
@@ -704,8 +1469,67 @@
           wrap.classList.remove('hidden');
         })
         .catch(() => {});
+
+      /* ── 卡片光晕跟随鼠标 ── */
+      const cards = document.querySelectorAll('.tool-card[data-glow="true"]');
+      cards.forEach(card => {
+        const glow = card.querySelector('.tool-card-glow');
+        if (!glow) return;
+
+        card.addEventListener('mousemove', e => {
+          const rect = card.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          glow.style.left = x + 'px';
+          glow.style.top = y + 'px';
+        });
+      });
+
+      /* ── 滚动渐入动画（IntersectionObserver） ── */
+      const animateItems = document.querySelectorAll(
+        '.workflow-card, .tool-card, .stat-card, .quickstart-grid > *'
+      );
+
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.style.opacity = '1';
+              entry.target.style.transform = 'translateY(0)';
+              observer.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+        animateItems.forEach(item => {
+          item.style.opacity = '0';
+          item.style.transform = 'translateY(24px)';
+          item.style.transition = 'opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)';
+          observer.observe(item);
+        });
+      } else {
+        // 降级：直接显示
+        animateItems.forEach(item => {
+          item.style.opacity = '1';
+          item.style.transform = 'translateY(0)';
+        });
+      }
+
+      /* ── 导航栏透明度变化 ── */
+      const navbar = document.querySelector('.navbar');
+      let lastScrollY = 0;
+
+      window.addEventListener('scroll', () => {
+        const scrollY = window.scrollY;
+        if (scrollY > 60) {
+          navbar.style.background = 'rgba(11, 18, 25, 0.95)';
+        } else {
+          navbar.style.background = 'rgba(11, 18, 25, 0.8)';
+        }
+        lastScrollY = scrollY;
+      }, { passive: true });
+
     })();
   </script>
-
 </body>
 </html>

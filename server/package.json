@@ -1,0 +1,13 @@
+{
+  "name": "article-tools-wechat-publisher",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Local sidecar to publish md-to-wechat output to a WeChat Official Account draft.",
+  "scripts": {
+    "start": "node publish-wechat.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Markdown → X 文章</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f5f5;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── 顶栏 ── */
+    header {
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 0 24px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .header-left { display: flex; align-items: center; min-width: 0; overflow: hidden; }
+    .home-btn { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; color: #6b7280; margin-right: 10px; flex-shrink: 0; text-decoration: none; transition: background 0.15s, color 0.15s; }
+    .home-btn:hover { background: #f3f4f6; color: #111; }
+    .header-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #111;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .header-title span {
+      color: #9ca3af;
+      font-weight: 400;
+      margin: 0 6px;
+    }
+
+    .doc-title-wrap { display: none; align-items: center; gap: 6px; margin-left: 14px; padding-left: 14px; border-left: 1px solid #e5e7eb; min-width: 0; max-width: 380px; }
+    .doc-title-text { font-size: 13px; color: #374151; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .doc-title-copy { flex-shrink: 0; background: none; border: none; cursor: pointer; color: #9ca3af; padding: 2px; border-radius: 3px; display: flex; align-items: center; transition: color 0.15s; }
+    .doc-title-copy:hover { color: #374151; }
+
+    .copy-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 20px;
+      background: #000;
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.02em;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .copy-btn:hover {
+      background: #222;
+    }
+
+    .copy-btn:active {
+      transform: scale(0.97);
+    }
+
+    .copy-btn.success {
+      background: #16a34a;
+    }
+
+    .copy-btn svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+
+    .header-actions { display: flex; gap: 10px; align-items: center; }
+
+    .reload-btn {
+      padding: 6px 14px;
+      background: none;
+      color: #6b7280;
+      border: 1px solid #e5e7eb;
+      border-radius: 20px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .reload-btn:hover {
+      color: #111;
+      border-color: #9ca3af;
+    }
+
+    .sync-switch {
+      display: flex; align-items: center; gap: 6px;
+      cursor: pointer; font-size: 12px; color: #6b7280;
+      user-select: none;
+    }
+    .sync-switch-track {
+      width: 32px; height: 18px; border-radius: 9px;
+      background: #e5e7eb; position: relative;
+      transition: background 0.2s; flex-shrink: 0;
+    }
+    .sync-switch-track.on { background: #111; }
+    .sync-switch-thumb {
+      position: absolute; top: 2px; left: 2px;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+      transition: transform 0.2s;
+    }
+    .sync-switch-track.on .sync-switch-thumb { transform: translateX(14px); }
+
+    /* ── 主体双栏 ── */
+    .main {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      flex: 1;
+      overflow: hidden;
+      gap: 1px;
+      background: #e5e7eb;
+    }
+
+    .pane {
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .pane-header {
+      padding: 10px 20px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #9ca3af;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      border-bottom: 1px solid #f0f0f0;
+      flex-shrink: 0;
+    }
+
+    /* ── 左侧输入 ── */
+    #md-input {
+      flex: 1;
+      padding: 20px;
+      font-size: 13px;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Menlo', monospace;
+      line-height: 1.7;
+      color: #374151;
+      border: none;
+      outline: none;
+      resize: none;
+      background: #fafafa;
+    }
+
+    #md-input::placeholder {
+      color: #d1d5db;
+    }
+
+    /* ── 右侧预览 ── */
+    #preview {
+      flex: 1;
+      padding: 24px 28px;
+      overflow-y: auto;
+      font-size: 15px;
+      line-height: 1.8;
+      color: #0f0f0f;
+    }
+
+    /* X 文章排版风格 */
+    #preview h1 {
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1.3;
+      margin-bottom: 20px;
+      color: #0f0f0f;
+    }
+
+    #preview h2 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-top: 32px;
+      margin-bottom: 12px;
+      color: #0f0f0f;
+    }
+
+    #preview h3 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-top: 24px;
+      margin-bottom: 8px;
+      color: #0f0f0f;
+    }
+
+    #preview p {
+      margin-bottom: 16px;
+    }
+
+    #preview ul,
+    #preview ol {
+      padding-left: 24px;
+      margin-bottom: 16px;
+    }
+
+    #preview li {
+      margin-bottom: 6px;
+    }
+
+    #preview strong {
+      font-weight: 700;
+    }
+
+    #preview em {
+      font-style: italic;
+    }
+
+    #preview code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      background: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #dc2626;
+    }
+
+    #preview pre {
+      background: #1e1e2e;
+      color: #cdd6f4;
+      padding: 16px 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin-bottom: 16px;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    #preview pre code {
+      background: none;
+      color: inherit;
+      padding: 0;
+      font-size: inherit;
+    }
+
+    #preview blockquote {
+      border-left: 3px solid #e5e7eb;
+      padding-left: 16px;
+      color: #6b7280;
+      margin-bottom: 16px;
+      font-style: italic;
+    }
+
+    #preview hr {
+      border: none;
+      border-top: 1px solid #e5e7eb;
+      margin: 28px 0;
+    }
+
+    #preview a {
+      color: #1d9bf0;
+      text-decoration: none;
+    }
+
+    #preview img { max-width: 100%; height: auto; width: 100%; display: block; }
+    .img-wrapper {
+      position: relative;
+      display: block;
+      margin: 16px 0;
+    }
+
+    .img-wrapper img {
+      border-radius: 6px;
+      margin: 0;
+    }
+
+    .img-overlay-left {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      display: flex;
+      align-items: stretch;
+      max-width: 75%;
+      border-radius: 0 4px 0 6px;
+      overflow: hidden;
+    }
+
+    .img-alt-label {
+      background: rgba(0, 0, 0, 0.5);
+      color: #fff;
+      font-size: 11px;
+      line-height: 1.4;
+      padding: 3px 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .img-copy-alt-btn {
+      background: rgba(0, 0, 0, 0.6);
+      color: #fff;
+      border: none;
+      border-left: 1px solid rgba(255, 255, 255, 0.2);
+      font-size: 11px;
+      padding: 2px 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+      flex-shrink: 0;
+    }
+
+    .img-copy-alt-btn:hover {
+      background: rgba(0, 0, 0, 0.8);
+    }
+
+    .img-copy-b64-btn {
+      position: absolute;
+      bottom: 6px;
+      right: 6px;
+      background: rgba(0, 0, 0, 0.5);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 11px;
+      padding: 2px 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .img-copy-b64-btn:hover {
+      background: rgba(0, 0, 0, 0.75);
+    }
+
+    /* 字数统计 */
+    .stats {
+      padding: 8px 20px;
+      font-size: 11px;
+      color: #9ca3af;
+      border-top: 1px solid #f0f0f0;
+      flex-shrink: 0;
+    }
+
+    /* 空状态 */
+    .empty-hint {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: #d1d5db;
+      font-size: 14px;
+      gap: 8px;
+    }
+
+    .empty-hint svg {
+      width: 36px;
+      height: 36px;
+      opacity: 0.4;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <div class="header-left">
+      <a href="index.html" class="home-btn" title="返回工具箱">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      </a>
+      <div class="header-title">Markdown <span>→</span> X 文章</div>
+      <div class="doc-title-wrap" id="doc-title-wrap">
+        <span class="doc-title-text" id="doc-title-text"></span>
+        <button class="doc-title-copy" id="doc-title-copy" title="复制标题" onclick="copyDocTitle()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="header-actions">
+      <label class="sync-switch" onclick="toggleSync()">
+        <div class="sync-switch-track on" id="sync-track"><div class="sync-switch-thumb"></div></div>
+        滚动同步
+      </label>
+      <button class="reload-btn" onclick="loadDraft()">重新加载草稿</button>
+      <button class="copy-btn" id="copy-btn" onclick="copyRichText()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="9" y="9" width="13" height="13" rx="2" />
+          <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+        </svg>
+        复制富文本
+      </button>
+    </div>
+  </header>
+
+  <div class="main">
+
+    <!-- 左：Markdown 输入 -->
+    <div class="pane">
+      <div class="pane-header">Markdown 输入</div>
+      <textarea id="md-input"></textarea>
+      <div class="stats" id="stats">0 字</div>
+    </div>
+
+    <!-- 右：预览 -->
+    <div class="pane">
+      <div class="pane-header">预览（X 文章样式）</div>
+      <div id="preview">
+        <div class="empty-hint">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <span>左侧粘贴 Markdown，这里实时预览</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const input = document.getElementById('md-input');
+    const preview = document.getElementById('preview');
+    const stats = document.getElementById('stats');
+
+    marked.setOptions({ breaks: true });
+
+    let docTitle = '';
+
+    function extractTitle(md) {
+      const m = md.match(/^# (.+)$/m);
+      return m ? m[1].trim() : '';
+    }
+
+    function updateTitleDisplay(title) {
+      docTitle = title;
+      const wrap = document.getElementById('doc-title-wrap');
+      const text = document.getElementById('doc-title-text');
+      text.textContent = title;
+      wrap.style.display = title ? 'flex' : 'none';
+    }
+
+    async function copyDocTitle() {
+      if (!docTitle) return;
+      const btn = document.getElementById('doc-title-copy');
+      await navigator.clipboard.writeText(docTitle);
+      btn.style.color = '#16a34a';
+      setTimeout(() => btn.style.color = '', 1500);
+    }
+
+    function toBase64(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          canvas.getContext('2d').drawImage(img, 0, 0);
+          resolve(canvas.toDataURL());
+        };
+        img.onerror = reject;
+        img.src = src;
+      });
+    }
+
+    async function inlineImages() {
+      const imgs = preview.querySelectorAll('img');
+      await Promise.all(Array.from(imgs).map(async (img) => {
+        if (img.src.startsWith('data:')) return;
+        try { img.src = await toBase64(img.src); } catch (_) { }
+      }));
+    }
+
+    function decorateImages() {
+      preview.querySelectorAll('img:not([data-decorated])').forEach(img => {
+        img.setAttribute('data-decorated', '1');
+        const alt = img.getAttribute('alt') || '';
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'img-wrapper';
+        img.parentNode.insertBefore(wrapper, img);
+        wrapper.appendChild(img);
+
+        // 左下：alt 文本 + 复制 alt 按钮
+        if (alt) {
+          const leftOverlay = document.createElement('div');
+          leftOverlay.className = 'img-overlay-left';
+          const label = document.createElement('div');
+          label.className = 'img-alt-label';
+          label.textContent = alt;
+          const copyAltBtn = document.createElement('button');
+          copyAltBtn.className = 'img-copy-alt-btn';
+          copyAltBtn.textContent = '复制';
+          copyAltBtn.onclick = async () => {
+            await navigator.clipboard.writeText(alt);
+            copyAltBtn.textContent = '✓';
+            setTimeout(() => copyAltBtn.textContent = '复制', 1500);
+          };
+          leftOverlay.appendChild(label);
+          leftOverlay.appendChild(copyAltBtn);
+          wrapper.appendChild(leftOverlay);
+        }
+
+        // 右下：复制图片本身（等同于浏览器右键「复制图片」）
+        const copyImgBtn = document.createElement('button');
+        copyImgBtn.className = 'img-copy-b64-btn';
+        copyImgBtn.textContent = '复制图片';
+        copyImgBtn.onclick = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          canvas.getContext('2d').drawImage(img, 0, 0);
+          canvas.toBlob(async (blob) => {
+            try {
+              await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+              copyImgBtn.textContent = '✓';
+            } catch (_) {
+              copyImgBtn.textContent = '✗';
+            }
+            setTimeout(() => copyImgBtn.textContent = '复制图片', 1500);
+          }, 'image/png');
+        };
+        wrapper.appendChild(copyImgBtn);
+      });
+    }
+
+    async function render() {
+      const rawMd = input.value.trim();
+      if (!rawMd) {
+        updateTitleDisplay('');
+        preview.innerHTML = `<div class="empty-hint">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          <span>左侧粘贴 Markdown，这里实时预览</span>
+        </div>`;
+        stats.textContent = '0 字';
+        return;
+      }
+      const md = rawMd.replace(/^# .+\n?/m, '').trim();
+      preview.innerHTML = marked.parse(md);
+      const charCount = rawMd.replace(/\s/g, '').length;
+      stats.textContent = `${charCount} 字 · ${rawMd.split('\n').length} 行`;
+      await inlineImages();
+      decorateImages();
+    }
+
+    input.addEventListener('input', render);
+
+    async function copyRichText() {
+      const md = input.value.trim();
+      if (!md) {
+        alert('请先粘贴 Markdown 内容');
+        return;
+      }
+
+      const html = preview.innerHTML;
+      const btn = document.getElementById('copy-btn');
+
+      try {
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            'text/html': new Blob([html], { type: 'text/html' }),
+            'text/plain': new Blob([md], { type: 'text/plain' }),
+          })
+        ]);
+        btn.textContent = '✓ 已复制，去 X 粘贴';
+        btn.classList.add('success');
+        setTimeout(() => {
+          btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2"/>
+            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+          </svg> 复制富文本`;
+          btn.classList.remove('success');
+        }, 3000);
+      } catch (err) {
+        // 降级：复制纯文本
+        await navigator.clipboard.writeText(md);
+        alert('富文本复制不支持，已复制纯文本（需手动格式化）');
+      }
+    }
+
+    async function loadDraft() {
+      try {
+        const res = await fetch('./draft.md');
+        if (!res.ok) return;
+        const text = await res.text();
+        // 从封面配置 JSON 块读取标题
+        const jsonM = text.match(/```json\s*([\s\S]*?)```/);
+        if (jsonM) {
+          try {
+            const parsed = JSON.parse('{' + jsonM[1].trim().replace(/,$/, '') + '}');
+            updateTitleDisplay(parsed.changes?.content?.title || '');
+          } catch (_) {}
+        }
+        const m = text.match(/^## 正文\s*\n([\s\S]*)/m);
+        // 去掉末尾的 footer（--- 后跟 *运行...）
+        const body = m
+          ? m[1].replace(/\n---\n\*运行[\s\S]*$/, '').trimEnd()
+          : text.trimEnd();
+        input.value = body;
+      } catch (_) {
+        // file:// 协议下 fetch 被拦截，保留 textarea 现有内容
+      }
+      await render();
+    }
+
+    loadDraft();
+
+    // ── 滚动同步 ──
+    let syncScroll = true;
+    let syncing = false;
+
+    function toggleSync() {
+      syncScroll = !syncScroll;
+      document.getElementById('sync-track').classList.toggle('on', syncScroll);
+    }
+
+    input.addEventListener('scroll', () => {
+      if (!syncScroll || syncing) return;
+      syncing = true;
+      const pct = input.scrollTop / (input.scrollHeight - input.clientHeight) || 0;
+      preview.scrollTop = pct * (preview.scrollHeight - preview.clientHeight);
+      syncing = false;
+    });
+
+    preview.addEventListener('scroll', () => {
+      if (!syncScroll || syncing) return;
+      syncing = true;
+      const pct = preview.scrollTop / (preview.scrollHeight - preview.clientHeight) || 0;
+      input.scrollTop = pct * (input.scrollHeight - input.clientHeight);
+      syncing = false;
+    });
+  </script>
+
+  
+
+</body>
+
+</html>

@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Markdown → 微信公众号</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f5f5;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── 顶栏 ── */
+    header {
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 0 24px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .header-left { display: flex; align-items: center; min-width: 0; overflow: hidden; }
+    .home-btn { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; color: #6b7280; margin-right: 10px; flex-shrink: 0; text-decoration: none; transition: background 0.15s, color 0.15s; }
+    .home-btn:hover { background: #f3f4f6; color: #111; }
+    .header-title { font-size: 14px; font-weight: 600; color: #111; letter-spacing: 0.02em; white-space: nowrap; flex-shrink: 0; }
+    .header-title span { color: #9ca3af; font-weight: 400; margin: 0 6px; }
+    .doc-title-wrap { display: none; align-items: center; gap: 6px; margin-left: 14px; padding-left: 14px; border-left: 1px solid #e5e7eb; min-width: 0; max-width: 380px; }
+    .doc-title-text { font-size: 13px; color: #374151; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .doc-title-copy { flex-shrink: 0; background: none; border: none; cursor: pointer; color: #9ca3af; padding: 2px; border-radius: 3px; display: flex; align-items: center; transition: color 0.15s; }
+    .doc-title-copy:hover { color: #374151; }
+    .header-actions { display: flex; gap: 10px; align-items: center; }
+
+    .reload-btn {
+      padding: 6px 14px;
+      background: none;
+      color: #6b7280;
+      border: 1px solid #e5e7eb;
+      border-radius: 20px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .reload-btn:hover { color: #111; border-color: #9ca3af; }
+    .sync-switch {
+      display: flex; align-items: center; gap: 6px;
+      cursor: pointer; font-size: 12px; color: #6b7280;
+      user-select: none;
+    }
+    .sync-switch-track {
+      width: 32px; height: 18px; border-radius: 9px;
+      background: #e5e7eb; position: relative;
+      transition: background 0.2s; flex-shrink: 0;
+    }
+    .sync-switch-track.on { background: #111; }
+    .sync-switch-thumb {
+      position: absolute; top: 2px; left: 2px;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+      transition: transform 0.2s;
+    }
+    .sync-switch-track.on .sync-switch-thumb { transform: translateX(14px); }
+
+    .copy-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 20px;
+      background: #07c160;
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.02em;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .copy-btn:hover { background: #06ad56; }
+    .copy-btn:active { transform: scale(0.97); }
+    .copy-btn.success { background: #16a34a; }
+    .copy-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+    .publish-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 18px;
+      background: #fff; color: #d1490b;
+      border: 1.5px solid #f0c9a8; border-radius: 20px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      letter-spacing: 0.02em;
+      transition: background 0.15s, border-color 0.15s, transform 0.1s, color 0.15s;
+    }
+    .publish-btn:hover { background: #fff7f0; border-color: #ff8a00; color: #b83e08; }
+    .publish-btn:active { transform: scale(0.97); }
+    .publish-btn:disabled { opacity: 0.55; cursor: default; }
+    .publish-btn.success { background: #16a34a; border-color: #16a34a; color: #fff; }
+    .publish-btn.error { background: #dc2626; border-color: #dc2626; color: #fff; }
+    .publish-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+    /* ── shadcn/sonner-style toasts ── */
+    .toast-viewport {
+      position: fixed; bottom: 22px; right: 22px; z-index: 10000;
+      display: flex; flex-direction: column; gap: 10px;
+      width: 380px; max-width: calc(100vw - 44px); pointer-events: none;
+    }
+    .toast {
+      pointer-events: auto;
+      display: flex; align-items: flex-start; gap: 12px;
+      background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(15,23,42,0.12), 0 2px 6px rgba(15,23,42,0.05);
+      padding: 14px 15px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      animation: toast-in 0.24s cubic-bezier(0.22,1,0.36,1);
+    }
+    .toast.hide { animation: toast-out 0.16s ease forwards; }
+    @keyframes toast-in { from { opacity: 0; transform: translateY(10px) scale(0.97); } to { opacity: 1; transform: none; } }
+    @keyframes toast-out { to { opacity: 0; transform: translateX(14px); } }
+    .toast-icon { flex-shrink: 0; width: 20px; height: 20px; margin-top: 1px; }
+    .toast-icon svg { width: 20px; height: 20px; display: block; }
+    .toast-body { flex: 1; min-width: 0; }
+    .toast-title { font-size: 13.5px; font-weight: 600; color: #0f172a; line-height: 1.45; }
+    .toast-desc { font-size: 12.5px; color: #64748b; line-height: 1.55; margin-top: 3px; word-break: break-word; white-space: pre-wrap; }
+    .toast-close { flex-shrink: 0; background: none; border: none; color: #9ca3af; cursor: pointer; padding: 2px; margin: -2px -3px -2px 0; border-radius: 6px; transition: color 0.15s, background 0.15s; }
+    .toast-close svg { width: 15px; height: 15px; display: block; }
+    .toast-close:hover { color: #0f172a; background: #f1f5f9; }
+    .toast.success .toast-icon { color: #16a34a; }
+    .toast.error .toast-icon { color: #dc2626; }
+    .toast.info .toast-icon { color: #0ea5e9; }
+
+    /* ── 风格选择（顶栏下拉） ── */
+    .style-select { position: relative; }
+    .style-select-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 12px;
+      background: none; color: #374151;
+      border: 1px solid #e5e7eb; border-radius: 20px;
+      font-size: 12px; cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .style-select-btn:hover { color: #111; border-color: #9ca3af; }
+    .style-select-btn .label { color: #9ca3af; }
+    .style-select-btn .chev { transition: transform 0.15s; flex-shrink: 0; }
+    .style-select.open .chev { transform: rotate(180deg); }
+
+    .style-menu {
+      position: absolute; top: calc(100% + 6px); right: 0;
+      width: 620px; max-width: 90vw; max-height: 64vh; overflow-y: auto;
+      background: #fff; border: 1px solid #e5e7eb; border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.14);
+      padding: 8px; z-index: 50; display: none;
+      scrollbar-width: thin;
+    }
+    .style-select.open .style-menu { display: block; }
+    .style-menu-group {
+      font-size: 10px; font-weight: 700; color: #9ca3af;
+      letter-spacing: 0.1em; padding: 8px 6px 6px; text-transform: uppercase;
+    }
+    .style-menu-grid {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
+    }
+    .style-menu-item {
+      display: flex; flex-direction: column; gap: 2px;
+      padding: 7px 9px; border-radius: 6px; cursor: pointer;
+      border: 1px solid transparent;
+    }
+    .style-menu-item:hover { background: #f3f4f6; }
+    .style-menu-item.active { background: #eef2ff; border-color: #c7d2fe; }
+    .style-menu-item .name { font-size: 12px; color: #111; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .style-menu-item .desc {
+      font-size: 10px; color: #9ca3af; line-height: 1.3;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .style-menu-item.active .name { color: #2563eb; }
+    .style-sw {
+      height: 32px; border-radius: 4px; border: 1px solid rgba(0,0,0,0.08);
+      padding: 5px 6px; margin-bottom: 4px;
+      display: flex; flex-direction: column; justify-content: center; gap: 3px; overflow: hidden;
+    }
+    .style-sw .bar { height: 3px; border-radius: 2px; }
+
+    /* ── 双栏 ── */
+    .main {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      flex: 1;
+      overflow: hidden;
+      gap: 1px;
+      background: #e5e7eb;
+    }
+
+    .pane { background: #fff; display: flex; flex-direction: column; overflow: hidden; }
+
+    .pane-header {
+      padding: 10px 20px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #9ca3af;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      border-bottom: 1px solid #f0f0f0;
+      flex-shrink: 0;
+    }
+
+    #md-input {
+      flex: 1;
+      padding: 20px;
+      font-size: 13px;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Menlo', monospace;
+      line-height: 1.7;
+      color: #374151;
+      border: none;
+      outline: none;
+      resize: none;
+      background: #fafafa;
+    }
+
+    #preview { flex: 1; overflow-y: auto; }
+
+    /* ── 预览主题（由 JS 按所选风格注入到 #theme-css） ── */
+    .wechat-body { min-height: 100%; }
+
+    /* ── 图片装饰 ── */
+    #preview img { max-width: 100%; height: auto; width: 100%; }
+    .img-wrapper { position: relative; display: block; margin: 24px 0; }
+    .img-wrapper img { border-radius: 4px; margin: 0; }
+    .img-overlay-left {
+      position: absolute; bottom: 0; left: 0;
+      display: flex; align-items: stretch;
+      max-width: 75%; border-radius: 0 4px 0 4px; overflow: hidden;
+    }
+    .img-alt-label {
+      background: rgba(0,0,0,0.5); color: #fff;
+      font-size: 11px; padding: 3px 8px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .img-copy-alt-btn {
+      background: rgba(0,0,0,0.6); color: #fff;
+      border: none; border-left: 1px solid rgba(255,255,255,0.2);
+      font-size: 11px; padding: 2px 8px; cursor: pointer;
+      transition: background 0.15s; flex-shrink: 0;
+    }
+    .img-copy-alt-btn:hover { background: rgba(0,0,0,0.8); }
+    .img-copy-b64-btn {
+      position: absolute; bottom: 6px; right: 6px;
+      background: rgba(0,0,0,0.5); color: #fff;
+      border: none; border-radius: 4px; font-size: 11px;
+      padding: 2px 8px; cursor: pointer; transition: background 0.15s;
+    }
+    .img-copy-b64-btn:hover { background: rgba(0,0,0,0.75); }
+
+    /* ── 底部 ── */
+    .stats { padding: 8px 20px; font-size: 11px; color: #9ca3af; border-top: 1px solid #f0f0f0; flex-shrink: 0; }
+
+    .empty-hint { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #d1d5db; font-size: 14px; gap: 8px; background: #f8f6f0; }
+    .empty-hint svg { width: 36px; height: 36px; opacity: 0.4; }
+  </style>
+  <style id="theme-css"></style>
+</head>
+
+<body>
+
+  <header>
+    <div class="header-left">
+      <a href="index.html" class="home-btn" title="返回 Starline">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      </a>
+      <div class="header-title">Markdown <span>→</span> 微信公众号</div>
+      <div class="doc-title-wrap" id="doc-title-wrap">
+        <span class="doc-title-text" id="doc-title-text"></span>
+        <button class="doc-title-copy" id="doc-title-copy" title="复制标题" onclick="copyDocTitle()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="header-actions">
+      <label class="sync-switch" onclick="toggleSync()">
+        <div class="sync-switch-track on" id="sync-track"><div class="sync-switch-thumb"></div></div>
+        滚动同步
+      </label>
+      <button class="reload-btn" onclick="loadDraft()">重新加载草稿</button>
+      <div class="style-select" id="style-select">
+        <button class="style-select-btn" onclick="toggleStyleMenu(event)">
+          <span class="label">风格</span>
+          <span id="style-current">Mac</span>
+          <svg class="chev" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
+        </button>
+        <div class="style-menu" id="style-menu"></div>
+      </div>
+      <button class="copy-btn" id="copy-btn" onclick="copyToWechat()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="9" y="9" width="13" height="13" rx="2"/>
+          <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+        </svg>
+        复制到公众号
+      </button>
+      <button class="publish-btn" id="publish-btn" onclick="publishToWechatDraft()" title="发布到公众号草稿箱（需先启动本地发布服务）">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>
+        发布到草稿
+      </button>
+    </div>
+  </header>
+
+  <div class="main">
+
+    <div class="pane">
+      <div class="pane-header">Markdown 输入</div>
+      <textarea id="md-input" placeholder="粘贴 Markdown…"></textarea>
+      <div class="stats" id="stats">0 字</div>
+    </div>
+
+    <div class="pane">
+      <div class="pane-header" id="preview-pane-header">预览（微信公众号）</div>
+      <div id="preview">
+        <div class="empty-hint">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          <span>左侧粘贴 Markdown，这里实时预览</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const input = document.getElementById('md-input');
+    const preview = document.getElementById('preview');
+    const stats = document.getElementById('stats');
+
+    marked.setOptions({ breaks: true });
+
+    let docTitle = '';
+
+    // ── shadcn/sonner-style toast (replaces alert) ──
+    function showToast(title, opts = {}) {
+      const { type = 'info', description = '', duration = 4200 } = opts;
+      let vp = document.getElementById('toast-viewport');
+      if (!vp) {
+        vp = document.createElement('div');
+        vp.id = 'toast-viewport';
+        vp.className = 'toast-viewport';
+        document.body.appendChild(vp);
+      }
+      const ICONS = {
+        success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>',
+        error: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>',
+        info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>',
+      };
+      const el = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.innerHTML = `<span class="toast-icon">${ICONS[type] || ICONS.info}</span>`
+        + `<div class="toast-body"><div class="toast-title"></div>${description ? '<div class="toast-desc"></div>' : ''}</div>`
+        + `<button class="toast-close" aria-label="关闭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>`;
+      el.querySelector('.toast-title').textContent = title;
+      if (description) el.querySelector('.toast-desc').textContent = description;
+      let timer;
+      const dismiss = () => { clearTimeout(timer); el.classList.add('hide'); setTimeout(() => el.remove(), 180); };
+      el.querySelector('.toast-close').addEventListener('click', dismiss);
+      vp.appendChild(el);
+      if (duration) timer = setTimeout(dismiss, duration);
+      return el;
+    }
+
+    function extractTitle(md) {
+      const m = md.match(/^# (.+)$/m);
+      return m ? m[1].trim() : '';
+    }
+
+    function updateTitleDisplay(title) {
+      docTitle = title;
+      const wrap = document.getElementById('doc-title-wrap');
+      const text = document.getElementById('doc-title-text');
+      text.textContent = title;
+      wrap.style.display = title ? 'flex' : 'none';
+    }
+
+    async function copyDocTitle() {
+      if (!docTitle) return;
+      const btn = document.getElementById('doc-title-copy');
+      await navigator.clipboard.writeText(docTitle);
+      btn.style.color = '#16a34a';
+      setTimeout(() => btn.style.color = '', 1500);
+    }
+
+    // ── base64 图片 ──
+    function toBase64(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          canvas.getContext('2d').drawImage(img, 0, 0);
+          resolve(canvas.toDataURL());
+        };
+        img.onerror = reject;
+        img.src = src;
+      });
+    }
+
+    async function inlineImages() {
+      const imgs = preview.querySelectorAll('img');
+      await Promise.all(Array.from(imgs).map(async (img) => {
+        if (img.src.startsWith('data:')) return;
+        try { img.src = await toBase64(img.src); } catch (_) { }
+      }));
+    }
+
+    // ── alt 标注 ──
+    function decorateImages() {
+      preview.querySelectorAll('img:not([data-decorated])').forEach(img => {
+        img.setAttribute('data-decorated', '1');
+        const alt = img.getAttribute('alt') || '';
+        const wrapper = document.createElement('div');
+        wrapper.className = 'img-wrapper';
+        img.parentNode.insertBefore(wrapper, img);
+        wrapper.appendChild(img);
+
+        // 左下：alt 文本 + 复制 alt 按钮
+        if (alt) {
+          const leftOverlay = document.createElement('div');
+          leftOverlay.className = 'img-overlay-left';
+          const label = document.createElement('div');
+          label.className = 'img-alt-label';
+          label.textContent = alt;
+          const copyAltBtn = document.createElement('button');
+          copyAltBtn.className = 'img-copy-alt-btn';
+          copyAltBtn.textContent = '复制';
+          copyAltBtn.onclick = async () => {
+            await navigator.clipboard.writeText(alt);
+            copyAltBtn.textContent = '✓';
+            setTimeout(() => copyAltBtn.textContent = '复制', 1500);
+          };
+          leftOverlay.appendChild(label);
+          leftOverlay.appendChild(copyAltBtn);
+          wrapper.appendChild(leftOverlay);
+        }
+
+        // 右下：复制图片本身（等同于浏览器右键「复制图片」）
+        const copyImgBtn = document.createElement('button');
+        copyImgBtn.className = 'img-copy-b64-btn';
+        copyImgBtn.textContent = '复制图片';
+        copyImgBtn.onclick = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          canvas.getContext('2d').drawImage(img, 0, 0);
+          canvas.toBlob(async (blob) => {
+            try {
+              await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+              copyImgBtn.textContent = '✓';
+            } catch (_) {
+              copyImgBtn.textContent = '✗';
+            }
+            setTimeout(() => copyImgBtn.textContent = '复制图片', 1500);
+          }, 'image/png');
+        };
+        wrapper.appendChild(copyImgBtn);
+      });
+    }
+
+    // ── 渲染 ──
+    async function render() {
+      const rawMd = input.value.trim();
+      if (!rawMd) {
+        updateTitleDisplay('');
+        preview.innerHTML = `<div class="empty-hint">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          <span>左侧粘贴 Markdown，这里实时预览</span>
+        </div>`;
+        stats.textContent = '0 字';
+        return;
+      }
+      const md = rawMd
+        .replace(/^# .+\n?/m, '')
+        .replace(/\n\n(```)/g, '\n$1')
+        .replace(/(```[^\n]*)\n\n/g, '$1\n')
+        .trim();
+      preview.innerHTML = `<div class="wechat-body">${marked.parse(md)}</div>`;
+      stats.textContent = `${rawMd.replace(/\s/g, '').length} 字 · ${rawMd.split('\n').length} 行`;
+      await inlineImages();
+      decorateImages();
+    }
+
+    input.addEventListener('input', render);
+
+    // ── 排版风格（数据来自开源仓库 liuxiaopai-ai/raphael-publish） ──
+    const THEME_DATA = {"themes":[{"id":"apple","name":"Mac","description":"留白干净、字距舒展，写什么都不出错的日常底色","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif; font-size: 16px; line-height: 1.7 !important; color: #1d1d1f !important; background-color: #ffffff !important; word-wrap: break-word;","h1":"font-size: 32px; font-weight: 700; color: #111 !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.015em; ","h2":"font-size: 26px; font-weight: 600; color: #111 !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 21px; font-weight: 600; color: #1d1d1f !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #0066cc; padding-left: 11px;","h4":"font-size: 18px; font-weight: 600; color: #1d1d1f !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.7 !important; color: #1d1d1f !important;","strong":"font-weight: 700; color: #000 !important; ","em":"font-style: italic; color: #666 !important;","a":"color: #0066cc !important; text-decoration: none; border-bottom: 1px solid #0066cc; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.7 !important; color: #1d1d1f !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #f5f5f7 !important; border-left: 4px solid #0066cc; color: #555 !important; border-radius: 4px; ","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 6px; background-color: #f5f5f7 !important; color: #0066cc !important; border-radius: 4px; font-size: 12px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #f5f5f7 !important; border-radius: 8px; overflow-x: auto; font-size: 12px !important; line-height: 1.5 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #0066cc;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 12px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #f5f5f7 !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #1d1d1f !important; border: 1px solid #e0e0e0;","td":"padding: 12px 16px; border: 1px solid #e0e0e0; color: #1d1d1f !important;","tr":"border: none;"}},{"id":"claude","name":"Claude","description":"燕麦米底配赭石红，长文读久了眼睛也不累","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif; font-size: 16px; line-height: 1.7 !important; color: #2b2b2b !important; background-color: #f8f6f0 !important; word-wrap: break-word;","h1":"font-size: 32px; font-weight: 700; color: #b75c3d !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.015em; ","h2":"font-size: 26px; font-weight: 600; color: #b75c3d !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 21px; font-weight: 600; color: #2b2b2b !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #b75c3d; padding-left: 11px;","h4":"font-size: 18px; font-weight: 600; color: #2b2b2b !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.7 !important; color: #2b2b2b !important;","strong":"font-weight: 700; color: #b75c3d !important; background-color: rgba(183,92,61,0.08); padding:0 4px; border-radius:4px;","em":"font-style: italic; color: #666 !important;","a":"color: #b75c3d !important; text-decoration: none; border-bottom: 1px solid #b75c3d; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.7 !important; color: #2b2b2b !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: rgba(183, 92, 61, 0.04) !important; border-left: 4px solid #b75c3d; color: #555 !important; border-radius: 4px; ","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 6px; background-color: #f0ece4 !important; color: #b75c3d !important; border-radius: 4px; font-size: 12px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #f0ece4 !important; border-radius: 8px; overflow-x: auto; font-size: 12px !important; line-height: 1.5 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #b75c3d;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 4px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #f0ece4 !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #2b2b2b !important; border: 1px solid #e0ddd6;","td":"padding: 12px 16px; border: 1px solid #e0ddd6; color: #2b2b2b !important;","tr":"border: none;"}},{"id":"wechat","name":"微信公众号原生","description":"公众号默认那股观感，绿调稳重、最不容易翻车","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif; font-size: 16px; line-height: 1.7 !important; color: #333333 !important; background-color: #ffffff !important; word-wrap: break-word;","h1":"font-size: 32px; font-weight: 700; color: #111 !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.015em; ","h2":"font-size: 26px; font-weight: 600; color: #111 !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 21px; font-weight: 600; color: #333333 !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #07c160; padding-left: 11px;","h4":"font-size: 18px; font-weight: 600; color: #333333 !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.7 !important; color: #333333 !important;","strong":"font-weight: 700; color: #07c160 !important; background-color: rgba(7,193,96,0.08); padding: 0 4px; border-radius: 4px;","em":"font-style: italic; color: #666 !important;","a":"color: #07c160 !important; text-decoration: none; border-bottom: 1px solid #07c160; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.7 !important; color: #333333 !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #f0f7f2 !important; border-left: 4px solid #07c160; color: #555 !important; border-radius: 4px; ","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 6px; background-color: #f0f7f2 !important; color: #07c160 !important; border-radius: 4px; font-size: 12px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #f0f7f2 !important; border-radius: 8px; overflow-x: auto; font-size: 12px !important; line-height: 1.5 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #07c160;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 4px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #f0f7f2 !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #333333 !important; border: 1px solid #d8e8dc;","td":"padding: 12px 16px; border: 1px solid #d8e8dc; color: #333333 !important;","tr":"border: none;"}},{"id":"media","name":"NYT","description":"米黄报纸底加衬线，给文章一身正经的新闻腔","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: Georgia, \"Times New Roman\", Times, serif; font-size: 16px; line-height: 1.7 !important; color: #000000 !important; background-color: #fdfaf6 !important; word-wrap: break-word;","h1":"font-size: 32px; font-weight: 700; color: #111 !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.015em; border-bottom: 2px solid #000; padding-bottom:12px;","h2":"font-size: 26px; font-weight: 700; color: #111 !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 21px; font-weight: 600; color: #000000 !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #326891; padding-left: 11px;","h4":"font-size: 18px; font-weight: 600; color: #000000 !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.7 !important; color: #000000 !important;","strong":"font-weight: 700; color: #000 !important; ","em":"font-style: italic; color: #666 !important;","a":"color: #326891 !important; text-decoration: none; border-bottom: 1px solid #326891; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.7 !important; color: #000000 !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #f0ede8 !important; border-left: 4px solid #326891; color: #555 !important; border-radius: 4px; font-style: italic;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 6px; background-color: #f0ede8 !important; color: #326891 !important; border-radius: 4px; font-size: 12px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #f0ede8 !important; border-radius: 8px; overflow-x: auto; font-size: 12px !important; line-height: 1.5 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #326891;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 4px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #f0ede8 !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #000000 !important; border: 1px solid #d5cfc5;","td":"padding: 12px 16px; border: 1px solid #d5cfc5; color: #000000 !important;","tr":"border: none;"}},{"id":"medium","name":"Medium","description":"西式博客的松弛排版，随笔和碎想的好去处","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif; font-size: 16px; line-height: 1.85 !important; color: #242424 !important; background-color: #fcfcfc !important; word-wrap: break-word;","h1":"font-size: 32px; font-weight: 700; color: #111 !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.015em; ","h2":"font-size: 26px; font-weight: 600; color: #111 !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 21px; font-weight: 600; color: #242424 !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #1a8917; padding-left: 11px;","h4":"font-size: 18px; font-weight: 600; color: #242424 !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 24px 0 !important; line-height: 1.85 !important; color: #242424 !important;","strong":"font-weight: 700; color: #000 !important; ","em":"font-style: italic; color: #666 !important;","a":"color: #1a8917 !important; text-decoration: none; border-bottom: 1px solid #1a8917; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 10px 0; line-height: 1.85 !important; color: #242424 !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: transparent !important; border-left: 3px solid #1a8917; color: #555 !important; border-radius: 0; ","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 6px; background-color: #f2f3f5 !important; color: #1a8917 !important; border-radius: 4px; font-size: 12px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #f2f3f5 !important; border-radius: 8px; overflow-x: auto; font-size: 12px !important; line-height: 1.5 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #1a8917;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 4px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #f2f3f5 !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #242424 !important; border: 1px solid #e0e0e0;","td":"padding: 12px 16px; border: 1px solid #e0e0e0; color: #242424 !important;","tr":"border: none;"}},{"id":"stripe","name":"Stripe","description":"硅谷 SaaS 那股冷感商务气，干净又利落","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif; font-size: 16px; line-height: 1.7 !important; color: #425466 !important; background-color: #f6f9fc !important; word-wrap: break-word;","h1":"font-size: 32px; font-weight: 700; color: #111 !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.015em; ","h2":"font-size: 26px; font-weight: 600; color: #111 !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 21px; font-weight: 600; color: #425466 !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #635bff; padding-left: 11px;","h4":"font-size: 18px; font-weight: 600; color: #425466 !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.7 !important; color: #425466 !important;","strong":"font-weight: 700; color: #0a2540 !important; ","em":"font-style: italic; color: #666 !important;","a":"color: #635bff !important; text-decoration: none; border-bottom: 1px solid #635bff; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.7 !important; color: #425466 !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #eef0ff !important; border-left: 4px solid #635bff; color: #425466 !important; border-radius: 4px; ","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 6px; background-color: #f0f2fe !important; color: #635bff !important; border-radius: 4px; font-size: 12px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #f0f2fe !important; border-radius: 8px; overflow-x: auto; font-size: 12px !important; line-height: 1.5 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #635bff;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 4px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #f0f2fe !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #425466 !important; border: 1px solid #dde0f0;","td":"padding: 12px 16px; border: 1px solid #dde0f0; color: #425466 !important;","tr":"border: none;"}},{"id":"workspace","name":"飞书","description":"克制的深蓝，谈方法论和职场效率最对味","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif; font-size: 16px; line-height: 1.7 !important; color: #1f2329 !important; background-color: #f7f8fa !important; word-wrap: break-word;","h1":"font-size: 32px; font-weight: 700; color: #111 !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.015em; ","h2":"font-size: 26px; font-weight: 600; color: #111 !important; line-height: 1.35 !important; margin: 32px 0 16px; border-bottom: 2px solid #3370ff; padding-bottom: 8px;","h3":"font-size: 21px; font-weight: 600; color: #1f2329 !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #3370ff; padding-left: 11px;","h4":"font-size: 18px; font-weight: 600; color: #1f2329 !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.7 !important; color: #1f2329 !important;","strong":"font-weight: 700; color: #000 !important; ","em":"font-style: italic; color: #666 !important;","a":"color: #3370ff !important; text-decoration: none; border-bottom: 1px solid #3370ff; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.7 !important; color: #1f2329 !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #edf1ff !important; border-left: 4px solid #3370ff; color: #555 !important; border-radius: 4px; ","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 6px; background-color: #eef1f8 !important; color: #3370ff !important; border-radius: 4px; font-size: 12px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #eef1f8 !important; border-radius: 8px; overflow-x: auto; font-size: 12px !important; line-height: 1.5 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #3370ff;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 4px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #eef1f8 !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #1f2329 !important; border: 1px solid #dee0e3;","td":"padding: 12px 16px; border: 1px solid #dee0e3; color: #1f2329 !important;","tr":"border: none;"}},{"id":"linear","name":"Linear","description":"深色极客调，写代码日志和技术札记的暗房","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif; font-size: 16px; line-height: 1.7 !important; color: #f1f1f2 !important; background-color: #101114 !important; word-wrap: break-word;","h1":"font-size: 32px; font-weight: 700; color: #fff !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.015em; ","h2":"font-size: 26px; font-weight: 600; color: #eee !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 21px; font-weight: 600; color: #ddd !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #5e6ad2; padding-left: 11px;","h4":"font-size: 18px; font-weight: 600; color: #f1f1f2 !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.7 !important; color: #f1f1f2 !important;","strong":"font-weight: 700; color: #fff !important; ","em":"font-style: italic; color: #bbb !important;","a":"color: #5e6ad2 !important; text-decoration: none; border-bottom: 1px solid #5e6ad2; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.7 !important; color: #f1f1f2 !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #1a1a1a !important; border-left: 4px solid #5e6ad2; color: #ccc !important; border-radius: 4px; ","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 6px; background-color: #1a1a2e !important; color: #5e6ad2 !important; border-radius: 4px; font-size: 12px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #1a1a2e !important; border-radius: 8px; overflow-x: auto; font-size: 12px !important; line-height: 1.5 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #5e6ad2;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 4px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #1a1a2e !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #f1f1f2 !important; border: 1px solid #333;","td":"padding: 12px 16px; border: 1px solid #333; color: #f1f1f2 !important;","tr":"border: none;"}},{"id":"retro","name":"Retro","description":"旧纸张配火漆红，带点年代感的人文气息","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: Georgia, \"Times New Roman\", Times, serif; font-size: 16px; line-height: 1.7 !important; color: #2b2621 !important; background-color: #f4ecd8 !important; background-image: radial-gradient(circle at center, #f4ecd8 0%, #ebdec4 100%); word-wrap: break-word;","h1":"font-size: 36px; font-weight: 800; color: #2b2621 !important; line-height: 1.2 !important; margin: 38px 0 20px; letter-spacing: -0.02em; font-variant: small-caps;","h2":"font-size: 26px; font-weight: 700; color: #8c2211 !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 21px; font-weight: 600; color: #2b2621 !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #8c2211; padding-left: 11px;","h4":"font-size: 18px; font-weight: 600; color: #2b2621 !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.7 !important; color: #2b2621 !important;","strong":"font-weight: 700; color: #8c2211 !important; ","em":"font-style: italic; color: #666 !important;","a":"color: #8c2211 !important; text-decoration: none; border-bottom: 1px solid #8c2211; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.7 !important; color: #2b2621 !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #efe5cc !important; border-left: 4px solid #8c2211; color: #555 !important; border-radius: 4px; font-style: italic;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 6px; background-color: #ede4d0 !important; color: #8c2211 !important; border-radius: 4px; font-size: 12px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #ede4d0 !important; border-radius: 8px; overflow-x: auto; font-size: 12px !important; line-height: 1.5 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #8c2211;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 4px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #ede4d0 !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #2b2621 !important; border: 1px solid #d4c9ae;","td":"padding: 12px 16px; border: 1px solid #d4c9ae; color: #2b2621 !important;","tr":"border: none;"}},{"id":"bloomberg","name":"Bloomberg","description":"金融终端的黑底荧光，硬核数据和代码的舞台","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: \"SF Mono\", \"Courier New\", Courier, monospace; font-size: 16px; line-height: 1.7 !important; color: #15fa52 !important; background-color: #000000 !important; word-wrap: break-word;","h1":"font-size: 32px; font-weight: 700; color: #fff !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.015em; ","h2":"font-size: 26px; font-weight: 600; color: #eee !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 21px; font-weight: 600; color: #ddd !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #ff8c00; padding-left: 11px;","h4":"font-size: 18px; font-weight: 600; color: #15fa52 !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.7 !important; color: #15fa52 !important;","strong":"font-weight: 700; color: #15fa52 !important; ","em":"font-style: italic; color: #bbb !important;","a":"color: #ff8c00 !important; text-decoration: none; border-bottom: 1px solid #ff8c00; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.7 !important; color: #15fa52 !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #0a0a0a !important; border: 1px solid #333; color: #ccc !important; border-radius: 4px; ","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 6px; background-color: #0a0a0a !important; color: #ff8c00 !important; border-radius: 4px; font-size: 12px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #0a0a0a !important; border: 1px solid #333; border-radius: 8px; overflow-x: auto; font-size: 12px !important; line-height: 1.5 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #ff8c00;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 4px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #0a0a0a !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #15fa52 !important; border: 1px solid #333;","td":"padding: 12px 16px; border: 1px solid #333; color: #15fa52 !important;","tr":"border: none;"}},{"id":"notion","name":"Notion","description":"黑白灰到底，信息密度拉满、安静无干扰","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif; font-size: 16px; line-height: 1.6 !important; color: #37352f !important; background-color: #ffffff !important; word-wrap: break-word;","h1":"font-size: 34px; font-weight: 700; color: #37352f !important; line-height: 1.2 !important; margin: 38px 0 8px; letter-spacing: -0.02em;","h2":"font-size: 26px; font-weight: 600; color: #37352f !important; line-height: 1.3 !important; margin: 32px 0 8px;","h3":"font-size: 21px; font-weight: 600; color: #37352f !important; line-height: 1.35 !important; margin: 28px 0 8px; border-left: 3px solid #37352f; padding-left: 11px;","h4":"font-size: 18px; font-weight: 600; color: #37352f !important; line-height: 1.4 !important; margin: 24px 0 8px;","p":"margin: 4px 0 !important; line-height: 1.6 !important; color: #37352f !important;","strong":"font-weight: 700; color: #37352f !important;","em":"font-style: italic; color: #37352f !important;","a":"color: #37352f !important; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(55,53,47,0.4);","ul":"margin: 4px 0; padding-left: 26px;","ol":"margin: 4px 0; padding-left: 26px;","li":"margin: 2px 0; line-height: 1.6 !important; color: #37352f !important;","blockquote":"margin: 8px 0; padding: 4px 16px; background-color: transparent !important; border-left: 3px solid #37352f; color: #37352f !important; border-radius: 0;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 2px 5px; background-color: #f7f6f3 !important; color: #eb5757 !important; border-radius: 3px; font-size: 13px !important; line-height: 1.5 !important;","pre":"margin: 16px 0; padding: 20px; background-color: #f7f6f3 !important; border-radius: 4px; overflow-x: auto; font-size: 13px !important; line-height: 1.5 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #37352f;","img":"max-width: 100%; height: auto; display: block; margin: 16px auto; border-radius: 2px;","table":"width: 100%; margin: 16px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #f7f6f3 !important; padding: 8px 12px; text-align: left; font-weight: 600; color: #37352f !important; border: 1px solid #e9e9e7;","td":"padding: 8px 12px; border: 1px solid #e9e9e7; color: #37352f !important;","tr":"border: none;"}},{"id":"github","name":"GitHub","description":"像在读一份 README，开发者一眼就熟","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.6 !important; color: #1f2328 !important; background-color: #ffffff !important; word-wrap: break-word;","h1":"font-size: 32px; font-weight: 600; color: #1f2328 !important; line-height: 1.25 !important; margin: 24px 0 16px; padding-bottom: 10px; border-bottom: 1px solid #d1d9e0;","h2":"font-size: 24px; font-weight: 600; color: #1f2328 !important; line-height: 1.25 !important; margin: 24px 0 16px; padding-bottom: 8px; border-bottom: 1px solid #d1d9e0;","h3":"font-size: 20px; font-weight: 600; color: #1f2328 !important; line-height: 1.25 !important; margin: 24px 0 16px; border-left: 3px solid #0969da; padding-left: 11px;","h4":"font-size: 16px; font-weight: 600; color: #1f2328 !important; line-height: 1.25 !important; margin: 24px 0 16px;","p":"margin: 16px 0 !important; line-height: 1.6 !important; color: #1f2328 !important;","strong":"font-weight: 600; color: #1f2328 !important;","em":"font-style: italic; color: #1f2328 !important;","a":"color: #0969da !important; text-decoration: underline; text-underline-offset: 2px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 4px 0; line-height: 1.6 !important; color: #1f2328 !important;","blockquote":"margin: 16px 0; padding: 8px 16px; background-color: transparent !important; border-left: 4px solid #d0d7de; color: #656d76 !important; border-radius: 0;","code":"font-family: \"SF Mono\", Consolas, \"Liberation Mono\", Menlo, monospace; padding: 3px 6px; background-color: rgba(175,184,193,0.2) !important; color: #1f2328 !important; border-radius: 6px; font-size: 13px !important; line-height: 1.5 !important;","pre":"margin: 16px 0; padding: 16px; background-color: #f6f8fa !important; border-radius: 6px; overflow-x: auto; font-size: 13px !important; line-height: 1.45 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #0969da;","img":"max-width: 100%; height: auto; display: block; margin: 16px auto; border-radius: 6px;","table":"width: 100%; margin: 16px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #f6f8fa !important; padding: 8px 16px; text-align: left; font-weight: 600; color: #1f2328 !important; border: 1px solid #d1d9e0;","td":"padding: 8px 16px; border: 1px solid #d1d9e0; color: #1f2328 !important;","tr":"border: none;"}},{"id":"sspai","name":"少数派","description":"那抹标志性的红，工整又精致的中文科技味","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif; font-size: 16px; line-height: 1.8 !important; color: #333333 !important; background-color: #ffffff !important; word-wrap: break-word;","h1":"font-size: 28px; font-weight: 700; color: #d71a1b !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.01em;","h2":"font-size: 22px; font-weight: 700; color: #333333 !important; line-height: 1.35 !important; margin: 32px 0 14px; padding-left: 12px; border-left: 4px solid #d71a1b;","h3":"font-size: 18px; font-weight: 600; color: #333333 !important; line-height: 1.4 !important; margin: 28px 0 12px; border-left: 3px solid #d71a1b; padding-left: 11px;","h4":"font-size: 16px; font-weight: 600; color: #333333 !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 20px 0 !important; line-height: 1.8 !important; color: #333333 !important;","strong":"font-weight: 700; color: #d71a1b !important;","em":"font-style: italic; color: #666 !important;","a":"color: #d71a1b !important; text-decoration: none; border-bottom: 1px solid rgba(215,26,27,0.3); padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.8 !important; color: #333333 !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #fef7f7 !important; border-left: 4px solid #d71a1b; color: #555 !important; border-radius: 4px;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 6px; background-color: #fff5f5 !important; color: #d71a1b !important; border-radius: 4px; font-size: 13px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #fafafa !important; border-radius: 8px; overflow-x: auto; font-size: 13px !important; line-height: 1.5 !important; border: 1px solid #f0f0f0;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #d71a1b;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 8px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #fef7f7 !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #333 !important; border: 1px solid #f0e0e0;","td":"padding: 12px 16px; border: 1px solid #f0e0e0; color: #333333 !important;","tr":"border: none;"}},{"id":"dracula","name":"Dracula","description":"暗紫吸血鬼调，粉与青撞出来的反差感","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif; font-size: 16px; line-height: 1.7 !important; color: #f8f8f2 !important; background-color: #282a36 !important; word-wrap: break-word;","h1":"font-size: 32px; font-weight: 700; color: #bd93f9 !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.015em;","h2":"font-size: 26px; font-weight: 600; color: #ff79c6 !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 21px; font-weight: 600; color: #8be9fd !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #8be9fd; padding-left: 11px;","h4":"font-size: 18px; font-weight: 600; color: #50fa7b !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.7 !important; color: #f8f8f2 !important;","strong":"font-weight: 700; color: #ffb86c !important;","em":"font-style: italic; color: #8be9fd !important;","a":"color: #8be9fd !important; text-decoration: none; border-bottom: 1px solid #8be9fd; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.7 !important; color: #f8f8f2 !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #44475a !important; border-left: 4px solid #bd93f9; color: #f8f8f2 !important; border-radius: 4px;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 6px; background-color: #44475a !important; color: #50fa7b !important; border-radius: 4px; font-size: 12px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #44475a !important; border-radius: 8px; overflow-x: auto; font-size: 12px !important; line-height: 1.5 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #8be9fd;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 4px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #44475a !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #bd93f9 !important; border: 1px solid #6272a4;","td":"padding: 12px 16px; border: 1px solid #6272a4; color: #f8f8f2 !important;","tr":"border: none;"}},{"id":"nord","name":"Nord","description":"北欧极地的冷蓝，安静克制的极光色","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif; font-size: 16px; line-height: 1.7 !important; color: #d8dee9 !important; background-color: #2e3440 !important; word-wrap: break-word;","h1":"font-size: 32px; font-weight: 700; color: #88c0d0 !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.015em;","h2":"font-size: 26px; font-weight: 600; color: #81a1c1 !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 21px; font-weight: 600; color: #88c0d0 !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #88c0d0; padding-left: 11px;","h4":"font-size: 18px; font-weight: 600; color: #d8dee9 !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.7 !important; color: #d8dee9 !important;","strong":"font-weight: 700; color: #eceff4 !important;","em":"font-style: italic; color: #a3be8c !important;","a":"color: #88c0d0 !important; text-decoration: none; border-bottom: 1px solid #88c0d0; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.7 !important; color: #d8dee9 !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #3b4252 !important; border-left: 4px solid #5e81ac; color: #d8dee9 !important; border-radius: 4px;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 6px; background-color: #3b4252 !important; color: #a3be8c !important; border-radius: 4px; font-size: 12px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #3b4252 !important; border-radius: 8px; overflow-x: auto; font-size: 12px !important; line-height: 1.5 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #88c0d0;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 4px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #3b4252 !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #88c0d0 !important; border: 1px solid #4c566a;","td":"padding: 12px 16px; border: 1px solid #4c566a; color: #d8dee9 !important;","tr":"border: none;"}},{"id":"sakura","name":"樱花","description":"淡粉日系，温柔细腻的一点少女气","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif; font-size: 16px; line-height: 1.75 !important; color: #4a3f4f !important; background-color: #fef7f9 !important; word-wrap: break-word;","h1":"font-size: 32px; font-weight: 700; color: #c44569 !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.015em;","h2":"font-size: 26px; font-weight: 600; color: #c44569 !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 21px; font-weight: 600; color: #4a3f4f !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #c44569; padding-left: 11px;","h4":"font-size: 18px; font-weight: 600; color: #4a3f4f !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.75 !important; color: #4a3f4f !important;","strong":"font-weight: 700; color: #c44569 !important; background-color: rgba(196,69,105,0.06); padding: 0 4px; border-radius: 4px;","em":"font-style: italic; color: #9b7fa7 !important;","a":"color: #c44569 !important; text-decoration: none; border-bottom: 1px solid rgba(196,69,105,0.3); padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.75 !important; color: #4a3f4f !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #fceef2 !important; border-left: 4px solid #e8a0b4; color: #6b5570 !important; border-radius: 8px;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 6px; background-color: #fceef2 !important; color: #c44569 !important; border-radius: 4px; font-size: 12px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #fceef2 !important; border-radius: 12px; overflow-x: auto; font-size: 12px !important; line-height: 1.5 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #c44569;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 12px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #fceef2 !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #4a3f4f !important; border: 1px solid #f0d4dd;","td":"padding: 12px 16px; border: 1px solid #f0d4dd; color: #4a3f4f !important;","tr":"border: none;"}},{"id":"ocean","name":"深海","description":"午夜蓝撞珊瑚橘，像潜进一段海底叙事","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif; font-size: 16px; line-height: 1.7 !important; color: #c8d6e5 !important; background-color: #0c2233 !important; word-wrap: break-word;","h1":"font-size: 32px; font-weight: 700; color: #ff6b6b !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.015em;","h2":"font-size: 26px; font-weight: 600; color: #feca57 !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 21px; font-weight: 600; color: #54a0ff !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #ff6b6b; padding-left: 11px;","h4":"font-size: 18px; font-weight: 600; color: #c8d6e5 !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.7 !important; color: #c8d6e5 !important;","strong":"font-weight: 700; color: #feca57 !important;","em":"font-style: italic; color: #78e0a0 !important;","a":"color: #ff6b6b !important; text-decoration: none; border-bottom: 1px solid #ff6b6b; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.7 !important; color: #c8d6e5 !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #152d42 !important; border-left: 4px solid #54a0ff; color: #c8d6e5 !important; border-radius: 4px;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 6px; background-color: #152d42 !important; color: #ff6b6b !important; border-radius: 4px; font-size: 12px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #152d42 !important; border-radius: 8px; overflow-x: auto; font-size: 12px !important; line-height: 1.5 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #ff6b6b;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 4px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #152d42 !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #feca57 !important; border: 1px solid #1e3a52;","td":"padding: 12px 16px; border: 1px solid #1e3a52; color: #c8d6e5 !important;","tr":"border: none;"}},{"id":"mint","name":"薄荷","description":"薄荷绿打底，清清爽爽的生活与健康向","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif; font-size: 16px; line-height: 1.7 !important; color: #2d4a3e !important; background-color: #f0faf5 !important; word-wrap: break-word;","h1":"font-size: 32px; font-weight: 700; color: #1a7a5a !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.015em;","h2":"font-size: 26px; font-weight: 600; color: #1a7a5a !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 21px; font-weight: 600; color: #2d4a3e !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #1a7a5a; padding-left: 11px;","h4":"font-size: 18px; font-weight: 600; color: #2d4a3e !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.7 !important; color: #2d4a3e !important;","strong":"font-weight: 700; color: #1a7a5a !important;","em":"font-style: italic; color: #5a8a72 !important;","a":"color: #1a7a5a !important; text-decoration: none; border-bottom: 1px solid rgba(26,122,90,0.3); padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.7 !important; color: #2d4a3e !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #e0f5ec !important; border-left: 4px solid #1a7a5a; color: #3d5a4e !important; border-radius: 4px;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 6px; background-color: #e0f5ec !important; color: #1a7a5a !important; border-radius: 4px; font-size: 12px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #e0f5ec !important; border-radius: 8px; overflow-x: auto; font-size: 12px !important; line-height: 1.5 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #1a7a5a;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 8px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #e0f5ec !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #2d4a3e !important; border: 1px solid #c8e6d8;","td":"padding: 12px 16px; border: 1px solid #c8e6d8; color: #2d4a3e !important;","tr":"border: none;"}},{"id":"sunset","name":"日落","description":"暖琥珀的黄昏感，适合散文、游记和心事","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: Georgia, \"Times New Roman\", Times, serif; font-size: 16px; line-height: 1.8 !important; color: #3d2c1e !important; background-color: #fdf6ee !important; word-wrap: break-word;","h1":"font-size: 32px; font-weight: 700; color: #c0582a !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.015em;","h2":"font-size: 26px; font-weight: 600; color: #c0582a !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 21px; font-weight: 600; color: #3d2c1e !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #c0582a; padding-left: 11px;","h4":"font-size: 18px; font-weight: 600; color: #3d2c1e !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 20px 0 !important; line-height: 1.8 !important; color: #3d2c1e !important;","strong":"font-weight: 700; color: #c0582a !important;","em":"font-style: italic; color: #8a6d4b !important;","a":"color: #c0582a !important; text-decoration: none; border-bottom: 1px solid rgba(192,88,42,0.3); padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.8 !important; color: #3d2c1e !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #f8ead6 !important; border-left: 4px solid #e8a65d; color: #5a4232 !important; border-radius: 4px; font-style: italic;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 6px; background-color: #f5e6d0 !important; color: #c0582a !important; border-radius: 4px; font-size: 12px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #f5e6d0 !important; border-radius: 8px; overflow-x: auto; font-size: 12px !important; line-height: 1.5 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #c0582a;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 4px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #f5e6d0 !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #3d2c1e !important; border: 1px solid #e8d4b8;","td":"padding: 12px 16px; border: 1px solid #e8d4b8; color: #3d2c1e !important;","tr":"border: none;"}},{"id":"monokai","name":"Monokai","description":"老牌编辑器配色，程序员的浪漫底色","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: \"SF Mono\", \"Fira Code\", Consolas, monospace; font-size: 15px; line-height: 1.7 !important; color: #f8f8f2 !important; background-color: #272822 !important; word-wrap: break-word;","h1":"font-size: 30px; font-weight: 700; color: #f92672 !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.01em;","h2":"font-size: 24px; font-weight: 600; color: #a6e22e !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 20px; font-weight: 600; color: #e6db74 !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #66d9ef; padding-left: 11px;","h4":"font-size: 17px; font-weight: 600; color: #66d9ef !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.7 !important; color: #f8f8f2 !important;","strong":"font-weight: 700; color: #f92672 !important;","em":"font-style: italic; color: #e6db74 !important;","a":"color: #66d9ef !important; text-decoration: none; border-bottom: 1px solid #66d9ef; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.7 !important; color: #f8f8f2 !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #3e3d32 !important; border-left: 4px solid #f92672; color: #a6a68a !important; border-radius: 4px;","code":"font-family: \"SF Mono\", \"Fira Code\", Consolas, monospace; padding: 3px 6px; background-color: #3e3d32 !important; color: #a6e22e !important; border-radius: 4px; font-size: 13px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #3e3d32 !important; border-radius: 8px; overflow-x: auto; font-size: 13px !important; line-height: 1.5 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #66d9ef;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 4px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 14px;","th":"background-color: #3e3d32 !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #a6e22e !important; border: 1px solid #49483e;","td":"padding: 12px 16px; border: 1px solid #49483e; color: #f8f8f2 !important;","tr":"border: none;"}},{"id":"solarized","name":"Solarized","description":"暖调护眼的开发者配色，久读也不累","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif; font-size: 16px; line-height: 1.7 !important; color: #657b83 !important; background-color: #fdf6e3 !important; word-wrap: break-word;","h1":"font-size: 32px; font-weight: 700; color: #cb4b16 !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.015em;","h2":"font-size: 26px; font-weight: 600; color: #268bd2 !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 21px; font-weight: 600; color: #2aa198 !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #268bd2; padding-left: 11px;","h4":"font-size: 18px; font-weight: 600; color: #657b83 !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.7 !important; color: #657b83 !important;","strong":"font-weight: 700; color: #cb4b16 !important;","em":"font-style: italic; color: #93a1a1 !important;","a":"color: #268bd2 !important; text-decoration: none; border-bottom: 1px solid #268bd2; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.7 !important; color: #657b83 !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #eee8d5 !important; border-left: 4px solid #2aa198; color: #586e75 !important; border-radius: 4px;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 6px; background-color: #eee8d5 !important; color: #859900 !important; border-radius: 4px; font-size: 12px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #eee8d5 !important; border-radius: 8px; overflow-x: auto; font-size: 12px !important; line-height: 1.5 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #268bd2;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 4px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #eee8d5 !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #657b83 !important; border: 1px solid #ddd6c1;","td":"padding: 12px 16px; border: 1px solid #ddd6c1; color: #657b83 !important;","tr":"border: none;"}},{"id":"cyberpunk","name":"Cyberpunk","description":"霓虹赛博，品红与青电到发亮","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: \"SF Mono\", \"Fira Code\", Consolas, monospace; font-size: 15px; line-height: 1.7 !important; color: #e0e0ff !important; background-color: #0d0221 !important; word-wrap: break-word;","h1":"font-size: 32px; font-weight: 700; color: #ff2a6d !important; text-shadow: 0 0 8px rgba(255,42,109,0.5); line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: 0.05em; text-transform: uppercase;","h2":"font-size: 26px; font-weight: 600; color: #05d9e8 !important; text-shadow: 0 0 8px rgba(5,217,232,0.5); line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 21px; font-weight: 600; color: #d1f7ff !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #05d9e8; padding-left: 11px;","h4":"font-size: 18px; font-weight: 600; color: #ff2a6d !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.7 !important; color: #e0e0ff !important;","strong":"font-weight: 700; color: #ff2a6d !important; text-shadow: 0 0 6px rgba(255,42,109,0.4);","em":"font-style: italic; color: #05d9e8 !important;","a":"color: #05d9e8 !important; text-decoration: none; border-bottom: 1px solid #05d9e8; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.7 !important; color: #e0e0ff !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #1a0a3e !important; border-left: 4px solid #ff2a6d; color: #c8c8ff !important; border-radius: 0;","code":"font-family: \"SF Mono\", \"Fira Code\", Consolas, monospace; padding: 3px 6px; background-color: #1a0a3e !important; color: #05d9e8 !important; border-radius: 0; font-size: 13px !important; line-height: 1.5 !important; border: 1px solid #2a1a4e;","pre":"margin: 24px 0; padding: 20px; background-color: #1a0a3e !important; border-radius: 0; overflow-x: auto; font-size: 13px !important; line-height: 1.5 !important; border: 1px solid #2a1a4e;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #05d9e8;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 0;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 14px;","th":"background-color: #1a0a3e !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #ff2a6d !important; border: 1px solid #2a1a4e;","td":"padding: 12px 16px; border: 1px solid #2a1a4e; color: #e0e0ff !important;","tr":"border: none;"}},{"id":"ink","name":"水墨","description":"纯黑白像一张宣纸，零色彩只剩文字","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: Georgia, \"Times New Roman\", Times, serif; font-size: 16px; line-height: 1.8 !important; color: #111111 !important; background-color: #ffffff !important; word-wrap: break-word;","h1":"font-size: 32px; font-weight: 700; color: #000000 !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.02em; border-bottom: 2px solid #000; padding-bottom: 10px;","h2":"font-size: 26px; font-weight: 700; color: #000000 !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 21px; font-weight: 600; color: #222222 !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #111111; padding-left: 11px;","h4":"font-size: 18px; font-weight: 600; color: #333333 !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 20px 0 !important; line-height: 1.8 !important; color: #111111 !important;","strong":"font-weight: 700; color: #000000 !important;","em":"font-style: italic; color: #555555 !important;","a":"color: #111111 !important; text-decoration: underline; text-underline-offset: 3px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.8 !important; color: #111111 !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: transparent !important; border-left: 3px solid #000000; color: #333333 !important; border-radius: 0;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 6px; background-color: #f0f0f0 !important; color: #000000 !important; border-radius: 2px; font-size: 13px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #f5f5f5 !important; border-radius: 2px; overflow-x: auto; font-size: 13px !important; line-height: 1.5 !important; border: 1px solid #e0e0e0;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #111111;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 0;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #f5f5f5 !important; padding: 12px 16px; text-align: left; font-weight: 700; color: #000000 !important; border: 1px solid #cccccc;","td":"padding: 12px 16px; border: 1px solid #cccccc; color: #111111 !important;","tr":"border: none;"}},{"id":"lavender","name":"薰衣草","description":"梦幻紫雾，留给诗意和灵感的温柔角落","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif; font-size: 16px; line-height: 1.75 !important; color: #3d3155 !important; background-color: #f5f0ff !important; word-wrap: break-word;","h1":"font-size: 32px; font-weight: 700; color: #6b4c9a !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.015em;","h2":"font-size: 26px; font-weight: 600; color: #7c5cad !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 21px; font-weight: 600; color: #3d3155 !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #6b4c9a; padding-left: 11px;","h4":"font-size: 18px; font-weight: 600; color: #3d3155 !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.75 !important; color: #3d3155 !important;","strong":"font-weight: 700; color: #6b4c9a !important; background-color: rgba(107,76,154,0.08); padding: 0 4px; border-radius: 4px;","em":"font-style: italic; color: #8a6dba !important;","a":"color: #6b4c9a !important; text-decoration: none; border-bottom: 1px solid rgba(107,76,154,0.3); padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.75 !important; color: #3d3155 !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #ece4ff !important; border-left: 4px solid #9b7fd4; color: #5a4570 !important; border-radius: 8px;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 6px; background-color: #ece4ff !important; color: #6b4c9a !important; border-radius: 4px; font-size: 12px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #ece4ff !important; border-radius: 12px; overflow-x: auto; font-size: 12px !important; line-height: 1.5 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #6b4c9a;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 12px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #ece4ff !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #3d3155 !important; border: 1px solid #ddd0f0;","td":"padding: 12px 16px; border: 1px solid #ddd0f0; color: #3d3155 !important;","tr":"border: none;"}},{"id":"forest","name":"密林","description":"深绿丛林感，幽静里藏着一点神秘","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif; font-size: 16px; line-height: 1.7 !important; color: #c8dcc8 !important; background-color: #1a2e1a !important; word-wrap: break-word;","h1":"font-size: 32px; font-weight: 700; color: #7dce82 !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.015em;","h2":"font-size: 26px; font-weight: 600; color: #a8d8a8 !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 21px; font-weight: 600; color: #8fbc8f !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #7dce82; padding-left: 11px;","h4":"font-size: 18px; font-weight: 600; color: #c8dcc8 !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.7 !important; color: #c8dcc8 !important;","strong":"font-weight: 700; color: #7dce82 !important;","em":"font-style: italic; color: #a0c8a0 !important;","a":"color: #7dce82 !important; text-decoration: none; border-bottom: 1px solid #7dce82; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.7 !important; color: #c8dcc8 !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #243824 !important; border-left: 4px solid #4a8b4a; color: #a8c8a8 !important; border-radius: 4px;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 6px; background-color: #243824 !important; color: #7dce82 !important; border-radius: 4px; font-size: 12px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #243824 !important; border-radius: 8px; overflow-x: auto; font-size: 12px !important; line-height: 1.5 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #7dce82;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 4px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #243824 !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #7dce82 !important; border: 1px solid #3a5a3a;","td":"padding: 12px 16px; border: 1px solid #3a5a3a; color: #c8dcc8 !important;","tr":"border: none;"}},{"id":"glacier","name":"冰川","description":"冰蓝清冷，理性分析和报告的好搭子","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif; font-size: 16px; line-height: 1.7 !important; color: #2c3e50 !important; background-color: #eef4fa !important; word-wrap: break-word;","h1":"font-size: 32px; font-weight: 700; color: #1565c0 !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.015em;","h2":"font-size: 26px; font-weight: 600; color: #1976d2 !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 21px; font-weight: 600; color: #2c3e50 !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #1976d2; padding-left: 11px;","h4":"font-size: 18px; font-weight: 600; color: #2c3e50 !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.7 !important; color: #2c3e50 !important;","strong":"font-weight: 700; color: #1565c0 !important;","em":"font-style: italic; color: #5a7a9a !important;","a":"color: #1976d2 !important; text-decoration: none; border-bottom: 1px solid rgba(25,118,210,0.3); padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.7 !important; color: #2c3e50 !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #e1eef6 !important; border-left: 4px solid #42a5f5; color: #3a5068 !important; border-radius: 4px;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 6px; background-color: #e1eef6 !important; color: #1565c0 !important; border-radius: 4px; font-size: 12px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #e1eef6 !important; border-radius: 8px; overflow-x: auto; font-size: 12px !important; line-height: 1.5 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #1976d2;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 4px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #e1eef6 !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #2c3e50 !important; border: 1px solid #c8dce8;","td":"padding: 12px 16px; border: 1px solid #c8dce8; color: #2c3e50 !important;","tr":"border: none;"}},{"id":"coffee","name":"咖啡","description":"巧克力棕的书卷气，像午后那杯手冲","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: Georgia, \"Times New Roman\", Times, serif; font-size: 16px; line-height: 1.75 !important; color: #3e2723 !important; background-color: #f5efe6 !important; background-image: radial-gradient(circle at center, #f5efe6 0%, #ebe2d3 100%); word-wrap: break-word;","h1":"font-size: 32px; font-weight: 700; color: #4e342e !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.015em;","h2":"font-size: 26px; font-weight: 600; color: #5d4037 !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 21px; font-weight: 600; color: #3e2723 !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #6d4c41; padding-left: 11px;","h4":"font-size: 18px; font-weight: 600; color: #3e2723 !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.75 !important; color: #3e2723 !important;","strong":"font-weight: 700; color: #4e342e !important;","em":"font-style: italic; color: #795548 !important;","a":"color: #6d4c41 !important; text-decoration: none; border-bottom: 1px solid rgba(109,76,65,0.3); padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.75 !important; color: #3e2723 !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #ece2d4 !important; border-left: 4px solid #a1887f; color: #5d4037 !important; border-radius: 4px;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 6px; background-color: #ece2d4 !important; color: #6d4c41 !important; border-radius: 4px; font-size: 12px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #ece2d4 !important; border-radius: 8px; overflow-x: auto; font-size: 12px !important; line-height: 1.5 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #6d4c41;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 4px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #ece2d4 !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #3e2723 !important; border: 1px solid #d7ccc8;","td":"padding: 12px 16px; border: 1px solid #d7ccc8; color: #3e2723 !important;","tr":"border: none;"}},{"id":"bauhaus","name":"Bauhaus","description":"红蓝黄三原色硬碰，现代主义的张扬","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: \"Helvetica Neue\", Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.65 !important; color: #1a1a1a !important; background-color: #ffffff !important; word-wrap: break-word;","h1":"font-size: 34px; font-weight: 900; color: #e30613 !important; line-height: 1.2 !important; margin: 38px 0 16px; letter-spacing: -0.02em; text-transform: uppercase;","h2":"font-size: 26px; font-weight: 700; color: #004d9f !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 21px; font-weight: 600; color: #1a1a1a !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #004d9f; padding-left: 11px;","h4":"font-size: 18px; font-weight: 600; color: #1a1a1a !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.65 !important; color: #1a1a1a !important;","strong":"font-weight: 900; color: #e30613 !important;","em":"font-style: italic; color: #555 !important;","a":"color: #004d9f !important; text-decoration: none; border-bottom: 2px solid #f5a623; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.65 !important; color: #1a1a1a !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #fff4d6 !important; border-left: 6px solid #f5a623; color: #333 !important; border-radius: 0;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 6px; background-color: #f0f0f0 !important; color: #004d9f !important; border-radius: 0; font-size: 13px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #f0f0f0 !important; border-radius: 0; overflow-x: auto; font-size: 13px !important; line-height: 1.5 !important; border-left: 6px solid #e30613;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #004d9f;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 0;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #004d9f !important; padding: 16px 16px; text-align: left; font-weight: 700; color: #ffffff !important; border: 3px solid #1a1a1a;","td":"padding: 16px 16px; border: 3px solid #1a1a1a; color: #1a1a1a !important; font-weight: 500;","tr":"border: none;"}},{"id":"copper","name":"赤铜","description":"暗底里的青铜光泽，沉静又温热的金属感","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: Georgia, \"Times New Roman\", Times, serif; font-size: 16px; line-height: 1.7 !important; color: #d4b896 !important; background-color: #1c1410 !important; word-wrap: break-word;","h1":"font-size: 32px; font-weight: 700; color: #e8a87c !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.015em;","h2":"font-size: 26px; font-weight: 600; color: #c49070 !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 21px; font-weight: 600; color: #d4b896 !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #e8a87c; padding-left: 11px;","h4":"font-size: 18px; font-weight: 600; color: #d4b896 !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.7 !important; color: #d4b896 !important;","strong":"font-weight: 700; color: #e8a87c !important;","em":"font-style: italic; color: #b89878 !important;","a":"color: #e8a87c !important; text-decoration: none; border-bottom: 1px solid #e8a87c; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.7 !important; color: #d4b896 !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #2a1e16 !important; border-left: 4px solid #b8734a; color: #c0a080 !important; border-radius: 4px;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 6px; background-color: #2a1e16 !important; color: #e8a87c !important; border-radius: 4px; font-size: 12px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #2a1e16 !important; border-radius: 8px; overflow-x: auto; font-size: 12px !important; line-height: 1.5 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #e8a87c;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 4px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #2a1e16 !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #e8a87c !important; border: 1px solid #3a2a1e;","td":"padding: 12px 16px; border: 1px solid #3a2a1e; color: #d4b896 !important;","tr":"border: none;"}},{"id":"pastel","name":"彩虹糖","description":"马卡龙多彩，甜甜的一股少年气","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif; font-size: 16px; line-height: 1.75 !important; color: #4a4a5a !important; background-color: #fefcf8 !important; word-wrap: break-word;","h1":"font-size: 32px; font-weight: 700; color: #e07a94 !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.015em;","h2":"font-size: 26px; font-weight: 600; color: #7ab8d0 !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 21px; font-weight: 600; color: #85b882 !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #7ab8d0; padding-left: 11px;","h4":"font-size: 18px; font-weight: 600; color: #d4a76a !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.75 !important; color: #4a4a5a !important;","strong":"font-weight: 700; color: #e07a94 !important;","em":"font-style: italic; color: #9b8ec4 !important;","a":"color: #7ab8d0 !important; text-decoration: none; border-bottom: 1px solid rgba(122,184,208,0.4); padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.75 !important; color: #4a4a5a !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #f0ecff !important; border-left: 4px solid #b8a9e0; color: #5a5a6a !important; border-radius: 12px;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 6px; background-color: #fff0f3 !important; color: #e07a94 !important; border-radius: 6px; font-size: 12px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #f0f7ff !important; border-radius: 12px; overflow-x: auto; font-size: 12px !important; line-height: 1.5 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #7ab8d0;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 12px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #f0ecff !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #4a4a5a !important; border: 1px solid #e8e0f0;","td":"padding: 12px 16px; border: 1px solid #e8e0f0; color: #4a4a5a !important;","tr":"border: none;"}},{"id":"sports","name":"运动风","description":"翠绿带渐变光，蹦着活力的运动调","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans SC\", sans-serif; font-size: 16px; line-height: 1.7 !important; color: #151513 !important; background-color: #ffffff !important; word-wrap: break-word;","h1":"font-size: 28px; font-weight: 700; color: #00a968 !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.01em;","h2":"font-size: 22px; font-weight: 700; color: #00a968 !important; line-height: 1.4 !important; margin: 32px 0 16px; border-left: 4px solid #00a968; padding-left: 12px;","h3":"font-size: 18px; font-weight: 600; color: #151513 !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #00a968; padding-left: 11px;","h4":"font-size: 16px; font-weight: 600; color: #151513 !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.7 !important; color: #151513 !important;","strong":"font-weight: 700; color: #00a968 !important; background-color: rgba(0,169,104,0.08); padding: 0 4px; border-radius: 4px;","em":"font-style: italic; color: #666 !important;","a":"color: #00a968 !important; text-decoration: none; border-bottom: 1px solid #00a968; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.7 !important; color: #151513 !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #f8f8f8 !important; border-left: 4px solid #00a968; color: #3c3c3e !important; border-radius: 4px;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 7px; background-color: #eafaf2 !important; color: #008a56 !important; border-radius: 999px; font-size: 13px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #f5f5f5 !important; border-radius: 8px; overflow-x: auto; font-size: 13px !important; line-height: 1.6 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #00a968;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 8px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #f8f8f8 !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #151513 !important; border: 1px solid #e6e6e6;","td":"padding: 12px 16px; border: 1px solid #e6e6e6; color: #151513 !important;","tr":"border: none;"}},{"id":"chinese","name":"中国风","description":"中国红配衬线，端正里透着古典雅意","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: \"Noto Serif SC\", Georgia, \"Times New Roman\", serif; font-size: 16px; line-height: 1.8 !important; color: #2b2620 !important; background-color: #fdfbf6 !important; word-wrap: break-word;","h1":"font-size: 28px; font-weight: 700; color: #8b1e22 !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.01em;","h2":"font-size: 22px; font-weight: 700; color: #8b1e22 !important; line-height: 1.4 !important; margin: 32px 0 16px; border-left: 4px solid #8b1e22; padding-left: 12px;","h3":"font-size: 18px; font-weight: 600; color: #2b2620 !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #8b1e22; padding-left: 11px;","h4":"font-size: 16px; font-weight: 600; color: #2b2620 !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.8 !important; color: #2b2620 !important;","strong":"font-weight: 700; color: #8b1e22 !important;","em":"font-style: italic; color: #666 !important;","a":"color: #8b1e22 !important; text-decoration: none; border-bottom: 1px solid #8b1e22; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.8 !important; color: #2b2620 !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #faf3f1 !important; border-left: 4px solid #8b1e22; color: #6b5f55 !important; border-radius: 4px;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 7px; background-color: #f6ece9 !important; color: #8b1e22 !important; border-radius: 4px; font-size: 13px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #f6efe7 !important; border-radius: 8px; overflow-x: auto; font-size: 13px !important; line-height: 1.6 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #8b1e22;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 8px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #faf3f1 !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #2b2620 !important; border: 1px solid #e3d8c6;","td":"padding: 12px 16px; border: 1px solid #e3d8c6; color: #2b2620 !important;","tr":"border: none;"}},{"id":"autumn-warm","name":"秋日暖光","description":"橙调暖光，写情绪和生活刚刚好","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans SC\", sans-serif; font-size: 16px; line-height: 1.75 !important; color: #4a413d !important; background-color: #faf9f5 !important; word-wrap: break-word;","h1":"font-size: 28px; font-weight: 700; color: #d97758 !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.01em;","h2":"font-size: 24px; font-weight: 600; color: #d97758 !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 18px; font-weight: 600; color: #4a413d !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #c06b4d; padding-left: 11px;","h4":"font-size: 16px; font-weight: 600; color: #4a413d !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.75 !important; color: #4a413d !important;","strong":"font-weight: 700; color: #d97758 !important; background-color: rgba(217,119,88,0.10); padding: 0 4px; border-radius: 4px;","em":"font-style: italic; color: #666 !important;","a":"color: #c06b4d !important; text-decoration: none; border-bottom: 1px solid #c06b4d; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.75 !important; color: #4a413d !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #fef4e7 !important; border-left: 4px solid #d97758; color: #7a6a5f !important; border-radius: 4px;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 7px; background-color: #fbeede !important; color: #c06b4d !important; border-radius: 4px; font-size: 13px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #fbeede !important; border-radius: 8px; overflow-x: auto; font-size: 13px !important; line-height: 1.6 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #c06b4d;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 8px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #fef4e7 !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #4a413d !important; border: 1px solid #e8ddcd;","td":"padding: 12px 16px; border: 1px solid #e8ddcd; color: #4a413d !important;","tr":"border: none;"}},{"id":"ocean-calm","name":"深海静谧","description":"冷蓝沉静，理性深度内容的专业底色","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans SC\", sans-serif; font-size: 16px; line-height: 1.75 !important; color: #3a4150 !important; background-color: #f0f4f8 !important; word-wrap: break-word;","h1":"font-size: 28px; font-weight: 700; color: #4a7c9b !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.01em;","h2":"font-size: 24px; font-weight: 600; color: #4a7c9b !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 18px; font-weight: 600; color: #3a4150 !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #3d6a8a; padding-left: 11px;","h4":"font-size: 16px; font-weight: 600; color: #3a4150 !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.75 !important; color: #3a4150 !important;","strong":"font-weight: 700; color: #4a7c9b !important; background-color: rgba(74,124,155,0.10); padding: 0 4px; border-radius: 4px;","em":"font-style: italic; color: #666 !important;","a":"color: #3d6a8a !important; text-decoration: none; border-bottom: 1px solid #3d6a8a; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.75 !important; color: #3a4150 !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #e8f0f8 !important; border-left: 4px solid #4a7c9b; color: #5a6678 !important; border-radius: 4px;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 7px; background-color: #e2ecf6 !important; color: #3d6a8a !important; border-radius: 4px; font-size: 13px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #e8f0f8 !important; border-radius: 8px; overflow-x: auto; font-size: 13px !important; line-height: 1.6 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #3d6a8a;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 8px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #e8f0f8 !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #3a4150 !important; border: 1px solid #d2dde8;","td":"padding: 12px 16px; border: 1px solid #d2dde8; color: #3a4150 !important;","tr":"border: none;"}},{"id":"spring-fresh","name":"春日清新","description":"嫩绿清新，一派生机的生活方式感","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans SC\", sans-serif; font-size: 16px; line-height: 1.75 !important; color: #3d4a3d !important; background-color: #f5f8f5 !important; word-wrap: break-word;","h1":"font-size: 28px; font-weight: 700; color: #6b9b7a !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.01em;","h2":"font-size: 24px; font-weight: 600; color: #6b9b7a !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 18px; font-weight: 600; color: #3d4a3d !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #4a8058; padding-left: 11px;","h4":"font-size: 16px; font-weight: 600; color: #3d4a3d !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.75 !important; color: #3d4a3d !important;","strong":"font-weight: 700; color: #6b9b7a !important; background-color: rgba(107,155,122,0.12); padding: 0 4px; border-radius: 4px;","em":"font-style: italic; color: #666 !important;","a":"color: #4a8058 !important; text-decoration: none; border-bottom: 1px solid #4a8058; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.75 !important; color: #3d4a3d !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #e8f0e8 !important; border-left: 4px solid #6b9b7a; color: #5a6a5a !important; border-radius: 4px;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 7px; background-color: #e2eee4 !important; color: #4a8058 !important; border-radius: 4px; font-size: 13px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #e8f0e8 !important; border-radius: 8px; overflow-x: auto; font-size: 13px !important; line-height: 1.6 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #4a8058;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 8px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #e8f0e8 !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #3d4a3d !important; border: 1px solid #d4e0d4;","td":"padding: 12px 16px; border: 1px solid #d4e0d4; color: #3d4a3d !important;","tr":"border: none;"}},{"id":"moyu-green","name":"摸鱼绿","description":"清新抹茶绿，信息密度高的通用教程底色","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans SC\", sans-serif; font-size: 16px; line-height: 1.75 !important; color: #12352f !important; background-color: #ecfdf5 !important; word-wrap: break-word;","h1":"font-size: 28px; font-weight: 700; color: #059669 !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.01em;","h2":"font-size: 24px; font-weight: 600; color: #059669 !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 18px; font-weight: 600; color: #12352f !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #059669; padding-left: 11px;","h4":"font-size: 16px; font-weight: 600; color: #12352f !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.75 !important; color: #12352f !important;","strong":"font-weight: 700; color: #059669 !important;","em":"font-style: italic; color: #56706a !important;","a":"color: #059669 !important; text-decoration: none; border-bottom: 1px solid #059669; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.75 !important; color: #12352f !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #d1fae5 !important; border-left: 4px solid #059669; color: #1f4d43 !important; border-radius: 4px;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 7px; background-color: #d1fae5 !important; color: #065f46 !important; border-radius: 4px; font-size: 13px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #d1fae5 !important; border-radius: 8px; overflow-x: auto; font-size: 13px !important; line-height: 1.6 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #059669;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 8px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #d1fae5 !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #12352f !important; border: 1px solid #a7f3d0;","td":"padding: 12px 16px; border: 1px solid #a7f3d0; color: #12352f !important;","tr":"border: none;"}},{"id":"tech-cobalt","name":"科技钴蓝","description":"冷静钴蓝，开发与 AI 技术内容的理性底色","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans SC\", sans-serif; font-size: 16px; line-height: 1.75 !important; color: #172554 !important; background-color: #ffffff !important; word-wrap: break-word;","h1":"font-size: 28px; font-weight: 700; color: #1d4ed8 !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.01em;","h2":"font-size: 24px; font-weight: 600; color: #1d4ed8 !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 18px; font-weight: 600; color: #172554 !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #1d4ed8; padding-left: 11px;","h4":"font-size: 16px; font-weight: 600; color: #172554 !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.75 !important; color: #172554 !important;","strong":"font-weight: 700; color: #1d4ed8 !important;","em":"font-style: italic; color: #475569 !important;","a":"color: #1d4ed8 !important; text-decoration: none; border-bottom: 1px solid #1d4ed8; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.75 !important; color: #172554 !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #eff6ff !important; border-left: 4px solid #1d4ed8; color: #1e3a8a !important; border-radius: 4px;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 7px; background-color: #dbeafe !important; color: #1e40af !important; border-radius: 4px; font-size: 13px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #eff6ff !important; border-radius: 8px; overflow-x: auto; font-size: 13px !important; line-height: 1.6 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #1d4ed8;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 6px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #eff6ff !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #172554 !important; border: 1px solid #bfdbfe;","td":"padding: 12px 16px; border: 1px solid #bfdbfe; color: #172554 !important;","tr":"border: none;"}},{"id":"red-white","name":"红白色系","description":"暖调红白对比，观点与深度分析的锋芒底色","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans SC\", sans-serif; font-size: 16px; line-height: 1.75 !important; color: #3f1d1d !important; background-color: #ffffff !important; word-wrap: break-word;","h1":"font-size: 28px; font-weight: 700; color: #dc2626 !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.01em;","h2":"font-size: 24px; font-weight: 600; color: #dc2626 !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 18px; font-weight: 600; color: #3f1d1d !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #dc2626; padding-left: 11px;","h4":"font-size: 16px; font-weight: 600; color: #3f1d1d !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.75 !important; color: #3f1d1d !important;","strong":"font-weight: 700; color: #dc2626 !important;","em":"font-style: italic; color: #8a5a5a !important;","a":"color: #dc2626 !important; text-decoration: none; border-bottom: 1px solid #dc2626; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.75 !important; color: #3f1d1d !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #fef2f2 !important; border-left: 4px solid #dc2626; color: #7f1d1d !important; border-radius: 4px;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 7px; background-color: #fee2e2 !important; color: #b91c1c !important; border-radius: 4px; font-size: 13px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #fef2f2 !important; border-radius: 8px; overflow-x: auto; font-size: 13px !important; line-height: 1.6 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #dc2626;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 8px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #fef2f2 !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #3f1d1d !important; border: 1px solid #fecaca;","td":"padding: 12px 16px; border: 1px solid #fecaca; color: #3f1d1d !important;","tr":"border: none;"}},{"id":"graphite-minimal","name":"石墨极简","description":"低饱和石墨灰，设计与专业观点的克制底色","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans SC\", sans-serif; font-size: 16px; line-height: 1.8 !important; color: #27272a !important; background-color: #ffffff !important; word-wrap: break-word;","h1":"font-size: 28px; font-weight: 700; color: #18181b !important; line-height: 1.3 !important; margin: 40px 0 16px; letter-spacing: -0.01em;","h2":"font-size: 24px; font-weight: 600; color: #27272a !important; line-height: 1.35 !important; margin: 34px 0 16px;","h3":"font-size: 18px; font-weight: 600; color: #27272a !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 2px solid #52525b; padding-left: 11px;","h4":"font-size: 16px; font-weight: 600; color: #27272a !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.8 !important; color: #27272a !important;","strong":"font-weight: 700; color: #18181b !important;","em":"font-style: italic; color: #71717a !important;","a":"color: #52525b !important; text-decoration: none; border-bottom: 1px solid #a1a1aa; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.8 !important; color: #27272a !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #f4f4f5 !important; border-left: 2px solid #52525b; color: #3f3f46 !important; border-radius: 2px;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 7px; background-color: #f4f4f5 !important; color: #3f3f46 !important; border-radius: 3px; font-size: 13px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #f4f4f5 !important; border-radius: 4px; overflow-x: auto; font-size: 13px !important; line-height: 1.6 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 1px; background-color: #a1a1aa;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 2px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #f4f4f5 !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #27272a !important; border: 1px solid #e4e4e7;","td":"padding: 12px 16px; border: 1px solid #e4e4e7; color: #27272a !important;","tr":"border: none;"}},{"id":"apple-open-course","name":"苹果公开课","description":"Apple Keynote 式清爽，方法论与课程内容的通透底色","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"SF Pro Display\", \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans SC\", sans-serif; font-size: 16px; line-height: 1.7 !important; color: #1d1d1f !important; background-color: #f5f5f7 !important; word-wrap: break-word;","h1":"font-size: 34px; font-weight: 700; color: #0066cc !important; line-height: 1.25 !important; margin: 38px 0 16px; letter-spacing: -0.02em;","h2":"font-size: 26px; font-weight: 600; color: #0066cc !important; line-height: 1.3 !important; margin: 32px 0 16px;","h3":"font-size: 20px; font-weight: 600; color: #1d1d1f !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #0066cc; padding-left: 11px;","h4":"font-size: 17px; font-weight: 600; color: #1d1d1f !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.7 !important; color: #1d1d1f !important;","strong":"font-weight: 700; color: #0066cc !important;","em":"font-style: italic; color: #6e6e73 !important;","a":"color: #0066cc !important; text-decoration: none; border-bottom: 1px solid #0066cc; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.7 !important; color: #1d1d1f !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #ffffff !important; border-left: 4px solid #0066cc; color: #424245 !important; border-radius: 6px;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 7px; background-color: #ffffff !important; color: #0066cc !important; border-radius: 4px; font-size: 12px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #ffffff !important; border-radius: 8px; overflow-x: auto; font-size: 12px !important; line-height: 1.5 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #0066cc;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 10px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #e8e8ed !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #1d1d1f !important; border: 1px solid #d2d2d7;","td":"padding: 12px 16px; border: 1px solid #d2d2d7; color: #1d1d1f !important;","tr":"border: none;"}},{"id":"zen-whitespace","name":"留白禅意","description":"呼吸感留白与低饱和青灰，深度随笔的静气底色","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 32px 24px 56px 24px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans SC\", sans-serif; font-size: 16px; line-height: 1.85 !important; color: #33413a !important; background-color: #f1f5f2 !important; word-wrap: break-word;","h1":"font-size: 28px; font-weight: 700; color: #4a5d52 !important; line-height: 1.35 !important; margin: 42px 0 18px; letter-spacing: 0.01em;","h2":"font-size: 24px; font-weight: 600; color: #4a5d52 !important; line-height: 1.4 !important; margin: 36px 0 18px;","h3":"font-size: 18px; font-weight: 600; color: #33413a !important; line-height: 1.45 !important; margin: 30px 0 16px; border-left: 2px solid #4a5d52; padding-left: 12px;","h4":"font-size: 16px; font-weight: 600; color: #33413a !important; line-height: 1.45 !important; margin: 26px 0 14px;","p":"margin: 18px 0 !important; line-height: 1.85 !important; color: #33413a !important;","strong":"font-weight: 700; color: #4a5d52 !important;","em":"font-style: italic; color: #6b7f72 !important;","a":"color: #4a5d52 !important; text-decoration: none; border-bottom: 1px solid #9db3a4; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 10px 0; line-height: 1.85 !important; color: #33413a !important;","blockquote":"margin: 28px 0; padding: 18px 22px; background-color: #e3ebe5 !important; border-left: 2px solid #4a5d52; color: #556a5e !important; border-radius: 3px;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 7px; background-color: #e3ebe5 !important; color: #3f5147 !important; border-radius: 4px; font-size: 13px !important; line-height: 1.5 !important;","pre":"margin: 28px 0; padding: 20px; background-color: #e3ebe5 !important; border-radius: 6px; overflow-x: auto; font-size: 13px !important; line-height: 1.6 !important;","hr":"margin: 44px auto; border: none; width: 64px; height: 1px; background-color: #9db3a4;","img":"max-width: 100%; height: auto; display: block; margin: 28px auto; border-radius: 6px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #e3ebe5 !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #33413a !important; border: 1px solid #d3ddd5;","td":"padding: 12px 16px; border: 1px solid #d3ddd5; color: #33413a !important;","tr":"border: none;"}},{"id":"moyu-ticket","name":"摸鱼票据","description":"票据打孔线隐喻，创意评测与工具对比的趣味底色","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans SC\", sans-serif; font-size: 16px; line-height: 1.75 !important; color: #12352f !important; background-color: #ecfdf5 !important; word-wrap: break-word;","h1":"font-size: 28px; font-weight: 700; color: #059669 !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.01em;","h2":"font-size: 24px; font-weight: 600; color: #059669 !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 18px; font-weight: 600; color: #12352f !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #059669; padding-left: 11px;","h4":"font-size: 16px; font-weight: 600; color: #12352f !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.75 !important; color: #12352f !important;","strong":"font-weight: 700; color: #059669 !important;","em":"font-style: italic; color: #56706a !important;","a":"color: #059669 !important; text-decoration: none; border-bottom: 1px dashed #059669; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.75 !important; color: #12352f !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #d1fae5 !important; border-left: 3px dashed #059669; color: #1f4d43 !important; border-radius: 4px;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 7px; background-color: #d1fae5 !important; color: #065f46 !important; border-radius: 4px; font-size: 13px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #d1fae5 !important; border-radius: 8px; overflow-x: auto; font-size: 13px !important; line-height: 1.6 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #059669;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 8px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #d1fae5 !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #12352f !important; border: 1px dashed #34d399;","td":"padding: 12px 16px; border: 1px dashed #a7f3d0; color: #12352f !important;","tr":"border: none;"}},{"id":"olive-journal","name":"橄榄手记","description":"暖橙与牛皮纸质感，内刊手记与案例复盘的体温底色","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans SC\", sans-serif; font-size: 16px; line-height: 1.8 !important; color: #4a2f1d !important; background-color: #fff7ed !important; word-wrap: break-word;","h1":"font-family: Georgia, \"Noto Serif SC\", \"Songti SC\", serif; font-size: 30px; font-weight: 700; color: #ed7b2f !important; line-height: 1.3 !important; margin: 38px 0 16px;","h2":"font-family: Georgia, \"Noto Serif SC\", \"Songti SC\", serif; font-size: 24px; font-weight: 600; color: #ed7b2f !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 18px; font-weight: 600; color: #4a2f1d !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #ed7b2f; padding-left: 11px;","h4":"font-size: 16px; font-weight: 600; color: #4a2f1d !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.8 !important; color: #4a2f1d !important;","strong":"font-weight: 700; color: #c2410c !important;","em":"font-style: italic; color: #9a5a2a !important;","a":"color: #ed7b2f !important; text-decoration: none; border-bottom: 1px solid #ed7b2f; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.8 !important; color: #4a2f1d !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #ffedd5 !important; border-left: 4px solid #ed7b2f; color: #7c4a2b !important; border-radius: 4px;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 7px; background-color: #ffedd5 !important; color: #9a3412 !important; border-radius: 4px; font-size: 13px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #ffedd5 !important; border-radius: 8px; overflow-x: auto; font-size: 13px !important; line-height: 1.6 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #ed7b2f;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 8px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #ffedd5 !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #4a2f1d !important; border: 1px solid #fed7aa;","td":"padding: 12px 16px; border: 1px solid #fed7aa; color: #4a2f1d !important;","tr":"border: none;"}},{"id":"klein-blue","name":"克莱因蓝","description":"浓烈克莱因蓝，艺术评论与展册式内容的展陈底色","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans SC\", sans-serif; font-size: 16px; line-height: 1.75 !important; color: #0f172a !important; background-color: #eff6ff !important; word-wrap: break-word;","h1":"font-size: 30px; font-weight: 700; color: #002fa7 !important; line-height: 1.25 !important; margin: 38px 0 16px; letter-spacing: 0.01em;","h2":"font-size: 24px; font-weight: 700; color: #002fa7 !important; line-height: 1.3 !important; margin: 32px 0 16px; letter-spacing: 0.02em;","h3":"font-size: 18px; font-weight: 600; color: #0f172a !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #002fa7; padding-left: 11px;","h4":"font-size: 16px; font-weight: 600; color: #0f172a !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.75 !important; color: #0f172a !important;","strong":"font-weight: 700; color: #002fa7 !important;","em":"font-style: italic; color: #475569 !important;","a":"color: #002fa7 !important; text-decoration: none; border-bottom: 1px solid #002fa7; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.75 !important; color: #0f172a !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #dbeafe !important; border-left: 4px solid #002fa7; color: #1e40af !important; border-radius: 4px;","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 7px; background-color: #dbeafe !important; color: #1e40af !important; border-radius: 4px; font-size: 13px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #dbeafe !important; border-radius: 8px; overflow-x: auto; font-size: 13px !important; line-height: 1.6 !important;","hr":"margin: 40px auto; border: none; width: 56px; height: 3px; border-radius: 2px; background-color: #002fa7;","img":"max-width: 100%; height: auto; display: block; margin: 24px auto; border-radius: 4px;","table":"width: 100%; margin: 24px 0; border-collapse: collapse; font-size: 15px;","th":"background-color: #dbeafe !important; padding: 12px 16px; text-align: left; font-weight: 600; color: #0f172a !important; border: 1px solid #bfdbfe;","td":"padding: 12px 16px; border: 1px solid #bfdbfe; color: #0f172a !important;","tr":"border: none;"}}],"groups":[{"label":"经典","ids":["apple","claude","wechat","media","medium","stripe","workspace","linear","retro","bloomberg"]},{"label":"潮流","ids":["notion","github","sspai","dracula","nord","sakura","ocean","mint","sunset","monokai"]},{"label":"更多风格","ids":["solarized","cyberpunk","ink","lavender","forest","glacier","coffee","bauhaus","copper","pastel"]},{"label":"md2wechat","ids":["sports","chinese","autumn-warm","ocean-calm","spring-fresh"]},{"label":"starline","ids":["moyu-green","tech-cobalt","red-white","graphite-minimal","apple-open-course","zen-whitespace","moyu-ticket","olive-journal","klein-blue"]}]};
+    const THEMES = THEME_DATA.themes;
+    const THEME_GROUPS = THEME_DATA.groups;
+    const THEME_MAP = Object.fromEntries(THEMES.map(t => [t.id, t]));
+    const DEFAULT_THEME = 'claude';
+
+    function themeBg(t) {
+      const m = t.styles.container.match(/background-color:\s*([^;!]+)/i);
+      return m ? m[1].trim() : '#ffffff';
+    }
+
+    // 预览 CSS（注入 #theme-css）
+    function buildPreviewCss(t) {
+      const s = t.styles;
+      const sel = (tag, css) => css ? `.wechat-body ${tag}{${css}}` : '';
+      return [
+        `.wechat-body{${s.container}}`,
+        sel('h1', s.h1), sel('h2', s.h2), sel('h3', s.h3), sel('h4', s.h4),
+        sel('p', s.p), sel('strong', s.strong), sel('em', s.em), sel('a', s.a),
+        sel('ul', s.ul), sel('ol', s.ol), sel('li', s.li),
+        sel('blockquote', s.blockquote), sel('code', s.code), sel('pre', s.pre),
+        `.wechat-body pre code{background:none !important;color:inherit !important;padding:0 !important;font-size:inherit !important;border-radius:0 !important;}`,
+        sel('hr', s.hr), sel('img', s.img), sel('table', s.table),
+        sel('th', s.th), sel('td', s.td), sel('tr', s.tr),
+        `.empty-hint{background:${themeBg(t)};}`,
+      ].join('\n');
+    }
+
+    let currentThemeKey = DEFAULT_THEME;
+
+    function applyTheme(key) {
+      if (!THEME_MAP[key]) key = DEFAULT_THEME;
+      currentThemeKey = key;
+      const t = THEME_MAP[key];
+      document.getElementById('theme-css').textContent = buildPreviewCss(t);
+      document.getElementById('style-current').textContent = t.name;
+      document.querySelectorAll('.style-menu-item').forEach(i => i.classList.toggle('active', i.dataset.theme === key));
+      try { localStorage.setItem('md2wechat-theme', key); } catch (_) {}
+    }
+
+    function cssVal(style, prop) {
+      const m = (style || '').match(new RegExp(prop + '\\s*:\\s*([^;!]+)', 'i'));
+      return m ? m[1].trim() : '';
+    }
+
+    // 用主题底色 + 标题/正文/强调三色的迷你条，给一个直观色彩预览
+    function buildSwatch(t) {
+      const s = t.styles;
+      const bg = themeBg(t);
+      const title = cssVal(s.h1, 'color') || '#111';
+      const text = cssVal(s.p, 'color') || cssVal(s.container, 'color') || '#333';
+      const accent = cssVal(s.strong, 'color') || cssVal(s.a, 'color') || title;
+      const sw = document.createElement('div');
+      sw.className = 'style-sw';
+      sw.style.background = bg;
+      [[title, '66%'], [text, '90%'], [accent, '44%']].forEach(([c, w]) => {
+        const bar = document.createElement('div');
+        bar.className = 'bar';
+        bar.style.background = c;
+        bar.style.width = w;
+        sw.appendChild(bar);
+      });
+      return sw;
+    }
+
+    function buildStyleMenu() {
+      const menu = document.getElementById('style-menu');
+      menu.innerHTML = '';
+      THEME_GROUPS.forEach(g => {
+        const lbl = document.createElement('div');
+        lbl.className = 'style-menu-group';
+        lbl.textContent = g.label;
+        menu.appendChild(lbl);
+        const grid = document.createElement('div');
+        grid.className = 'style-menu-grid';
+        g.ids.forEach(id => {
+          const t = THEME_MAP[id];
+          if (!t) return;
+          const item = document.createElement('div');
+          item.className = 'style-menu-item';
+          item.dataset.theme = id;
+          item.title = t.name + ' — ' + t.description;
+          const name = document.createElement('div'); name.className = 'name'; name.textContent = t.name;
+          const desc = document.createElement('div'); desc.className = 'desc'; desc.textContent = t.description;
+          item.append(buildSwatch(t), name, desc);
+          item.onclick = () => { applyTheme(id); closeStyleMenu(); };
+          grid.appendChild(item);
+        });
+        menu.appendChild(grid);
+      });
+    }
+
+    function toggleStyleMenu(e) {
+      if (e) e.stopPropagation();
+      document.getElementById('style-select').classList.toggle('open');
+    }
+    function closeStyleMenu() {
+      document.getElementById('style-select').classList.remove('open');
+    }
+    document.addEventListener('click', e => {
+      if (!e.target.closest('#style-select')) closeStyleMenu();
+    });
+
+    buildStyleMenu();
+    (function () {
+      let saved = DEFAULT_THEME;
+      try { saved = localStorage.getItem('md2wechat-theme') || DEFAULT_THEME; } catch (_) {}
+      applyTheme(saved);
+    })();
+
+    function buildWechatHTML() {
+      // 从预览 clone，保留已 base64 的图片
+      const body = preview.querySelector('.wechat-body');
+      if (!body) return '';
+
+      const clone = body.cloneNode(true);
+
+      // 移除预览用的装饰元素
+      clone.querySelectorAll('.img-overlay-left, .img-copy-b64-btn').forEach(el => el.remove());
+      clone.querySelectorAll('.img-wrapper').forEach(wrapper => {
+        const img = wrapper.querySelector('img');
+        if (img) wrapper.replaceWith(img);
+      });
+      clone.querySelectorAll('[data-decorated]').forEach(el => el.removeAttribute('data-decorated'));
+
+      // 用 DOMParser 应用 inline style
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(`<div>${clone.innerHTML}</div>`, 'text/html');
+      const root = doc.body.firstChild;
+
+      const t = THEME_MAP[currentThemeKey];
+      const s = t.styles;
+      const bg = themeBg(t);
+      // 块级元素自身无底色的，补上主题底色，微信才会保留观感
+      const BLOCK_BG = new Set(['h1','h2','h3','h4','p','ul','ol','li','table','tr','td']);
+      const styleFor = tag => {
+        let css = s[tag] || '';
+        if (BLOCK_BG.has(tag) && !/background-color/i.test(css)) css += `background-color:${bg};`;
+        return css;
+      };
+
+      ['h1','h2','h3','h4','p','strong','em','a','ul','ol','li','blockquote','hr','table','th','td','tr'].forEach(tag => {
+        root.querySelectorAll(tag).forEach(el => { el.style.cssText = styleFor(tag); });
+      });
+      // blockquote 内的 <p> 去掉背景色，避免盖掉 blockquote 自身背景
+      root.querySelectorAll('blockquote p').forEach(el => {
+        el.style.backgroundColor = 'transparent';
+      });
+
+      root.querySelectorAll('img').forEach(el => { el.style.cssText = s.img; });
+
+      // 代码块：保留 <pre>，微信不会在 <pre> 前后补空行（<section> 会触发 ProseMirror trailing break）
+      root.querySelectorAll('pre').forEach(pre => {
+        pre.style.cssText = s.pre + 'white-space:pre-wrap;word-break:break-all;';
+        const code = pre.querySelector('code');
+        if (code) code.style.cssText = 'background:none;color:inherit;padding:0;font-size:inherit;border-radius:0;';
+      });
+
+      root.querySelectorAll('code').forEach(el => {
+        if (el.closest('pre')) return;
+        el.style.cssText = s.code;
+      });
+
+      // 移除空段落（代码块前后的空行）
+      root.querySelectorAll('p').forEach(p => {
+        if (!p.textContent.trim() && !p.querySelector('img')) p.remove();
+      });
+
+      root.style.cssText = s.container;
+      // 微信会丢弃 div 的 background-color，用 table 包一层确保背景色保留
+      return `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${bg};border:none;border-collapse:collapse;"><tr><td style="background-color:${bg};border:none;">${root.outerHTML}</td></tr></table>`;
+    }
+
+    async function copyToWechat() {
+      if (!input.value.trim()) { showToast('请先输入 Markdown 内容', { type: 'info' }); return; }
+
+      const btn = document.getElementById('copy-btn');
+      const html = buildWechatHTML();
+
+      try {
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            'text/html': new Blob([html], { type: 'text/html' }),
+            'text/plain': new Blob([input.value], { type: 'text/plain' }),
+          })
+        ]);
+        btn.textContent = '✓ 已复制，去公众号粘贴';
+        btn.classList.add('success');
+        setTimeout(() => {
+          btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> 复制到公众号`;
+          btn.classList.remove('success');
+        }, 3000);
+      } catch (_) {
+        await navigator.clipboard.writeText(input.value);
+        showToast('已复制纯文本', { type: 'info', description: '当前环境不支持富文本复制' });
+      }
+    }
+
+    // ── 发布到公众号草稿（需本地 server/publish-wechat.mjs 运行）──
+    function draftEndpoint() {
+      const isLocal = location.protocol === 'http:' && /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
+      return isLocal ? '/api/draft' : 'http://127.0.0.1:3007/api/draft';
+    }
+
+    async function publishToWechatDraft() {
+      if (!input.value.trim()) { showToast('请先输入 Markdown 内容', { type: 'info' }); return; }
+
+      const btn = document.getElementById('publish-btn');
+      const html = buildWechatHTML();
+      if (!html) { showToast('预览为空，无法发布', { type: 'info' }); return; }
+
+      const restore = () => {
+        btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg> 发布到草稿`;
+        btn.classList.remove('success', 'error');
+        btn.disabled = false;
+      };
+
+      btn.disabled = true;
+      btn.textContent = '发布中…';
+      try {
+        const res = await fetch(draftEndpoint(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: docTitle || extractTitle(input.value) || '未命名草稿', contentHtml: html }),
+        });
+        const data = await res.json();
+        if (data.ok) {
+          btn.classList.add('success');
+          btn.textContent = '✓ 已进草稿箱';
+          setTimeout(restore, 4000);
+          showToast('已进草稿箱', { type: 'success', description: `图片 ${data.images || '0/0'} 已上传，去公众号草稿箱查看` });
+        } else {
+          btn.classList.add('error');
+          btn.textContent = '✗ 发布失败';
+          setTimeout(restore, 4000);
+          showToast('发布失败', { type: 'error', description: data.error || '未知错误', duration: 7000 });
+        }
+      } catch (_) {
+        btn.classList.add('error');
+        btn.textContent = '✗ 服务未启动';
+        setTimeout(restore, 4000);
+        showToast('连不上本地发布服务', { type: 'error', description: '请先在 tools/server 运行 npm start，再通过 http://127.0.0.1:3007 打开本工具', duration: 7000 });
+      }
+    }
+
+    // ── 加载 draft.md ──
+    async function loadDraft() {
+      try {
+        const res = await fetch('./draft.md');
+        if (!res.ok) return;
+        const text = await res.text();
+        // 从封面配置 JSON 块读取标题
+        const jsonM = text.match(/```json\s*([\s\S]*?)```/);
+        if (jsonM) {
+          try {
+            const parsed = JSON.parse('{' + jsonM[1].trim().replace(/,$/, '') + '}');
+            updateTitleDisplay(parsed.changes?.content?.title || '');
+          } catch (_) {}
+        }
+        const m = text.match(/^## 正文\s*\n([\s\S]*)/m);
+        // 去掉末尾的 footer（--- 后跟 *运行...）
+        const body = m
+          ? m[1].replace(/\n---\n\*运行[\s\S]*$/, '').trimEnd()
+          : text.trimEnd();
+        input.value = body;
+      } catch (_) {}
+      await render();
+    }
+
+    loadDraft();
+
+    // ── 滚动同步 ──
+    let syncScroll = true;
+    let syncing = false;
+
+    function toggleSync() {
+      syncScroll = !syncScroll;
+      document.getElementById('sync-track').classList.toggle('on', syncScroll);
+    }
+
+    input.addEventListener('scroll', () => {
+      if (!syncScroll || syncing) return;
+      syncing = true;
+      const pct = input.scrollTop / (input.scrollHeight - input.clientHeight) || 0;
+      preview.scrollTop = pct * (preview.scrollHeight - preview.clientHeight);
+      syncing = false;
+    });
+
+    preview.addEventListener('scroll', () => {
+      if (!syncScroll || syncing) return;
+      syncing = true;
+      const pct = preview.scrollTop / (preview.scrollHeight - preview.clientHeight) || 0;
+      input.scrollTop = pct * (input.scrollHeight - input.clientHeight);
+      syncing = false;
+    });
+  </script>
+
+</body>
+</html>

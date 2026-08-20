@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Starline Content Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      background: #f5f6f8;
+      font-family: 'Noto Serif SC', serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ── Header ── */
+    header {
+      width: 100%;
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 0 32px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .logo {
+      font-size: 15px;
+      font-weight: 700;
+      color: #111;
+      letter-spacing: 0.02em;
+    }
+
+    .github-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #fff;
+      color: #111;
+      font-size: 13px;
+      font-family: sans-serif;
+      font-weight: 600;
+      text-decoration: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .github-btn:hover {
+      border-color: #111;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .github-btn svg { flex: none; }
+
+    .github-star {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding-left: 8px;
+      border-left: 1px solid #e5e7eb;
+      color: #6b7280;
+      font-size: 12px;
+    }
+
+    .github-star.hidden { display: none; }
+
+    /* ── Header actions ── */
+    .header-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      padding: 64px 32px 48px;
+      text-align: center;
+      max-width: 640px;
+    }
+
+    .hero h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #111;
+      letter-spacing: -0.01em;
+      margin-bottom: 12px;
+    }
+
+    .hero p {
+      font-size: 14px;
+      color: #6b7280;
+      line-height: 1.8;
+      font-family: sans-serif;
+    }
+
+    /* ── Grid ── */
+    .grid {
+      width: 100%;
+      max-width: 720px;
+      padding: 0 32px 64px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 480px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── Card base ── */
+    .card {
+      background: #fff;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      text-decoration: none;
+    }
+
+    a.card {
+      transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+      cursor: pointer;
+    }
+
+    a.card:hover {
+      border-color: #93c5fd;
+      box-shadow: 0 4px 16px rgba(37,99,235,0.08);
+      transform: translateY(-2px);
+    }
+
+    .card.disabled {
+      opacity: 0.48;
+      cursor: not-allowed;
+    }
+
+    /* ── Card icon ── */
+    .card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: none;
+    }
+
+    .icon-blue   { background: linear-gradient(135deg, #1e3a8a, #2563eb); }
+    .icon-violet { background: linear-gradient(135deg, #4c1d95, #7c3aed); }
+    .icon-slate  { background: linear-gradient(135deg, #334155, #64748b); }
+    .icon-green  { background: linear-gradient(135deg, #065f46, #059669); }
+    .icon-rose   { background: linear-gradient(135deg, #9d174d, #ec4899); }
+    .icon-orange { background: linear-gradient(135deg, #9a3412, #ea580c); }
+
+    /* ── Card body ── */
+    .card-body { display: flex; flex-direction: column; gap: 5px; }
+
+    .card-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: #111;
+      letter-spacing: 0.01em;
+    }
+
+    .card-desc {
+      font-size: 12px;
+      color: #6b7280;
+      line-height: 1.6;
+      font-family: sans-serif;
+    }
+
+    /* ── Tag ── */
+    .card-tag {
+      display: inline-flex;
+      align-items: center;
+      font-size: 10px;
+      font-family: sans-serif;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 20px;
+      width: fit-content;
+    }
+
+    .tag-live    { background: #dcfce7; color: #16a34a; }
+    .tag-soon    { background: #f3f4f6; color: #9ca3af; }
+
+    @media (max-width: 640px) {
+      header { padding: 0 20px; }
+      .hero { padding: 48px 20px 36px; }
+      .grid { padding-left: 20px; padding-right: 20px; }
+    }
+
+    /* ── Footer ── */
+    footer {
+      margin-top: auto;
+      padding: 24px 32px;
+      font-size: 11px;
+      font-family: sans-serif;
+      color: #9ca3af;
+      text-align: center;
+      letter-spacing: 0.04em;
+    }
+
+    footer a { color: #9ca3af; text-decoration: none; }
+    footer a:hover { color: #6b7280; }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <span class="logo">Starline Content Studio</span>
+    <div class="header-actions">
+      <a class="github-btn" href="https://github.com/FreeCodeCampXYG/starline-gzh-publisher" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 005.47 7.59c.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.42 7.42 0 014 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>
+        <span>GitHub</span>
+        <span class="github-star hidden" id="github-star">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/>
+          </svg>
+          <span id="github-star-count">—</span>
+        </span>
+      </a>
+    </div>
+  </header>
+
+  <section class="hero">
+    <h1>一个源内容，多种输出</h1>
+    <p>按照 Markdown 格式写作，剩下的交给工具。<br>封面、公众号排版、小红书图文、X 文章——打开即用，点击完成。</p>
+  </section>
+
+  <div class="grid">
+
+    <a class="card" href="cover.html">
+      <div class="card-icon icon-blue">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="18" height="14" rx="2"/>
+          <path d="M2 13.5l4.5-4.5 3.5 3.5 3.5-4.5 6.5 6.5"/>
+          <line x1="6" y1="20" x2="16" y2="20"/>
+          <line x1="11" y1="17" x2="11" y2="20"/>
+        </svg>
+      </div>
+      <div class="card-body">
+        <span class="card-name">封面生成器</span>
+        <span class="card-desc">快速生成文章封面图，支持多种配色、装饰风格与字体。</span>
+      </div>
+      <span class="card-tag tag-live">已上线</span>
+    </a>
+
+    <a class="card" href="qrcode.html">
+      <div class="card-icon icon-violet">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="2" width="7" height="7" rx="1"/>
+          <rect x="3.5" y="3.5" width="4" height="4" rx="0.5" fill="white" stroke="none"/>
+          <rect x="13" y="2" width="7" height="7" rx="1"/>
+          <rect x="14.5" y="3.5" width="4" height="4" rx="0.5" fill="white" stroke="none"/>
+          <rect x="2" y="13" width="7" height="7" rx="1"/>
+          <rect x="3.5" y="14.5" width="4" height="4" rx="0.5" fill="white" stroke="none"/>
+          <rect x="13" y="13" width="2" height="2" fill="white" stroke="none"/>
+          <rect x="17" y="13" width="2" height="2" fill="white" stroke="none"/>
+          <rect x="13" y="17" width="2" height="2" fill="white" stroke="none"/>
+          <rect x="17" y="17" width="2" height="2" fill="white" stroke="none"/>
+        </svg>
+      </div>
+      <div class="card-body">
+        <span class="card-name">二维码工具</span>
+        <span class="card-desc">生成与解析二维码，支持文本、链接，纯本地处理。</span>
+      </div>
+      <span class="card-tag tag-live">已上线</span>
+    </a>
+
+    <a class="card" href="md-to-wechat.html">
+      <div class="card-icon icon-slate">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 3h8l4 4v12H5V3z"/>
+          <path d="M13 3v4h4"/>
+          <line x1="8" y1="11" x2="14" y2="11"/>
+          <line x1="8" y1="14" x2="12" y2="14"/>
+        </svg>
+      </div>
+      <div class="card-body">
+        <span class="card-name">MD → 微信排版</span>
+        <span class="card-desc">将 Markdown 转换为微信公众号富文本，支持 44 种主题风格。</span>
+      </div>
+      <span class="card-tag tag-live">已上线</span>
+    </a>
+
+    <a class="card" href="md-to-xiaohongshu.html">
+      <div class="card-icon icon-rose">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 3h8l4 4v12H5V3z"/>
+          <path d="M13 3v4h4"/>
+          <line x1="8" y1="11" x2="14" y2="11"/>
+          <line x1="8" y1="14" x2="12" y2="14"/>
+        </svg>
+      </div>
+      <div class="card-body">
+        <span class="card-name">MD → 小红书图文</span>
+        <span class="card-desc">将 Markdown 转换为适合小红书发布的图文格式。</span>
+      </div>
+      <span class="card-tag tag-live">已上线</span>
+    </a>
+
+    <a class="card" href="md-to-x.html">
+      <div class="card-icon icon-slate">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 3h8l4 4v12H5V3z"/>
+          <path d="M13 3v4h4"/>
+          <line x1="8" y1="11" x2="14" y2="11"/>
+          <line x1="8" y1="14" x2="12" y2="14"/>
+        </svg>
+      </div>
+      <div class="card-body">
+        <span class="card-name">MD → X 排版</span>
+        <span class="card-desc">将 Markdown 转换为适合 X（Twitter）发布的格式。</span>
+      </div>
+      <span class="card-tag tag-live">已上线</span>
+    </a>
+
+    <a class="card disabled" href="#">
+      <div class="card-icon icon-orange">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 3h8l4 4v12H5V3z"/>
+          <path d="M13 3v4h4"/>
+          <line x1="8" y1="11" x2="14" y2="11"/>
+          <line x1="8" y1="14" x2="12" y2="14"/>
+        </svg>
+      </div>
+      <div class="card-body">
+        <span class="card-name">简历排版</span>
+        <span class="card-desc">将结构化简历排版为可投递格式（即将上线）。</span>
+      </div>
+      <span class="card-tag tag-soon">即将上线</span>
+    </a>
+
+  </div>
+
+  <footer>
+    由 <a href="https://github.com/FreeCodeCampXYG" target="_blank">Starline</a> 构建 · 墨点星痕 · 更多工具持续上线中
+  </footer>
+
+  <script>
+    (function () {
+      fetch('https://api.github.com/repos/FreeCodeCampXYG/starline-gzh-publisher')
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (!data || typeof data.stargazers_count !== 'number') return;
+          const wrap = document.getElementById('github-star');
+          const count = document.getElementById('github-star-count');
+          const n = data.stargazers_count;
+          count.textContent = n >= 1000 ? (n / 1000).toFixed(1) + 'k' : n;
+          wrap.classList.remove('hidden');
+        })
+        .catch(() => {});
+    })();
+  </script>
+
+</body>
+</html>

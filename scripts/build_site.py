@@ -178,7 +178,6 @@ def build(args):
         (article_dir / "visual-card.svg").write_text(svg, encoding="utf-8")
         records.append(record)
     (out / "index.json").write_text(json.dumps(records, ensure_ascii=False, indent=2), encoding="utf-8")
-    (out / "index.html").write_text(editor_page(records), encoding="utf-8")
     # Copy the tools/ and server/ directories into _site for Pages deployment
     tools_src = Path(__file__).resolve().parent.parent / "tools"
     if tools_src.exists():
@@ -190,6 +189,23 @@ def build(args):
     images_src = tools_src / "images"
     if images_src.exists():
         shutil.copytree(images_src, out / "tools" / "images", dirs_exist_ok=True)
+    # 根目录 index.html 使用 tools/index.html（新首页），旧编辑器页面放到 editor.html
+    tools_index = tools_src / "index.html"
+    if tools_index.exists():
+        # 使用 meta refresh 跳转到 tools/，确保所有相对链接正确解析
+        (out / "index.html").write_text(
+            '<!DOCTYPE html><html lang="zh"><head><meta charset="UTF-8">'
+            '<meta http-equiv="refresh" content="0;url=tools/index.html">'
+            '<title>Starline Content Studio</title>'
+            '<style>body{background:#0b1219;color:#f0ede8;font-family:Inter,sans-serif;'
+            'display:flex;align-items:center;justify-content:center;height:100vh;}'
+            'a{color:#d4a855;}</style></head>'
+            '<body><p>正在跳转至 <a href="tools/index.html">Starline Content Studio</a>…</p></body></html>',
+            encoding="utf-8"
+        )
+        (out / "editor.html").write_text(editor_page(records), encoding="utf-8")
+    else:
+        (out / "index.html").write_text(editor_page(records), encoding="utf-8")
 
 
 def base_css():

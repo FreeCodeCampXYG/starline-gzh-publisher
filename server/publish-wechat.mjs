@@ -18,7 +18,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const TOOLS_DIR = path.resolve(__dirname, '..'); // static root = the tools/ dir
+const TOOLS_DIR = path.resolve(__dirname, '..', 'tools'); // 静态文件根目录 = tools/
 const CACHE_FILE = path.join(__dirname, '.cache.json');
 
 // ── .env loader (no dependency) ──────────────────────────────────────────────

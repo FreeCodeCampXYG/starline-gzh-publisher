@@ -1,21 +1,27 @@
 ---
-title: 欢迎来到 Starline GZH Publisher
+title: 欢迎来到 Starline Content Studio
 slug: welcome
+type: article
 category: 使用说明
-tags: Markdown,公众号,Pages
+tags: Markdown,内容管理,公众号,Pages
 theme: apple-open-course
 status: published
-description: 推送 Markdown，自动生成多主题公众号预览。
+summary: 先把内容作为源资产管理，再选择阅读、公众号排版与未来的多端输出。
 ---
 
-# 欢迎来到 Starline GZH Publisher
+# 欢迎来到 Starline Content Studio
 
-> 写好 Markdown，剩下的交给自动化流水线。
+这不是一个只会把 Markdown 变成公众号 HTML 的转换器，而是一间以内容源文件为中心的静态工作台。
 
-## 你只需要提交 Markdown
+## 先管理内容，再选择出口
 
-把文章放入 `content/`，提交并推送到 GitHub，Actions 会自动生成内容索引和公众号 HTML 预览。
+Markdown 是源资产；阅读页、公众号 HTML、未来的学习笔记和简历输出，都是围绕同一份内容的适配器。
 
-## 主题可以切换
+## 现在可以做什么
 
-在 frontmatter 中修改 `theme`，就可以切换已注册主题。后续会继续增加 AI 审阅、Fireworks 技术图和更多主题。
+- 在内容目录中按类型、状态、标签搜索
+- 在阅读视图与公众号预览之间切换
+- 复制可粘贴的微信公众号 HTML
+- 用九种主题快速比较文章的视觉方向
+
+> 公众号只是第一个出口。未来会在不破坏事实与版本的前提下，接入学习资料定位、简历结构化编辑，以及带接受/拒绝/回退的 AI 选区编辑。

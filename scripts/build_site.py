@@ -179,6 +179,17 @@ def build(args):
         records.append(record)
     (out / "index.json").write_text(json.dumps(records, ensure_ascii=False, indent=2), encoding="utf-8")
     (out / "index.html").write_text(editor_page(records), encoding="utf-8")
+    # Copy the tools/ and server/ directories into _site for Pages deployment
+    tools_src = Path(__file__).resolve().parent.parent / "tools"
+    if tools_src.exists():
+        shutil.copytree(tools_src, out / "tools", dirs_exist_ok=True)
+    server_src = Path(__file__).resolve().parent.parent / "server"
+    if server_src.exists():
+        shutil.copytree(server_src, out / "server", dirs_exist_ok=True)
+    # Copy images/ from tools into _site (for images used by tools)
+    images_src = tools_src / "images"
+    if images_src.exists():
+        shutil.copytree(images_src, out / "tools" / "images", dirs_exist_ok=True)
 
 
 def base_css():

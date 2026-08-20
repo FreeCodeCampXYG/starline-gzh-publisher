@@ -1,54 +1,77 @@
-# DEV_STATE
+# DEV_STATE.md — Starline Content Studio
 
 ## 当前目标
 
-- 基于了 [eternityspring/article-tools](https://github.com/eternityspring/article-tools) 改造为带 Starline 自身特色的内容创作工具集。
-- 保留零依赖、打开即用的成熟能力：md→微信富文本复制、封面生成、二维码、本地直推草稿箱。
-- 新增小红书排版功能（md→小红书图文，纯文本 + #话题标签 + 图片复制）。
-- 规划简历排版等后续扩展。
+全面改造 starline-gzh-publisher 项目，包括：
+1. ✅ 创建 md-filter.js Markdown 过滤层（非标准格式转标准 MD，不支持的格式转 SVG）
+2. ✅ 改造 md-to-wechat 列设置界面（表格列宽、边框、斑马纹、悬停效果、表头对齐）
+3. ✅ 重做主页 index.html（引导用户进入各功能，工作流指引，快速开始）
+4. ✅ 完善首页文档 draft.md / demo.md / README.md
+5. ✅ 更新其他工具适配 md-filter
 
-## 已完成
+## 已完成工作
 
-- **公开仓库**：`FreeCodeCampXYG/starline-gzh-publisher`；Pages：`https://freecodecampxyg.github.io/starline-gzh-publisher/`。
-- **工具集**（`tools/` 目录）：
-  - `index.html` — Starline 工具箱首页，品牌白标，无推广内容
-  - `cover.html` — 封面生成器（13 配色、4 装饰、8 预设、10 模板，导出 PNG / 复制图片）
-  - `md-to-wechat.html` — Markdown → 微信公众号富文本（44 主题：35 原版 + 9 Starline 主题，ClipboardItem 富文本复制）
-  - `md-to-xiaohongshu.html` — **Markdown → 小红书图文**（纯文本 + #话题标签 + 图片复制，Starline 粉色主题，字数统计）
-  - `md-to-x.html` — Markdown → X 排版
-  - `qrcode.html` — 生成与解析二维码
-  - `draft.md` / `demo.md` — 写作规范与封面配置
-- **本地发布服务**（`server/`）：
-  - `publish-wechat.mjs` — 直推公众号草稿箱（零依赖，需 Node ≥ 18，配置 AppID/Secret 后 `npm start`）
-- **去推广化**：所有工具无「烁皓/AI 交流群/hao_dev/Coverly/eternityspring」品牌残留，已替换为 Starline/墨点星痕。
-- **Pages 构建**（`scripts/build_site.py`）：
-  - 9 个主题 mock
-  - 多平台输出：`wechat.html` / `xiaohongshu.html` / `visual-card.svg`
-  - 内容索引 `index.json`
-  - 工作台编辑器（左编辑右预览）
-- **测试**：`scripts/test_build_site.py` 回归测试通过（1/1 OK）。
-- **`git diff --check`**：通过（无空白/冲突问题）。
+### md-filter.js（Markdown 过滤层）
+- 新建 `tools/md-filter.js`，纯前端零依赖，IIFE 自执行
+- 格式归一化：全角标点→半角、标题修复（`#标题`→`# 标题`）、列表统一为 `-`、代码块前后补空行、引用块修复、分隔线统一、表格对齐修复、中文与英文间加空格
+- 不支持的格式转 SVG：数学公式（$$）、Mermaid 图、LaTeX、Graphviz、PlantUML、自定义块（:::）→ 自动生成 SVG 图片
+- 格式诊断：检测未闭合代码块、标题层级跳跃、表格对齐问题、列表标记不统一
+- 公开 API：`MdFilter.process()`、`MdFilter.injectSVG()` 及各个归一化子函数
 
-## 当前边界
+### md-to-wechat.html（微信排版）
+- 集成 md-filter.js，渲染时自动过滤
+- 新增设置面板（齿轮按钮）：表格列设置界面
+  - 全局设置：显示边框、斑马纹、悬停高亮、表头对齐方式
+  - 列宽设置：各列百分比宽度，留空自动均分
+  - 诊断区域：显示 md-filter 格式诊断结果
+- 底部统计栏：字数 + 行数 + 诊断按钮
+- 表格渲染实时响应设置变更
+- 全面中文注释，每个控制点说明原因
 
-- 静态 Pages 无后端、无 AI、无 Token。
-- 本地草稿编辑、远程发布和凭据服务未实现（需本地 `server/publish-wechat.mjs`）。
-- 小红书富文本渲染为纯文本格式（小红书平台限制），不支持样式主题切换。
-- 封面生成器依赖 `html-to-image` CDN，离线时导出功能不可用。
-- `resume` 当前仅路线图，不是投递级简历编辑器。
-- `study-note` 当前仅模块路线图，非来源分析成品。
+### index.html（主页）
+- 品牌标识（S 图标）+ 渐变标题
+- 3 步工作流指引：写 Markdown → 打开工具 → 一键输出
+- 6 卡网格：封面、二维码、微信、小红书、X、简历（即将上线）
+- 每张卡片附带特性标签（13 配色、44 主题等）
+- 快速开始区域：写作规范展示 + 使用说明
+- 使用说明按钮（锚点跳转）
+- GitHub Star 计数
 
-## 验证
+### 文档完善
+- `draft.md`：更新为完整写作规范，增加 md-filter 说明，5 工具表格
+- `demo.md`：更新为演示文档，与 draft.md 结构一致
+- `README.md`：更新为完整项目文档，增加 md-filter 章节，特性表格
 
-- 本地 Python 构建通过（`python scripts/build_site.py --content content --output _site`）。
-- 回归测试通过（1/1）。
-- `git diff --check` 通过。
-- 生成 HTML 危险 URL、外部脚本和 `onclick` 扫描无命中。
+### 其他工具适配
+- `md-to-x.html`：集成 md-filter.js，渲染时自动过滤
+- `md-to-xiaohongshu.html`：集成 md-filter.js，渲染时自动过滤
 
-## 下一步
+## 核心文件
 
-1. 补充 frontmatter/schema 校验、媒体安全检查与更完整 Markdown/主题组件。
-2. 把内容索引契约拆成可复用的 `data/` 与前端模块，支持本地草稿 import/export。
-3. 设计 AI 选区编辑的 before/after、版本锚定、接受/拒绝/局部接受/回退协议。
-4. 接入真实简历排版功能（`resume` 模块）。
-5. 接入真实学习材料来源定位（页码/时间戳）。
+| 文件 | 大小 | 用途 |
+|------|------|------|
+| `tools/md-filter.js` | ~15KB | Markdown 过滤层（新建） |
+| `tools/md-to-wechat.html` | ~87KB | 微信排版（改造完成） |
+| `tools/index.html` | ~13KB | 主页（重做完成） |
+| `tools/md-to-x.html` | ~20KB | X 排版（已适配 md-filter） |
+| `tools/md-to-xiaohongshu.html` | ~30KB | 小红书排版（已适配 md-filter） |
+| `tools/cover.html` | ~136KB | 封面生成器（未修改） |
+| `tools/qrcode.html` | ~14KB | 二维码工具（未修改） |
+| `tools/draft.md` | ~3KB | 写作规范（更新） |
+| `tools/demo.md` | ~3KB | 演示文档（更新） |
+| `README.md` | ~3KB | 项目文档（更新） |
+
+## 已知问题
+
+1. `cover.html` 和 `qrcode.html` 未集成 md-filter.js（它们不处理 Markdown 正文，暂不需要）
+2. 预览中的表格设置面板（列设置界面）在切换主题后需要手动触发重新渲染
+3. SVG 转换后的图片在微信公众号中可能因编辑器限制而显示异常，建议复制前先预览确认
+4. `file://` 协议下 `fetch('./draft.md')` 被浏览器拦截，工具无法自动加载草稿，需通过 HTTP 服务访问
+
+## 下一步计划
+
+- 简历排版工具实现
+- 封面生成器增加更多模板
+- 微信排版主题增加更多自定义选项
+- 考虑将 md-filter.js 作为 npm 包发布
+- 写作规范增加更多示例

@@ -1,5 +1,21 @@
 <!DOCTYPE html>
 <html lang="zh">
+<!--
+╔══════════════════════════════════════════════════════════════════════════╗
+║  Starline Content Studio 首页                                           ║
+║  ─────────────────────────────────────────────────────────────────────  ║
+║  一个源内容，多种输出。                                                 ║
+║  按照 Markdown 格式写作，剩下的交给工具。                              ║
+║                                                                        ║
+║  工具列表：                                                             ║
+║    1. 封面生成器   — 快速生成文章封面图                                ║
+║    2. 二维码工具   — 生成与解析二维码                                  ║
+║    3. MD→微信排版  — 转微信公众号富文本，44 种主题                     ║
+║    4. MD→小红书    — 转小红书图文格式                                  ║
+║    5. MD→X 排版    — 转 X（Twitter）长文格式                           ║
+║    6. 简历排版（即将上线）                                              ║
+╚══════════════════════════════════════════════════════════════════════════╝
+-->
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,34 +23,76 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
   <style>
+    /* ============================================================
+       全局重置
+       ============================================================ */
     * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #f5f6f8;
+      --card-bg: #fff;
+      --border: #e5e7eb;
+      --text-primary: #111;
+      --text-secondary: #6b7280;
+      --text-muted: #9ca3af;
+      --accent: #2563eb;
+      --accent-light: #93c5fd;
+      --radius: 12px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
 
     body {
       min-height: 100vh;
-      background: #f5f6f8;
+      background: var(--bg);
       font-family: 'Noto Serif SC', serif;
       display: flex;
       flex-direction: column;
       align-items: center;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* ── Header ── */
+    /* ============================================================
+       顶栏
+       ============================================================ */
     header {
       width: 100%;
-      background: #fff;
-      border-bottom: 1px solid #e5e7eb;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
       padding: 0 32px;
       height: 56px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 10px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
     }
 
     .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo-icon {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, #1e3a8a, #2563eb);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .logo-text {
       font-size: 15px;
       font-weight: 700;
-      color: #111;
+      color: var(--text-primary);
       letter-spacing: 0.02em;
     }
 
@@ -43,22 +101,20 @@
       align-items: center;
       gap: 8px;
       padding: 6px 12px;
-      border: 1px solid #e5e7eb;
+      border: 1px solid var(--border);
       border-radius: 8px;
-      background: #fff;
-      color: #111;
+      background: var(--card-bg);
+      color: var(--text-primary);
       font-size: 13px;
       font-family: sans-serif;
       font-weight: 600;
       text-decoration: none;
       transition: border-color 0.15s, box-shadow 0.15s;
     }
-
     .github-btn:hover {
-      border-color: #111;
+      border-color: var(--text-primary);
       box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     }
-
     .github-btn svg { flex: none; }
 
     .github-star {
@@ -66,47 +122,135 @@
       align-items: center;
       gap: 4px;
       padding-left: 8px;
-      border-left: 1px solid #e5e7eb;
-      color: #6b7280;
+      border-left: 1px solid var(--border);
+      color: var(--text-secondary);
       font-size: 12px;
     }
-
     .github-star.hidden { display: none; }
 
-    /* ── Header actions ── */
     .header-actions {
       display: inline-flex;
       align-items: center;
       gap: 10px;
     }
 
-    /* ── Hero ── */
+    /* ============================================================
+       Hero 区域
+       ============================================================ */
     .hero {
-      padding: 64px 32px 48px;
+      padding: 64px 32px 32px;
       text-align: center;
-      max-width: 640px;
+      max-width: 720px;
     }
 
     .hero h1 {
-      font-size: 28px;
+      font-size: 32px;
       font-weight: 700;
-      color: #111;
+      color: var(--text-primary);
       letter-spacing: -0.01em;
       margin-bottom: 12px;
+      line-height: 1.3;
+    }
+
+    .hero h1 span {
+      background: linear-gradient(135deg, #1e3a8a, #2563eb);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
     .hero p {
       font-size: 14px;
-      color: #6b7280;
+      color: var(--text-secondary);
       line-height: 1.8;
+      font-family: sans-serif;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    /* ============================================================
+       工作流指引
+       ============================================================ */
+    .workflow {
+      width: 100%;
+      max-width: 720px;
+      padding: 0 32px 32px;
+    }
+
+    .workflow-steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+    }
+
+    @media (max-width: 600px) {
+      .workflow-steps { grid-template-columns: 1fr; }
+    }
+
+    .workflow-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .workflow-step-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #eef2ff;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: sans-serif;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .workflow-step-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .workflow-step-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 3px;
+    }
+
+    .workflow-step-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.5;
       font-family: sans-serif;
     }
 
-    /* ── Grid ── */
+    /* ============================================================
+       工具网格
+       ============================================================ */
+    .section-title {
+      width: 100%;
+      max-width: 720px;
+      padding: 8px 32px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-family: sans-serif;
+    }
+
     .grid {
       width: 100%;
       max-width: 720px;
-      padding: 0 32px 64px;
+      padding: 0 32px 48px;
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 16px;
@@ -116,16 +260,18 @@
       .grid { grid-template-columns: 1fr; }
     }
 
-    /* ── Card base ── */
+    /* ── 卡片 ── */
     .card {
-      background: #fff;
-      border: 1.5px solid #e5e7eb;
-      border-radius: 12px;
+      background: var(--card-bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
       padding: 24px;
       display: flex;
       flex-direction: column;
       gap: 14px;
       text-decoration: none;
+      position: relative;
+      overflow: hidden;
     }
 
     a.card {
@@ -134,7 +280,7 @@
     }
 
     a.card:hover {
-      border-color: #93c5fd;
+      border-color: var(--accent-light);
       box-shadow: 0 4px 16px rgba(37,99,235,0.08);
       transform: translateY(-2px);
     }
@@ -144,7 +290,7 @@
       cursor: not-allowed;
     }
 
-    /* ── Card icon ── */
+    /* ── 卡片图标 ── */
     .card-icon {
       width: 44px;
       height: 44px;
@@ -161,25 +307,42 @@
     .icon-green  { background: linear-gradient(135deg, #065f46, #059669); }
     .icon-rose   { background: linear-gradient(135deg, #9d174d, #ec4899); }
     .icon-orange { background: linear-gradient(135deg, #9a3412, #ea580c); }
+    .icon-teal   { background: linear-gradient(135deg, #0f766e, #14b8a6); }
 
-    /* ── Card body ── */
+    /* ── 卡片内容 ── */
     .card-body { display: flex; flex-direction: column; gap: 5px; }
 
     .card-name {
       font-size: 15px;
       font-weight: 700;
-      color: #111;
+      color: var(--text-primary);
       letter-spacing: 0.01em;
     }
 
     .card-desc {
       font-size: 12px;
-      color: #6b7280;
+      color: var(--text-secondary);
       line-height: 1.6;
       font-family: sans-serif;
     }
 
-    /* ── Tag ── */
+    .card-features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 2px;
+    }
+
+    .card-feature {
+      font-size: 10px;
+      font-family: sans-serif;
+      color: var(--text-muted);
+      background: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
     .card-tag {
       display: inline-flex;
       align-items: center;
@@ -194,35 +357,102 @@
     }
 
     .tag-live    { background: #dcfce7; color: #16a34a; }
-    .tag-soon    { background: #f3f4f6; color: #9ca3af; }
+    .tag-soon    { background: #f3f4f6; color: var(--text-muted); }
 
-    @media (max-width: 640px) {
-      header { padding: 0 20px; }
-      .hero { padding: 48px 20px 36px; }
-      .grid { padding-left: 20px; padding-right: 20px; }
+    /* ============================================================
+       快速开始区域
+       ============================================================ */
+    .quickstart {
+      width: 100%;
+      max-width: 720px;
+      padding: 0 32px 48px;
     }
 
-    /* ── Footer ── */
+    .quickstart-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+    }
+
+    .quickstart-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+    }
+
+    .quickstart-code {
+      background: #1e293b;
+      border-radius: 8px;
+      padding: 16px 20px;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 13px;
+      line-height: 1.8;
+      color: #e2e8f0;
+      overflow-x: auto;
+      margin-bottom: 16px;
+      white-space: pre-wrap;
+    }
+
+    .quickstart-code .comment { color: #64748b; }
+    .quickstart-code .keyword { color: #93c5fd; }
+    .quickstart-code .string { color: #a7f3d0; }
+
+    .quickstart-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      font-family: sans-serif;
+    }
+
+    /* ============================================================
+       底部
+       ============================================================ */
     footer {
       margin-top: auto;
       padding: 24px 32px;
       font-size: 11px;
       font-family: sans-serif;
-      color: #9ca3af;
+      color: var(--text-muted);
       text-align: center;
       letter-spacing: 0.04em;
+      width: 100%;
+      border-top: 1px solid var(--border);
     }
 
-    footer a { color: #9ca3af; text-decoration: none; }
-    footer a:hover { color: #6b7280; }
+    footer a { color: var(--text-muted); text-decoration: none; }
+    footer a:hover { color: var(--text-secondary); }
+
+    @media (max-width: 640px) {
+      header { padding: 0 20px; }
+      .hero { padding: 48px 20px 24px; }
+      .hero h1 { font-size: 26px; }
+      .workflow { padding: 0 20px 24px; }
+      .section-title { padding: 8px 20px 12px; }
+      .grid { padding-left: 20px; padding-right: 20px; }
+      .quickstart { padding: 0 20px 32px; }
+    }
   </style>
 </head>
 
 <body>
-
+  <!-- ============================================================
+       顶栏
+       ============================================================ -->
   <header>
-    <span class="logo">Starline Content Studio</span>
+    <div class="logo">
+      <div class="logo-icon">S</div>
+      <span class="logo-text">Starline Content Studio</span>
+    </div>
     <div class="header-actions">
+      <!-- 使用说明按钮（快速滚动到快速开始区域） -->
+      <a class="github-btn" href="#quickstart" style="border: none; background: #f3f4f6; font-weight: 500;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+        </svg>
+        使用说明
+      </a>
       <a class="github-btn" href="https://github.com/FreeCodeCampXYG/starline-gzh-publisher" target="_blank" rel="noopener">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
           <path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 005.47 7.59c.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.42 7.42 0 014 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/>
@@ -238,13 +468,53 @@
     </div>
   </header>
 
+  <!-- ============================================================
+       Hero
+       ============================================================ -->
   <section class="hero">
-    <h1>一个源内容，多种输出</h1>
-    <p>按照 Markdown 格式写作，剩下的交给工具。<br>封面、公众号排版、小红书图文、X 文章——打开即用，点击完成。</p>
+    <h1>一个源内容，<span>多种输出</span></h1>
+    <p>
+      按照 Markdown 格式写作，剩下的交给工具。
+      封面、公众号排版、小红书图文、X 文章——打开即用，点击完成。
+    </p>
   </section>
 
-  <div class="grid">
+  <!-- ============================================================
+       工作流指引
+       ============================================================ -->
+  <div class="workflow">
+    <div class="workflow-steps">
+      <div class="workflow-step">
+        <div class="workflow-step-num">1</div>
+        <div class="workflow-step-body">
+          <div class="workflow-step-title">写 Markdown</div>
+          <div class="workflow-step-desc">在 draft.md 中按规范写作，顶部配置封面元数据</div>
+        </div>
+      </div>
+      <div class="workflow-step">
+        <div class="workflow-step-num">2</div>
+        <div class="workflow-step-body">
+          <div class="workflow-step-title">打开工具</div>
+          <div class="workflow-step-desc">选择下方工具，自动读取草稿，实时预览效果</div>
+        </div>
+      </div>
+      <div class="workflow-step">
+        <div class="workflow-step-num">3</div>
+        <div class="workflow-step-body">
+          <div class="workflow-step-title">一键输出</div>
+          <div class="workflow-step-desc">复制富文本/图片，直接粘贴到对应平台发布</div>
+        </div>
+      </div>
+    </div>
+  </div>
 
+  <!-- ============================================================
+       工具网格
+       ============================================================ -->
+  <div class="section-title">工具集</div>
+
+  <div class="grid">
+    <!-- 封面生成器 -->
     <a class="card" href="cover.html">
       <div class="card-icon icon-blue">
         <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
@@ -256,11 +526,18 @@
       </div>
       <div class="card-body">
         <span class="card-name">封面生成器</span>
-        <span class="card-desc">快速生成文章封面图，支持多种配色、装饰风格与字体。</span>
+        <span class="card-desc">快速生成文章封面图，支持 13 种配色、4 种装饰风格、8 个预设模板，可导出 PNG 或复制图片。</span>
+        <div class="card-features">
+          <span class="card-feature">13 配色</span>
+          <span class="card-feature">4 装饰</span>
+          <span class="card-feature">8 预设</span>
+          <span class="card-feature">PNG 导出</span>
+        </div>
       </div>
       <span class="card-tag tag-live">已上线</span>
     </a>
 
+    <!-- 二维码工具 -->
     <a class="card" href="qrcode.html">
       <div class="card-icon icon-violet">
         <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
@@ -278,11 +555,18 @@
       </div>
       <div class="card-body">
         <span class="card-name">二维码工具</span>
-        <span class="card-desc">生成与解析二维码，支持文本、链接，纯本地处理。</span>
+        <span class="card-desc">生成带 Logo 的二维码，支持解析（拖放/粘贴图片），纯本地处理，不上传任何数据。</span>
+        <div class="card-features">
+          <span class="card-feature">生成</span>
+          <span class="card-feature">解析</span>
+          <span class="card-feature">Logo 嵌入</span>
+          <span class="card-feature">纯本地</span>
+        </div>
       </div>
       <span class="card-tag tag-live">已上线</span>
     </a>
 
+    <!-- MD → 微信排版 -->
     <a class="card" href="md-to-wechat.html">
       <div class="card-icon icon-slate">
         <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
@@ -294,11 +578,18 @@
       </div>
       <div class="card-body">
         <span class="card-name">MD → 微信排版</span>
-        <span class="card-desc">将 Markdown 转换为微信公众号富文本，支持 44 种主题风格。</span>
+        <span class="card-desc">将 Markdown 转换为微信公众号富文本，支持 44 种主题风格，一键复制粘贴。自动修复格式问题，不支持的格式转 SVG 图片。</span>
+        <div class="card-features">
+          <span class="card-feature">44 主题</span>
+          <span class="card-feature">富文本复制</span>
+          <span class="card-feature">格式修复</span>
+          <span class="card-feature">草稿发布</span>
+        </div>
       </div>
       <span class="card-tag tag-live">已上线</span>
     </a>
 
+    <!-- MD → 小红书图文 -->
     <a class="card" href="md-to-xiaohongshu.html">
       <div class="card-icon icon-rose">
         <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
@@ -310,11 +601,17 @@
       </div>
       <div class="card-body">
         <span class="card-name">MD → 小红书图文</span>
-        <span class="card-desc">将 Markdown 转换为适合小红书发布的图文格式。</span>
+        <span class="card-desc">将 Markdown 转换为适合小红书发布的图文格式，自动生成 #话题标签，800-1000 字推荐。</span>
+        <div class="card-features">
+          <span class="card-feature">话题标签</span>
+          <span class="card-feature">字数建议</span>
+          <span class="card-feature">图片复制</span>
+        </div>
       </div>
       <span class="card-tag tag-live">已上线</span>
     </a>
 
+    <!-- MD → X 排版 -->
     <a class="card" href="md-to-x.html">
       <div class="card-icon icon-slate">
         <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
@@ -326,11 +623,17 @@
       </div>
       <div class="card-body">
         <span class="card-name">MD → X 排版</span>
-        <span class="card-desc">将 Markdown 转换为适合 X（Twitter）发布的格式。</span>
+        <span class="card-desc">将 Markdown 转换为适合 X（Twitter）发布的长文格式，粗体保留、代码块转纯文本、图片单独复制。</span>
+        <div class="card-features">
+          <span class="card-feature">长文格式</span>
+          <span class="card-feature">粗体保留</span>
+          <span class="card-feature">图片复制</span>
+        </div>
       </div>
       <span class="card-tag tag-live">已上线</span>
     </a>
 
+    <!-- 简历排版（即将上线） -->
     <a class="card disabled" href="#">
       <div class="card-icon icon-orange">
         <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
@@ -346,13 +649,48 @@
       </div>
       <span class="card-tag tag-soon">即将上线</span>
     </a>
-
   </div>
 
+  <!-- ============================================================
+       快速开始
+       ============================================================ -->
+  <div class="section-title" id="quickstart" style="padding-top: 0;">快速开始</div>
+
+  <div class="quickstart">
+    <div class="quickstart-card">
+      <div class="quickstart-title">写作规范</div>
+      <div class="quickstart-code">
+        <span class="comment">```json</span>
+        <span class="comment">"changes": {</span>
+        <span class="comment">  "content": {</span>
+        <span class="comment">    "title": "文章标题",</span>
+        <span class="comment">    "author": "@starline · 墨点星痕"</span>
+        <span class="comment">  }</span>
+        <span class="comment">}</span>
+        <span class="comment">```</span>
+        <span> </span>
+        <span class="comment">## 正文</span>
+        <span> </span>
+        <span>从这里开始写文章内容……</span>
+      </div>
+      <div class="quickstart-hint">
+        💡 Markdown 稿件存放在 <code>tools/draft.md</code>，工具会自动加载。
+        顶部用 <code>```json</code> 块配置封面元数据，<code>## 正文</code> 之后写正文。
+        也支持直接粘贴任意 Markdown 内容到工具中处理。
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       底部
+       ============================================================ -->
   <footer>
     由 <a href="https://github.com/FreeCodeCampXYG" target="_blank">Starline</a> 构建 · 墨点星痕 · 更多工具持续上线中
   </footer>
 
+  <!-- ============================================================
+       GitHub Star 计数
+       ============================================================ -->
   <script>
     (function () {
       fetch('https://api.github.com/repos/FreeCodeCampXYG/starline-gzh-publisher')

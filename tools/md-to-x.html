@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Markdown → X 文章</title>
   <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+  <!-- Starline Markdown 过滤层：自动修复非标准格式 -->
+  <script src="md-filter.js"></script>
   <style>
     * {
       margin: 0;
@@ -552,8 +554,13 @@
         stats.textContent = '0 字';
         return;
       }
-      const md = rawMd.replace(/^# .+\n?/m, '').trim();
-      preview.innerHTML = marked.parse(md);
+      // 通过 MdFilter 过滤 —— 自动修复格式问题
+      const filterResult = MdFilter.process(rawMd, { convertSVG: false });
+      const md = filterResult.md.replace(/^# .+\n?/m, '').trim();
+      let html = marked.parse(md);
+      // 注入 SVG（如果有转换）
+      html = MdFilter.injectSVG(html, filterResult.svgBlocks);
+      preview.innerHTML = html;
       const charCount = rawMd.replace(/\s/g, '').length;
       stats.textContent = `${charCount} 字 · ${rawMd.split('\n').length} 行`;
       await inlineImages();

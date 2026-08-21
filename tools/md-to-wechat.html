@@ -1009,6 +1009,8 @@
             tag1: '原创',
             tag2: '深度',
           });
+          // 组件模式同样注入 SVG 占位（数学公式/Mermaid 等已转换的块），避免复制到公众号后 404
+          comp.html = MdFilter.injectSVG(comp.html, filterResult.svgBlocks);
           preview.innerHTML = comp.html;
           const wordCount = rawMd.replace(/\s/g, '').length;
           const lineCount = rawMd.split('\n').length;
@@ -1391,6 +1393,36 @@
     // 8. 复制到微信公众号
     // ================================================================
 
+    /**
+     * 把克隆节点里仍残留的 md-filter-svg-* 占位 <img> 替换为 data URL 图片。
+     * 微信公众号编辑器粘贴时会自动上传 data URL 图片，避免相对路径 404。
+     */
+    function svgToDataURL(root) {
+      if (!root || typeof MdFilter === 'undefined') return;
+      root.querySelectorAll('img[src*="md-filter-svg-"]').forEach(img => {
+        const id = (img.getAttribute('src') || '').split('/').pop();
+        const block = (lastFilterResult && lastFilterResult.svgBlocks || []).find(b => b.id === id);
+        if (!block || !block.svg) return;
+        const encoded = encodeURIComponent(block.svg)
+          .replace(/'/g, '%27').replace(/"/g, '%22');
+        img.setAttribute('src', `data:image/svg+xml;charset=utf-8,${encoded}`);
+      });
+      // 兜底：预览已注入的内联 <svg>（组件模式）也转成 data URL 图片，
+      // 微信公众号编辑器对 <svg> 标签支持不稳定，data URL 图片则会被自动转存上传
+      root.querySelectorAll('svg').forEach(svg => {
+        try {
+          const str = new XMLSerializer().serializeToString(svg);
+          const encoded = encodeURIComponent(str)
+            .replace(/'/g, '%27').replace(/"/g, '%22');
+          const img = document.createElement('img');
+          img.setAttribute('src', `data:image/svg+xml;charset=utf-8,${encoded}`);
+          img.setAttribute('alt', '');
+          img.style.cssText = 'max-width:100%;height:auto;display:block;margin:0 auto;';
+          svg.replaceWith(img);
+        } catch (_) { /* 序列化失败则保留原 svg */ }
+      });
+    }
+
     function buildWechatHTML() {
       // 组件排版模式：直接克隆预览中的组件化 <section>（已内联样式 + leaf）
       if (useComponents) {
@@ -1403,6 +1435,9 @@
             if (img) wrapper.replaceWith(img);
           });
           clone.querySelectorAll('[data-decorated]').forEach(el => el.removeAttribute('data-decorated'));
+          // 兜底：把仍以 md-filter-svg-* 为 src 的占位 <img> 替换为内联 SVG，
+          // 避免粘贴到公众号后按相对路径请求导致 404
+          svgToDataURL(clone);
           return clone.outerHTML;
         }
       }
@@ -1445,6 +1480,7 @@
         if (!p.textContent.trim() && !p.querySelector('img')) p.remove();
       });
       root.style.cssText = s.container;
+      svgToDataURL(root);
       return `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${bg};border:none;border-collapse:collapse;"><tr><td style="background-color:${bg};border:none;">${root.outerHTML}</td></tr></table>`;
     }
 

@@ -3,75 +3,72 @@
 ## 当前目标
 
 全面改造 starline-gzh-publisher 项目，包括：
-1. ✅ 创建 md-filter.js Markdown 过滤层（非标准格式转标准 MD，不支持的格式转 SVG）
-2. ✅ 改造 md-to-wechat 列设置界面（表格列宽、边框、斑马纹、悬停效果、表头对齐）
-3. ✅ 重做主页 index.html（引导用户进入各功能，工作流指引，快速开始）
-4. ✅ 完善首页文档 draft.md / demo.md / README.md
-5. ✅ 更新其他工具适配 md-filter
+1. ✅ md-filter.js Markdown 过滤层（非标准格式转标准 MD，不支持的格式转 SVG）
+2. ✅ 三大工具（wechat / x / xiaohongshu）统一为明亮「写作转换」v2 设计
+3. ✅ 格式诊断交互：行号定位 + 左侧高亮 + 修复建议
+4. ✅ 主页 index.html 改为明亮主题 + 深浅主题切换
+5. ✅ 品牌升级为「Starline Writer · 一份内容，三种平台」
 
 ## 已完成工作
 
-### md-filter.js（Markdown 过滤层）
-- 新建 `tools/md-filter.js`，纯前端零依赖，IIFE 自执行
-- 格式归一化：全角标点→半角、标题修复（`#标题`→`# 标题`）、列表统一为 `-`、代码块前后补空行、引用块修复、分隔线统一、表格对齐修复、中文与英文间加空格
-- 不支持的格式转 SVG：数学公式（$$）、Mermaid 图、LaTeX、Graphviz、PlantUML、自定义块（:::）→ 自动生成 SVG 图片
-- 格式诊断：检测未闭合代码块、标题层级跳跃、表格对齐问题、列表标记不统一
-- 公开 API：`MdFilter.process()`、`MdFilter.injectSVG()` 及各个归一化子函数
+### md-filter.js（Markdown 过滤层增强）
+- 原有归一化与 SVG 转换保留
+- **diagnose() 全面增强**：每条诊断统一带 `line`（1 基行号）与 `fix`（修复建议）
+- 新增检查项：无空格标题（`#标题`）、引用块 `>` 无空格、未闭合加粗定位到行、表格对齐行定位、列表标记不统一的逐行提示、标题层级跳跃、全角标点统计
+- 三个工具共用此诊断输出，前端据此定位左侧编辑器行号
 
-### md-to-wechat.html（微信排版）
-- 集成 md-filter.js，渲染时自动过滤
-- 新增设置面板（齿轮按钮）：表格列设置界面
-  - 全局设置：显示边框、斑马纹、悬停高亮、表头对齐方式
-  - 列宽设置：各列百分比宽度，留空自动均分
-  - 诊断区域：显示 md-filter 格式诊断结果
-- 底部统计栏：字数 + 行数 + 诊断按钮
-- 表格渲染实时响应设置变更
-- 全面中文注释，每个控制点说明原因
+### 统一 v2 工具外壳（wechat / x / xiaohongshu 三页一致）
+- 编辑栏结构统一：顶栏（品牌+动作）→ 控制栏 → 双栏工作区（编辑器 | 手机模拟框）
+- 每页独立品牌强调色：wechat 明亮蓝、x 一抹深蓝、小红书玫红
+- 控制栏含「背景色切换」色点（白/米/淡/粉/深），深色背景自动反白文字
+- 编辑区下方新增「诊断面板」：点击控制栏诊断按钮展开，列出问题（错误/警告/提示）、行号、修复建议，点击条目跳转原稿对应行并高亮
+- `MdFilter.process()` 后调用 `updateDiagnosisBtn()` 动态显示问题数徽章
 
-### index.html（主页）
-- 品牌标识（S 图标）+ 渐变标题
-- 3 步工作流指引：写 Markdown → 打开工具 → 一键输出
-- 6 卡网格：封面、二维码、微信、小红书、X、简历（即将上线）
-- 每张卡片附带特性标签（13 配色、44 主题等）
-- 快速开始区域：写作规范展示 + 使用说明
-- 使用说明按钮（锚点跳转）
-- GitHub Star 计数
+### md-to-wechat.html
+- 品牌改名：`Starline微排` → `Starline Writer`，标语改「一份内容，三种平台」
+- 新增背景色切换（含深色反白逻辑 `setAppBg` + `luminance`）
+- 新增诊断面板（`renderDiagnosisPanel` / `jumpToLine` / `toggleDiagnosisPanel`）
+- 保留 44 主题、章节样式、表格设置等既有功能
 
-### 文档完善
-- `draft.md`：更新为完整写作规范，增加 md-filter 说明，5 工具表格
-- `demo.md`：更新为演示文档，与 draft.md 结构一致
-- `README.md`：更新为完整项目文档，增加 md-filter 章节，特性表格
+### md-to-x.html（重写为 v2）
+- 从 398 行的双栏旧版升级为完整 v2 外壳
+- 修复：render() 不再删除 H1（保留文章标题）；`copyRichText()` 经 `buildXHTML()` 克隆并剔除图片悬浮按钮/覆盖 UI 元素
+- 新增诊断面板、背景色切换（深色反白）、字号滑块、滚动同步
+- X 文章手机模拟框预览
 
-### 其他工具适配
-- `md-to-x.html`：集成 md-filter.js，渲染时自动过滤
-- `md-to-xiaohongshu.html`：集成 md-filter.js，渲染时自动过滤
+### md-to-xiaohongshu.html（重写为 v2）
+- 玫红色品牌 + 明亮修改，卡片式手机框（xhs-card）
+- 修复 `buildXhsText()` 大小写 bug（原名 `buildXHSText()`）
+- `copyRichText()` 输出克隆后的纯文本（剔除图片悬浮 UI），含 HTML/纯文本双格式
+- 保留小红书字数哨兵（buildStatus）+ 标签生成逻辑
+
+### 主页 index.html（明亮化 + 主题切换）
+- `:root` 改为明亮主题默认；新增 `.theme-dark` 覆盖暗色原值
+- 右上角新增深浅主题切换按钮（太阳/月亮图标，localStorage 记忆 `starline-theme`）
+- 硬编码深色值改为 CSS 变量：导航栏 `--color-navbar`、网格 `--color-grid`、代码块全套 `--color-code-*`、卡片 `--color-card`、光晕 `--color-glow-*`、成功标签 `--color-success-*`
+- 新增 `--color-border-hover` / `--color-accent-border`
 
 ## 核心文件
 
-| 文件 | 大小 | 用途 |
-|------|------|------|
-| `tools/md-filter.js` | ~15KB | Markdown 过滤层（新建） |
-| `tools/md-to-wechat.html` | ~87KB | 微信排版（改造完成） |
-| `tools/index.html` | ~13KB | 主页（重做完成） |
-| `tools/md-to-x.html` | ~20KB | X 排版（已适配 md-filter） |
-| `tools/md-to-xiaohongshu.html` | ~30KB | 小红书排版（已适配 md-filter） |
-| `tools/cover.html` | ~136KB | 封面生成器（未修改） |
-| `tools/qrcode.html` | ~14KB | 二维码工具（未修改） |
-| `tools/draft.md` | ~3KB | 写作规范（更新） |
-| `tools/demo.md` | ~3KB | 演示文档（更新） |
-| `README.md` | ~3KB | 项目文档（更新） |
+| 文件 | 用途 |
+|------|------|
+| `tools/md-filter.js` | Markdown 过滤 + 诊断（行号/建议）层 |
+| `tools/md-to-wechat.html` | 微信排版 v2 |
+| `tools/md-to-x.html` | X 文章 v2 |
+| `tools/md-to-xiaohongshu.html` | 小红书图文 v2 |
+| `tools/index.html` | 主页（明亮 + 深浅切换） |
+| `tools/cover.html` / `qrcode.html` | 未改动 |
 
 ## 已知问题
 
-1. `cover.html` 和 `qrcode.html` 未集成 md-filter.js（它们不处理 Markdown 正文，暂不需要）
-2. 预览中的表格设置面板（列设置界面）在切换主题后需要手动触发重新渲染
-3. SVG 转换后的图片在微信公众号中可能因编辑器限制而显示异常，建议复制前先预览确认
-4. `file://` 协议下 `fetch('./draft.md')` 被浏览器拦截，工具无法自动加载草稿，需通过 HTTP 服务访问
+1. `_site/` 已 .gitignore，构建产物不入库；改动只提交 `tools/`、`md-filter.js`
+2. `file://` 下 `fetch('./draft.md')` 被浏览器拦截，需 HTTP 服务访问
+3. 三个工具的「背景色切换」仅作用于预览/文章体，不改整个工作区 UI 主题——全局 UI 深浅由主页切换（工具页自身未加全局暗色，避免改动过度）
+4. `cover.html` / `qrcode.html` 未集成 md-filter（不处理 Markdown 正文）
+5. 已完成的内联 JS 均通过 Node `vm.Script` 语法校验；功能级交互（剪贴板/图片转 base64）需浏览器实机验证
 
-## 下一步计划
+## 下一步
 
-- 简历排版工具实现
-- 封面生成器增加更多模板
-- 微信排版主题增加更多自定义选项
-- 考虑将 md-filter.js 作为 npm 包发布
-- 写作规范增加更多示例
+- 微信排版「风格多选 + 主题风格库分流派」（杂志/卡片/简约/复古）增强
+- 浏览器实测三工具 + 主页的深浅切换与诊断定位交互
+- 提交并推送 GitHub（autocrlf=false）

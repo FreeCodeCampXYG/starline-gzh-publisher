@@ -40,23 +40,43 @@
     └────────────────────────────────────────────────────────────────┘
     */
     :root {
-      /* 色彩系统 — 午夜蓝 + 琥珀金 */
-      --color-bg: #0b1219;
-      --color-bg-alt: #0f1a26;
-      --color-surface: rgba(255, 255, 255, 0.04);
-      --color-surface-hover: rgba(255, 255, 255, 0.08);
-      --color-border: rgba(255, 255, 255, 0.08);
-      --color-border-light: rgba(255, 255, 255, 0.04);
-      --color-primary: #1a4972;
-      --color-primary-light: #2d6da8;
-      --color-accent: #d4a855;
-      --color-accent-soft: rgba(212, 168, 85, 0.15);
-      --color-accent-glow: rgba(212, 168, 85, 0.08);
-      --color-text-primary: #f0ede8;
-      --color-text-secondary: rgba(240, 237, 232, 0.6);
-      --color-text-muted: rgba(240, 237, 232, 0.35);
-      --color-text-accent: #d4a855;
+      /* 色彩系统 — 明亮主题（默认）*/
+      --color-bg: #f7f8fb;
+      --color-bg-alt: #eef1f7;
+      --color-surface: rgba(255, 255, 255, 0.72);
+      --color-surface-hover: rgba(255, 255, 255, 0.95);
+      --color-border: rgba(15, 23, 42, 0.08);
+      --color-border-light: rgba(15, 23, 42, 0.05);
+      --color-border-hover: rgba(15, 23, 42, 0.15);
+      --color-primary: #2563eb;
+      --color-primary-light: #3b82f6;
+      --color-accent: #d97706;
+      --color-accent-soft: rgba(217, 119, 6, 0.12);
+      --color-accent-glow: rgba(217, 119, 6, 0.06);
+      --color-text-primary: #1e293b;
+      --color-text-secondary: rgba(30, 41, 59, 0.68);
+      --color-text-muted: rgba(30, 41, 59, 0.42);
+      --color-text-accent: #b45309;
       --color-white: #ffffff;
+      --color-navbar: rgba(247, 248, 251, 0.85);
+      --color-grid: rgba(15, 23, 42, 0.05);
+      --color-code-bg: #ffffff;
+      --color-code-header: #f3f4f6;
+      --color-code-header-border: rgba(15, 23, 42, 0.06);
+      --color-code-text: #1e293b;
+      --color-code-comment: #64748b;
+      --color-code-keyword: #2563eb;
+      --color-code-string: #059669;
+      --color-code-number: #d97706;
+      --color-code-operator: #7c3aed;
+      --color-glow-1: rgba(59, 130, 246, 0.16);
+      --color-glow-2: rgba(217, 119, 6, 0.10);
+      --color-success-soft: rgba(5, 150, 105, 0.10);
+      --color-success-text: #047857;
+      --color-success-border: rgba(5, 150, 105, 0.2);
+      --color-card: #ffffff;
+      --color-card-hover: #ffffff;
+      --color-accent-border: rgba(217, 119, 6, 0.3);
 
       /* 字体 */
       --font-serif: 'Noto Serif SC', 'Source Han Serif SC', serif;
@@ -80,6 +100,50 @@
       --radius-xl: 24px;
 
       /* 阴影 */
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+      --shadow-lg: 0 8px 32px rgba(15, 23, 42, 0.1);
+      --shadow-glow: 0 0 40px rgba(217, 119, 6, 0.08);
+    }
+
+    /* 暗色主题覆盖 */
+    .theme-dark {
+      --color-bg: #0b1219;
+      --color-bg-alt: #0f1a26;
+      --color-surface: rgba(255, 255, 255, 0.04);
+      --color-surface-hover: rgba(255, 255, 255, 0.08);
+      --color-border: rgba(255, 255, 255, 0.08);
+      --color-border-light: rgba(255, 255, 255, 0.04);
+      --color-border-hover: rgba(255, 255, 255, 0.15);
+      --color-primary: #1a4972;
+      --color-primary-light: #2d6da8;
+      --color-accent: #d4a855;
+      --color-accent-soft: rgba(212, 168, 85, 0.15);
+      --color-accent-glow: rgba(212, 168, 85, 0.08);
+      --color-text-primary: #f0ede8;
+      --color-text-secondary: rgba(240, 237, 232, 0.6);
+      --color-text-muted: rgba(240, 237, 232, 0.35);
+      --color-text-accent: #d4a855;
+      --color-white: #ffffff;
+      --color-navbar: rgba(11, 18, 25, 0.8);
+      --color-grid: rgba(255, 255, 255, 0.03);
+      --color-code-bg: #161b22;
+      --color-code-header: rgba(0, 0, 0, 0.3);
+      --color-code-header-border: rgba(255, 255, 255, 0.05);
+      --color-code-text: #e2e8f0;
+      --color-code-comment: #636e7b;
+      --color-code-keyword: #7dd3fc;
+      --color-code-string: #a7f3d0;
+      --color-code-number: #fbbf24;
+      --color-code-operator: #d4a855;
+      --color-glow-1: rgba(26, 73, 114, 0.3);
+      --color-glow-2: rgba(212, 168, 85, 0.08);
+      --color-success-soft: rgba(22, 163, 74, 0.15);
+      --color-success-text: #4ade80;
+      --color-success-border: rgba(22, 163, 74, 0.2);
+      --color-card: rgba(255, 255, 255, 0.04);
+      --color-card-hover: rgba(255, 255, 255, 0.06);
+      --color-accent-border: rgba(212, 168, 85, 0.25);
       --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
       --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.25);
       --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.35);
@@ -138,14 +202,14 @@
       right: -10%;
       width: 600px;
       height: 600px;
-      background: radial-gradient(circle, rgba(26, 73, 114, 0.3), transparent 70%);
+      background: radial-gradient(circle, var(--color-glow-1), transparent 70%);
     }
     .bg-glow-2 {
       bottom: -10%;
       left: -5%;
       width: 500px;
       height: 500px;
-      background: radial-gradient(circle, rgba(212, 168, 85, 0.08), transparent 70%);
+      background: radial-gradient(circle, var(--color-glow-2), transparent 70%);
     }
 
     a {
@@ -174,7 +238,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: rgba(11, 18, 25, 0.8);
+      background: var(--color-navbar);
       backdrop-filter: blur(20px) saturate(1.5);
       -webkit-backdrop-filter: blur(20px) saturate(1.5);
       border-bottom: 1px solid var(--color-border);
@@ -248,7 +312,7 @@
     .nav-btn:hover {
       color: var(--color-text-primary);
       background: var(--color-surface-hover);
-      border-color: rgba(255, 255, 255, 0.15);
+      border-color: var(--color-border-hover);
     }
     .nav-btn svg {
       flex-shrink: 0;
@@ -298,8 +362,8 @@
       position: absolute;
       inset: 0;
       background-image:
-        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        linear-gradient(var(--color-grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--color-grid) 1px, transparent 1px);
       background-size: 60px 60px;
       mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
       -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
@@ -620,11 +684,7 @@
       position: relative;
       padding: var(--space-xl);
       border-radius: var(--radius-lg);
-      background: linear-gradient(
-        135deg,
-        rgba(255, 255, 255, 0.04),
-        rgba(255, 255, 255, 0.02)
-      );
+      background: var(--color-card);
       border: 1px solid var(--color-border);
       backdrop-filter: blur(10px);
       transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
@@ -651,12 +711,8 @@
     }
 
     .tool-card:hover {
-      border-color: rgba(212, 168, 85, 0.25);
-      background: linear-gradient(
-        135deg,
-        rgba(255, 255, 255, 0.06),
-        rgba(255, 255, 255, 0.03)
-      );
+      border-color: var(--color-accent-border);
+      background: var(--color-card-hover);
       transform: translateY(-4px);
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), var(--shadow-glow);
     }
@@ -723,12 +779,12 @@
       flex-shrink: 0;
     }
     .tag-live {
-      background: rgba(22, 163, 74, 0.15);
-      color: #4ade80;
-      border: 1px solid rgba(22, 163, 74, 0.2);
+      background: var(--color-success-soft);
+      color: var(--color-success-text);
+      border: 1px solid var(--color-success-border);
     }
     .tag-soon {
-      background: rgba(255, 255, 255, 0.05);
+      background: var(--color-surface);
       color: var(--color-text-muted);
       border: 1px solid var(--color-border);
     }
@@ -760,11 +816,11 @@
       font-size: 10px;
       font-family: var(--font-sans);
       font-weight: 500;
-      color: rgba(240, 237, 232, 0.5);
-      background: rgba(255, 255, 255, 0.04);
+      color: var(--color-text-secondary);
+      background: var(--color-surface);
       padding: 3px 10px;
       border-radius: 100px;
-      border: 1px solid rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--color-border);
       white-space: nowrap;
     }
 
@@ -862,7 +918,7 @@
     }
 
     .quickstart-code-block {
-      background: #0d1117;
+      background: var(--color-code-bg);
       border-radius: var(--radius-lg);
       border: 1px solid var(--color-border);
       overflow: hidden;
@@ -873,8 +929,8 @@
       align-items: center;
       gap: 8px;
       padding: 12px 16px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      background: rgba(0, 0, 0, 0.2);
+      border-bottom: 1px solid var(--color-code-header-border);
+      background: var(--color-code-header);
     }
     .quickstart-code-dot {
       width: 10px;
@@ -890,15 +946,15 @@
       font-family: var(--font-mono);
       font-size: 13px;
       line-height: 1.8;
-      color: #e2e8f0;
+      color: var(--color-code-text);
       overflow-x: auto;
       white-space: pre-wrap;
     }
-    .quickstart-code-body .comment { color: #636e7b; }
-    .quickstart-code-body .keyword { color: #7dd3fc; }
-    .quickstart-code-body .string { color: #a7f3d0; }
-    .quickstart-code-body .number { color: #fbbf24; }
-    .quickstart-code-body .operator { color: #d4a855; }
+    .quickstart-code-body .comment { color: var(--color-code-comment); }
+    .quickstart-code-body .keyword { color: var(--color-code-keyword); }
+    .quickstart-code-body .string { color: var(--color-code-string); }
+    .quickstart-code-body .number { color: var(--color-code-number); }
+    .quickstart-code-body .operator { color: var(--color-code-operator); }
 
     /*
     ┌────────────────────────────────────────────────────────────────┐
@@ -1110,6 +1166,15 @@
           <span id="github-star-count">—</span>
         </span>
       </a>
+      <button class="nav-btn theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="切换深浅主题" aria-label="切换深浅主题" style="border-color:var(--color-border);">
+        <svg class="theme-icon theme-icon-sun" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+        </svg>
+        <svg class="theme-icon theme-icon-moon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+          <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+        </svg>
+        <span id="theme-toggle-text">暗色</span>
+      </button>
     </div>
   </nav>
 
@@ -1456,6 +1521,28 @@
   <script>
     (function() {
       'use strict';
+
+      /* ── 深浅主题切换 ── */
+      function applyTheme(dark) {
+        document.documentElement.classList.toggle('theme-dark', dark);
+        const sun = document.querySelector('.theme-icon-sun');
+        const moon = document.querySelector('.theme-icon-moon');
+        const text = document.getElementById('theme-toggle-text');
+        if (sun) sun.style.display = dark ? 'none' : 'block';
+        if (moon) moon.style.display = dark ? 'block' : 'none';
+        if (text) text.textContent = dark ? '亮色' : '暗色';
+      }
+      function toggleTheme() {
+        const dark = document.documentElement.classList.contains('theme-dark');
+        applyTheme(!dark);
+        try { localStorage.setItem('starline-theme', !dark ? 'dark' : 'light'); } catch (_) {}
+      }
+      (function initTheme() {
+        let dark = false;
+        try { dark = localStorage.getItem('starline-theme') === 'dark'; } catch (_) {}
+        applyTheme(dark);
+      })();
+      window.toggleTheme = toggleTheme;
 
       /* ── GitHub Star 计数 ── */
       fetch('https://api.github.com/repos/FreeCodeCampXYG/starline-gzh-publisher')

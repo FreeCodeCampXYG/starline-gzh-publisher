@@ -8,144 +8,140 @@
   <script src="md-filter.js"></script>
   <style>
     :root {
-      --bg: #f5f3ee;
-      --surface: #ffffff;
-      --surface-hover: #faf8f5;
-      --border: #e8e3dc;
-      --border-hover: #d4cdc2;
-      --text-primary: #1a1a2e;
-      --text-secondary: #6b6560;
-      --text-muted: #a09890;
-      --accent: #c43a5e;
-      --accent-light: #fce8ed;
-      --accent-soft: rgba(196,58,94,0.06);
-      --gold: #c4973f;
-      --success: #16a34a;
-      --radius: 10px;
+      --primary: #ff2e5a;
+      --primary-dark: #d62549;
+      --primary-light: #fef0f3;
+      --primary-soft: rgba(255,46,90,0.08);
+      --accent: #F59E0B;
+      --accent-dark: #D97706;
+      --bg: #f8f8f8;
+      --surface: #FFFFFF;
+      --surface-hover: #f7f7f7;
+      --border: #EEECEC;
+      --border-hover: #DDD8D8;
+      --text-primary: #1E293B;
+      --text-secondary: #4e4e53;
+      --text-muted: #a09b9b;
+      --success: #10B981;
+      --error: #EF4444;
+      --radius: 8px;
       --radius-sm: 6px;
       --radius-full: 999px;
       --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
       --font-mono: 'JetBrains Mono', 'Fira Code', 'Menlo', Consolas, monospace;
-      --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
-      --shadow-md: 0 4px 16px rgba(0,0,0,0.06);
-      --shadow-lg: 0 8px 32px rgba(0,0,0,0.08);
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+      --shadow-lg: 0 8px 24px rgba(0,0,0,0.08);
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: var(--font-sans);
-      background: var(--bg);
-      color: var(--text-primary);
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      -webkit-font-smoothing: antialiased;
-    }
+    body { font-family: var(--font-sans); background: var(--bg); color: var(--text-primary); height: 100vh; display: flex; flex-direction: column; -webkit-font-smoothing: antialiased; }
 
-    header {
-      background: rgba(255,255,255,0.88);
-      backdrop-filter: blur(20px) saturate(1.5);
-      -webkit-backdrop-filter: blur(20px) saturate(1.5);
-      border-bottom: 1px solid var(--border);
-      padding: 0 24px;
-      height: 56px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-shrink: 0;
-      z-index: 50;
-    }
-    .header-left { display: flex; align-items: center; min-width: 0; overflow: hidden; }
-    .home-btn { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: var(--radius-sm); color: var(--text-muted); margin-right: 10px; flex-shrink: 0; text-decoration: none; transition: all 0.2s; }
-    .home-btn:hover { background: var(--accent-light); color: var(--accent); }
-    .header-title { font-size: 14px; font-weight: 600; color: var(--text-primary); letter-spacing: 0.01em; white-space: nowrap; flex-shrink: 0; }
-    .header-title span { color: var(--text-muted); font-weight: 400; margin: 0 6px; }
-    .doc-title-wrap { display: none; align-items: center; gap: 6px; margin-left: 14px; padding-left: 14px; border-left: 1px solid var(--border); min-width: 0; max-width: 380px; }
-    .doc-title-text { font-size: 13px; color: var(--text-secondary); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .topbar { height: 52px; flex-shrink: 0; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 20px; gap: 12px; z-index: 100; }
+    .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .home-link { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: var(--radius-sm); color: var(--text-muted); text-decoration: none; transition: all 0.15s; }
+    .home-link:hover { background: var(--primary-light); color: var(--primary); }
+    .brand-avatar { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), #ff7a94); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 800; flex-shrink: 0; }
+    .brand-copy { display: flex; flex-direction: column; flex-shrink: 0; }
+    .brand-copy strong { font-size: 14px; font-weight: 700; color: var(--text-primary); line-height: 1.2; }
+    .brand-copy strong em { font-style: normal; color: var(--primary); }
+    .brand-copy small { font-size: 9px; color: var(--text-muted); letter-spacing: 0.12em; font-weight: 600; text-transform: uppercase; }
+    .brand-divider { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; }
+    .brand-tag { font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+    .topbar-spacer { flex: 1; }
+    .topbar-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .doc-title-wrap { display: none; align-items: center; gap: 6px; margin-left: 10px; padding-left: 10px; border-left: 1px solid var(--border); min-width: 0; max-width: 280px; }
+    .doc-title-text { font-size: 12px; color: var(--text-secondary); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .doc-title-copy { flex-shrink: 0; background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 2px; border-radius: 3px; display: flex; align-items: center; transition: color 0.15s; }
-    .doc-title-copy:hover { color: var(--accent); }
-    .header-actions { display: flex; gap: 8px; align-items: center; }
+    .doc-title-copy:hover { color: var(--primary); }
+    .topbar-btn { display: flex; align-items: center; gap: 6px; padding: 7px 14px; font-size: 12px; font-weight: 600; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text-secondary); cursor: pointer; transition: all 0.15s; }
+    .topbar-btn:hover { border-color: var(--border-hover); color: var(--text-primary); background: var(--surface-hover); }
+    .topbar-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+    .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .btn-primary:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+    .btn-success { background: var(--success); border-color: var(--success); }
+    @media (max-width: 700px) { .brand-tag, .brand-divider { display: none; } }
 
-    .reload-btn { padding: 6px 14px; background: none; color: var(--text-secondary); border: 1px solid var(--border); border-radius: var(--radius-full); font-size: 12px; cursor: pointer; transition: all 0.2s; }
-    .reload-btn:hover { color: var(--text-primary); border-color: var(--border-hover); background: var(--surface-hover); }
+    .controlbar { height: 44px; flex-shrink: 0; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 16px; gap: 8px; overflow-x: auto; z-index: 99; }
+    .controlbar::-webkit-scrollbar { height: 0; }
+    .ctrl-divider { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; }
+    .ctrl-group { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .ctrl-label { font-size: 11px; color: var(--text-muted); font-weight: 600; white-space: nowrap; }
+    .ctrl-shortcut { display: flex; align-items: center; gap: 4px; padding: 4px 8px; font-size: 11px; border: none; border-radius: var(--radius-sm); background: none; color: var(--text-secondary); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+    .ctrl-shortcut:hover { background: var(--surface-hover); color: var(--text-primary); }
+    .ctrl-shortcut svg { width: 14px; height: 14px; }
+    .ctrl-shortcut.active { background: var(--primary-light); color: var(--primary); }
+    .ctrl-toolbar-shortcuts { display: flex; align-items: center; gap: 2px; }
+    .ctrl-color-group { display: flex; align-items: center; gap: 4px; }
+    .bg-dot { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--border); cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
+    .bg-dot:hover { transform: scale(1.15); }
+    .bg-dot.active { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-soft); }
 
-    .sync-switch { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 12px; color: var(--text-secondary); user-select: none; }
-    .sync-switch-track { width: 32px; height: 18px; border-radius: 9px; background: var(--border); position: relative; transition: background 0.2s; flex-shrink: 0; }
-    .sync-switch-track.on { background: var(--accent); }
-    .sync-switch-thumb { position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.15); transition: transform 0.2s; }
-    .sync-switch-track.on .sync-switch-thumb { transform: translateX(14px); }
+    .workspace { flex: 1; display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; gap: 0; }
+    @media (max-width: 800px) { .workspace { grid-template-columns: 1fr; } }
 
-    .copy-btn {
-      display: flex; align-items: center; gap: 8px;
-      padding: 8px 20px; background: var(--accent); color: #fff;
-      border: none; border-radius: var(--radius-full);
-      font-size: 13px; font-weight: 600; cursor: pointer;
-      transition: all 0.2s;
-    }
-    .copy-btn:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(196,58,94,0.25); }
-    .copy-btn:active { transform: translateY(0); }
-    .copy-btn.success { background: var(--success); }
-    .copy-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+    .editor-pane { display: flex; flex-direction: column; overflow: hidden; background: var(--surface); }
+    .pane-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .pane-head .eyebrow { font-size: 9px; color: var(--text-muted); font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; display: block; }
+    .pane-head h2 { font-size: 14px; font-weight: 700; color: var(--text-primary); line-height: 1.2; margin-top: 1px; }
+    .pane-actions { display: flex; gap: 6px; }
+    .pane-actions button { padding: 5px 12px; font-size: 11px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text-secondary); cursor: pointer; transition: all 0.15s; }
+    .pane-actions button:hover { border-color: var(--border-hover); color: var(--text-primary); background: var(--surface-hover); }
 
-    .main { display: grid; grid-template-columns: 1fr 1fr; flex: 1; overflow: hidden; gap: 1px; background: var(--border); }
-    @media (max-width: 720px) { .main { grid-template-columns: 1fr; } }
-
-    .pane { background: #fff; display: flex; flex-direction: column; overflow: hidden; }
-    .pane-header { padding: 12px 20px; font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.15em; text-transform: uppercase; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-
-    #md-input { flex: 1; padding: 20px; font-size: 13px; font-family: var(--font-mono); line-height: 1.7; color: var(--text-primary); border: none; outline: none; resize: none; background: #faf8f5; }
+    #md-input { flex: 1; padding: 20px; font-size: 13px; font-family: var(--font-mono); line-height: 1.8; color: var(--text-primary); border: none; outline: none; resize: none; background: var(--surface); }
     #md-input::placeholder { color: var(--text-muted); }
 
-    #preview { flex: 1; overflow-y: auto; padding: 20px; background: var(--bg); }
+    .diagnosis-panel { flex-shrink: 0; border-top: 1px solid var(--border); background: var(--surface); max-height: 30%; display: flex; flex-direction: column; }
+    .diagnosis-head { display: flex; align-items: center; justify-content: space-between; padding: 8px 16px; border-bottom: 1px solid var(--border); font-size: 11px; font-weight: 700; color: var(--text-secondary); letter-spacing: 0.05em; }
+    .diagnosis-close { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 2px; border-radius: 4px; display: flex; }
+    .diagnosis-close:hover { background: var(--surface-hover); color: var(--text-primary); }
+    .diagnosis-list { overflow-y: auto; padding: 6px 8px; }
+    .diagnosis-item { display: flex; align-items: flex-start; gap: 8px; padding: 6px 8px; border-radius: var(--radius-sm); cursor: pointer; transition: background 0.12s; font-size: 12px; }
+    .diagnosis-item:hover { background: var(--surface-hover); }
+    .diagnosis-item .d-sev { flex-shrink: 0; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: var(--radius-full); margin-top: 1px; letter-spacing: 0.03em; }
+    .diagnosis-item .d-sev.error { background: #fee2e2; color: var(--error); }
+    .diagnosis-item .d-sev.warn { background: #fef3c7; color: #b45309; }
+    .diagnosis-item .d-sev.info { background: #e0f2fe; color: #0369a1; }
+    .diagnosis-item .d-body { flex: 1; min-width: 0; }
+    .diagnosis-item .d-msg { color: var(--text-secondary); line-height: 1.4; }
+    .diagnosis-item .d-line { color: var(--text-muted); font-family: var(--font-mono); font-size: 10px; flex-shrink: 0; margin-top: 2px; }
+    .diagnosis-item .d-fix { color: var(--text-muted); font-size: 11px; line-height: 1.4; margin-top: 2px; word-break: break-all; }
+    .diagnosis-item .d-fix b { color: var(--primary); font-weight: 600; }
+    .diagnosis-summary { padding: 6px 16px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-muted); }
 
-    /* ── 小红书卡片预览 ── */
-    .xhs-card {
-      max-width: 400px; margin: 0 auto;
-      background: #fff; border-radius: var(--radius);
-      box-shadow: var(--shadow-md);
-      overflow: hidden;
-    }
-    .xhs-card-head {
-      display: flex; align-items: center; gap: 10px;
-      padding: 16px 18px 8px;
-    }
-    .xhs-avatar {
-      width: 32px; height: 32px; border-radius: 50%;
-      background: linear-gradient(135deg, #fce8ed, var(--accent));
-      display: flex; align-items: center; justify-content: center;
-      color: #fff; font-size: 13px; font-weight: 700; flex-shrink: 0;
-    }
-    .xhs-author { font-size: 13px; font-weight: 600; color: var(--text-primary); }
-    .xhs-time { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
-
-    .xhs-body {
-      padding: 8px 18px 12px;
-      font-size: 14px; line-height: 1.75; color: var(--text-primary);
-      white-space: pre-wrap; word-break: break-word;
-    }
-    .xhs-body strong { font-weight: 600; color: var(--accent); }
-    .xhs-body em { font-style: italic; }
-    .xhs-code {
-      margin: 8px 0; padding: 12px 14px;
-      background: #f5f5f5; border-radius: var(--radius-sm);
-      font-family: var(--font-mono); font-size: 12px;
-      line-height: 1.6; color: var(--text-secondary);
-      white-space: pre-wrap; overflow-x: auto;
-    }
-    .xhs-tags {
-      padding: 4px 18px 16px;
-      font-size: 13px; color: var(--accent); line-height: 1.8;
-    }
-    .xhs-count {
-      padding: 10px 18px 14px;
-      font-size: 11px; color: var(--text-muted);
-      border-top: 1px solid var(--border);
-    }
-    .stat-num { font-weight: 700; color: var(--text-secondary); }
+    .statusbar { display: flex; align-items: center; gap: 16px; padding: 8px 20px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
+    .statusbar .stat-num { font-weight: 700; color: var(--text-secondary); }
     .stat-status { font-weight: 600; }
     .stat-status.ok { color: var(--success); }
     .stat-status.warn { color: #d97706; }
     .stat-status.long { color: var(--text-muted); }
-    .stat-status.short { color: var(--accent); }
+    .stat-status.short { color: var(--primary); }
+
+    .preview-pane { display: flex; flex-direction: column; overflow: hidden; background: var(--bg); }
+    .preview-head { border-bottom: 1px solid var(--border); }
+    .preview-head-actions { display: flex; gap: 6px; }
+    .preview-head-actions button { display: flex; align-items: center; gap: 6px; padding: 5px 12px; font-size: 11px; font-weight: 600; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text-secondary); cursor: pointer; transition: all 0.15s; }
+    .preview-head-actions button:hover { border-color: var(--border-hover); color: var(--text-primary); }
+    .preview-head-actions button svg { width: 14px; height: 14px; }
+    .preview-head-actions .copy-button { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .preview-head-actions .copy-button:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+    .preview-head-actions .copy-button.success { background: var(--success); border-color: var(--success); }
+
+    .preview-scroll { flex: 1; overflow-y: auto; padding: 24px 20px; display: flex; justify-content: center; background: var(--surface); }
+    .preview-stage { position: relative; max-width: 400px; width: 100%; }
+    .phone-frame { background: var(--surface); border-radius: 22px; box-shadow: 0 8px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06); overflow: hidden; border: 1px solid var(--border); }
+
+    /* 小红书卡片 */
+    .xhs-card { background: #fff; border-radius: 8px; padding: 12px 14px 0; }
+    .xhs-card-head { display: flex; align-items: center; gap: 10px; padding: 8px 0 10px; }
+    .xhs-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), #ff7a94); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+    .xhs-author { font-size: 13px; font-weight: 600; color: #333; }
+    .xhs-time { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+    .xhs-body { padding: 0 0 12px; font-size: 14px; line-height: 1.7; color: #24292e; white-space: pre-wrap; word-break: break-word; }
+    .xhs-body strong { font-weight: 600; color: var(--primary); }
+    .xhs-body em { font-style: italic; }
+    .xhs-code { margin: 8px 0; padding: 12px 14px; background: #f4f4f5; border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 12px; line-height: 1.6; color: var(--text-secondary); white-space: pre-wrap; overflow-x: auto; }
+    .xhs-tags { padding: 0 0 14px; font-size: 13px; color: var(--primary); line-height: 1.8; }
+    .xhs-count { padding: 10px 0 12px; font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border); }
 
     .img-wrapper { position: relative; display: inline-block; margin: 4px 0; }
     .img-wrapper img { max-width: 100%; height: auto; border-radius: var(--radius-sm); }
@@ -155,61 +151,112 @@
     .img-copy-alt-btn:hover { background: rgba(0,0,0,0.8); }
     .img-copy-b64-btn { position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,0.5); color: #fff; border: none; border-radius: 4px; font-size: 11px; padding: 2px 8px; cursor: pointer; transition: background 0.15s; }
     .img-copy-b64-btn:hover { background: rgba(0,0,0,0.75); }
-
-    .stats { padding: 10px 20px; font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border); flex-shrink: 0; }
-    .empty-hint { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 14px; gap: 8px; background: #faf8f5; border-radius: var(--radius); }
-    .empty-hint svg { width: 36px; height: 36px; opacity: 0.3; }
+    .empty-hint { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 14px; gap: 8px; padding: 40px; text-align: center; }
+    .empty-hint svg { width: 36px; height: 36px; opacity: 0.25; }
   </style>
 </head>
 <body>
 
-  <header>
-    <div class="header-left">
-      <a href="index.html" class="home-btn" title="返回工具箱">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
-        </svg>
+  <header class="topbar">
+    <div class="brand">
+      <a href="index.html" class="home-link" title="返回 Starline 工具箱">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       </a>
-      <div class="header-title">Markdown <span>→</span> 小红书图文</div>
-      <div class="doc-title-wrap" id="doc-title-wrap">
-        <span class="doc-title-text" id="doc-title-text"></span>
-        <button class="doc-title-copy" id="doc-title-copy" title="复制标题" onclick="copyDocTitle()">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
-          </svg>
-        </button>
+      <span class="brand-avatar">红</span>
+      <div class="brand-copy">
+        <strong><em>Starline</em> Writer</strong>
+        <small>MARKDOWN → 小红书</small>
       </div>
+      <span class="brand-divider"></span>
+      <span class="brand-tag">一份内容，三种平台。</span>
     </div>
-    <div class="header-actions">
-      <label class="sync-switch" onclick="toggleSync()">
-        <div class="sync-switch-track on" id="sync-track"><div class="sync-switch-thumb"></div></div>
-        滚动同步
-      </label>
-      <button class="reload-btn" onclick="loadDraft()">重新加载草稿</button>
-      <button class="copy-btn" id="copy-btn" onclick="copyRichText()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="9" y="9" width="13" height="13" rx="2" />
-          <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-        </svg>
+    <div class="doc-title-wrap" id="doc-title-wrap">
+      <span class="doc-title-text" id="doc-title-text"></span>
+      <button class="doc-title-copy" id="doc-title-copy" title="复制标题" onclick="copyDocTitle()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+      </button>
+    </div>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-actions">
+      <button class="topbar-btn" onclick="loadDraft()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        重新加载
+      </button>
+      <button class="topbar-btn btn-primary" id="copy-btn" onclick="copyRichText()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
         复制富文本
       </button>
     </div>
   </header>
 
-  <div class="main">
-    <div class="pane">
-      <div class="pane-header">Markdown 输入</div>
-      <textarea id="md-input"></textarea>
-      <div class="stats" id="stats">0 字</div>
+  <div class="controlbar">
+    <div class="ctrl-toolbar-shortcuts">
+      <label class="ctrl-shortcut" onclick="toggleSync()" style="cursor:pointer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0115-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 01-15 6.7L3 16"/></svg>
+        <span id="sync-label">同步</span>
+      </label>
+      <button class="ctrl-shortcut" id="diagnosis-btn" onclick="showDiagnosis()" style="display:none" title="格式诊断">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span>诊断</span>
+      </button>
     </div>
-    <div class="pane">
-      <div class="pane-header">预览（小红书图文样式）</div>
-      <div id="preview">
-        <div class="empty-hint">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-          </svg>
-          <span>左侧粘贴 Markdown，这里实时预览小红书图文</span>
+    <span class="ctrl-divider"></span>
+    <div class="ctrl-group" title="预览/卡片背景色">
+      <span class="ctrl-label">背景</span>
+      <div class="ctrl-color-group">
+        <button class="bg-dot active" style="background:#ffffff" onclick="setCardBg('#ffffff', this)" aria-label="白色"></button>
+        <button class="bg-dot" style="background:#fff8e1" onclick="setCardBg('#fff8e1', this)" aria-label="奶油"></button>
+        <button class="bg-dot" style="background:#fef0f3" onclick="setCardBg('#fef0f3', this)" aria-label="粉底"></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="workspace">
+    <div class="editor-pane">
+      <div class="pane-head">
+        <div><span class="eyebrow">MARKDOWN / TXT</span><h2>原稿</h2></div>
+        <div class="pane-actions">
+          <button onclick="document.getElementById('md-file-input').click()">导入</button>
+          <input type="file" id="md-file-input" accept=".md,.markdown,.txt,text/markdown,text/plain" style="display:none" onchange="importMdFile(event)">
+          <button onclick="clearInput()">清空</button>
+        </div>
+      </div>
+      <textarea id="md-input" placeholder="在此粘贴 Markdown 内容…"></textarea>
+      <div class="diagnosis-panel" id="diagnosis-panel" style="display:none;">
+        <div class="diagnosis-head">
+          <span id="diagnosis-title">格式诊断</span>
+          <button class="diagnosis-close" onclick="toggleDiagnosisPanel()" aria-label="关闭诊断">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="diagnosis-list" id="diagnosis-list"></div>
+        <div class="diagnosis-summary" id="diagnosis-summary"></div>
+      </div>
+      <div class="statusbar" id="stats">
+        <span><span class="stat-num" id="stat-words">0</span> 字</span>
+      </div>
+    </div>
+
+    <div class="preview-pane">
+      <div class="pane-head preview-head">
+        <div><span class="eyebrow">XHS PREVIEW</span><h2>小红书预览</h2></div>
+        <div class="preview-head-actions">
+          <button class="copy-button" id="copy-btn-2" onclick="copyRichText()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            <span>复制富文本</span>
+          </button>
+        </div>
+      </div>
+      <div class="preview-scroll" id="preview-scroll">
+        <div class="preview-stage">
+          <div class="phone-frame">
+            <div id="preview">
+              <div class="empty-hint">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <span>左侧粘贴 Markdown，这里实时预览小红书图文</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -218,8 +265,6 @@
   <script>
     const input = document.getElementById('md-input');
     const preview = document.getElementById('preview');
-    const stats = document.getElementById('stats');
-
     marked.setOptions({ breaks: true, gfm: true });
 
     const IMG_START = '\uE000';
@@ -230,14 +275,15 @@
     let explicitTags = [];
     let images = [];
     let headingTags = [];
+    let lastFilterResult = null;
 
     function updateTitleDisplay(title) {
+      docTitle = title;
       const wrap = document.getElementById('doc-title-wrap');
       const text = document.getElementById('doc-title-text');
       text.textContent = title;
       wrap.style.display = title ? 'flex' : 'none';
     }
-
     async function copyDocTitle() {
       if (!docTitle) return;
       const btn = document.getElementById('doc-title-copy');
@@ -327,8 +373,7 @@
       const tags = [...new Set([
         ...explicitTags,
         ...headingTags.slice(0, 3).map(t => t.replace(/[^\w\u4e00-\u9fff]/g, '')),
-        '内容创作',
-        '效率工具',
+        '内容创作', '效率工具',
       ].filter(Boolean))].slice(0, 6);
       return { blocks, images, tags };
     }
@@ -360,9 +405,7 @@
     }
 
     function updateStats(count) {
-      const s = buildStatus(count);
-      stats.innerHTML = '<span><span class="stat-num">' + count + '</span> 字</span>' +
-        '<span class="stat-status ' + s.cls + '">' + s.text + '</span>';
+      document.getElementById('stat-words').textContent = count;
     }
 
     function render() {
@@ -371,23 +414,18 @@
         docTitle = '';
         updateTitleDisplay('');
         preview.innerHTML = `<div class="empty-hint">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-          </svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
           <span>左侧粘贴 Markdown，这里实时预览小红书图文</span>
         </div>`;
-        stats.innerHTML = '<span class="stat-num">0</span> 字';
+        updateStats(0);
+        updateDiagnosisBtn(null);
         return;
       }
-
       const filterResult = MdFilter.process(rawMd, { convertSVG: false });
+      lastFilterResult = filterResult;
 
       const h1m = filterResult.md.match(/^#\s+(.+)$/m);
-      if (h1m) {
-        docTitle = h1m[1].trim();
-        updateTitleDisplay(docTitle);
-      }
-
+      if (h1m) { docTitle = h1m[1].trim(); updateTitleDisplay(docTitle); }
       const result = convert(filterResult.md);
 
       let blocks = result.blocks;
@@ -396,13 +434,10 @@
       preview.innerHTML = '';
       const card = document.createElement('div');
       card.className = 'xhs-card';
-
       const head = document.createElement('div');
       head.className = 'xhs-card-head';
-      head.innerHTML = '<div class="xhs-avatar">S</div>' +
-        '<div><div class="xhs-author">Starline</div><div class="xhs-time">刚刚</div></div>';
+      head.innerHTML = '<div class="xhs-avatar">S</div><div><div class="xhs-author">Starline</div><div class="xhs-time">刚刚</div></div>';
       card.appendChild(head);
-
       const body = document.createElement('div');
       body.className = 'xhs-body';
       let first = true;
@@ -410,108 +445,63 @@
         if (!first) body.appendChild(document.createTextNode('\n\n'));
         first = false;
         if (b.kind === 'code') {
-          const pre = document.createElement('pre');
-          pre.className = 'xhs-code';
-          pre.textContent = b.text;
-          body.appendChild(pre);
+          const pre = document.createElement('pre'); pre.className = 'xhs-code'; pre.textContent = b.text; body.appendChild(pre);
         } else {
           appendTextWithImages(body, b.text, result.images);
         }
       }
       card.appendChild(body);
-
       if (result.tags.length) {
-        const tagEl = document.createElement('div');
-        tagEl.className = 'xhs-tags';
-        tagEl.textContent = result.tags.join(' ');
-        card.appendChild(tagEl);
+        const tagEl = document.createElement('div'); tagEl.className = 'xhs-tags'; tagEl.textContent = result.tags.join(' '); card.appendChild(tagEl);
       }
-
       const fullText = blocks.map(b => b.text).join('\n\n') + (result.tags.length ? '\n\n' + result.tags.join(' ') : '');
       const count = fullText.replace(/\s/g, '').length;
       const s = buildStatus(count);
       const countEl = document.createElement('div');
       countEl.className = 'xhs-count';
-      countEl.innerHTML = '全文 <span class="stat-num">' + count + '</span> 字' +
-        ' · <span class="stat-status ' + s.cls + '">' + s.text + '</span>';
+      countEl.innerHTML = '全文 <span class="stat-num">' + count + '</span> 字 · <span class="stat-status ' + s.cls + '">' + s.text + '</span>';
       card.appendChild(countEl);
-
       preview.appendChild(card);
       updateStats(count);
-
+      updateDiagnosisBtn(filterResult);
       inlineImages().then(decorateImages);
     }
-
     input.addEventListener('input', render);
 
     function toBase64(src) {
       return new Promise((resolve, reject) => {
         const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          canvas.width = img.naturalWidth;
-          canvas.height = img.naturalHeight;
-          canvas.getContext('2d').drawImage(img, 0, 0);
-          resolve(canvas.toDataURL());
-        };
-        img.onerror = reject;
-        img.src = src;
+        img.onload = () => { const canvas = document.createElement('canvas'); canvas.width = img.naturalWidth; canvas.height = img.naturalHeight; canvas.getContext('2d').drawImage(img, 0, 0); resolve(canvas.toDataURL()); };
+        img.onerror = reject; img.src = src;
       });
     }
-
     async function inlineImages() {
       const imgs = preview.querySelectorAll('img');
       await Promise.all(Array.from(imgs).map(async (img, i) => {
         if (img.src.startsWith('data:')) return;
-        try {
-          const b64 = await toBase64(img.src);
-          img.src = b64;
-          if (images[i]) images[i].src = b64;
-        } catch (_) { }
+        try { const b64 = await toBase64(img.src); img.src = b64; if (images[i]) images[i].src = b64; } catch (_) { }
       }));
     }
-
     function decorateImages() {
       preview.querySelectorAll('img:not([data-decorated])').forEach(img => {
         img.setAttribute('data-decorated', '1');
         const alt = img.getAttribute('alt') || '';
-        const wrapper = document.createElement('div');
-        wrapper.className = 'img-wrapper';
-        img.parentNode.insertBefore(wrapper, img);
-        wrapper.appendChild(img);
+        const wrapper = document.createElement('div'); wrapper.className = 'img-wrapper';
+        img.parentNode.insertBefore(wrapper, img); wrapper.appendChild(img);
         if (alt) {
-          const leftOverlay = document.createElement('div');
-          leftOverlay.className = 'img-overlay-left';
-          const label = document.createElement('div');
-          label.className = 'img-alt-label';
-          label.textContent = alt;
-          const copyAltBtn = document.createElement('button');
-          copyAltBtn.className = 'img-copy-alt-btn';
-          copyAltBtn.textContent = '复制';
-          copyAltBtn.onclick = async () => {
-            await navigator.clipboard.writeText(alt);
-            copyAltBtn.textContent = '✓';
-            setTimeout(() => copyAltBtn.textContent = '复制', 1500);
-          };
-          leftOverlay.appendChild(label);
-          leftOverlay.appendChild(copyAltBtn);
-          wrapper.appendChild(leftOverlay);
+          const ov = document.createElement('div'); ov.className = 'img-overlay-left';
+          const label = document.createElement('div'); label.className = 'img-alt-label'; label.textContent = alt;
+          const btn = document.createElement('button'); btn.className = 'img-copy-alt-btn'; btn.textContent = '复制';
+          btn.onclick = async () => { await navigator.clipboard.writeText(alt); btn.textContent = '✓'; setTimeout(() => btn.textContent = '复制', 1500); };
+          ov.appendChild(label); ov.appendChild(btn); wrapper.appendChild(ov);
         }
-        const copyImgBtn = document.createElement('button');
-        copyImgBtn.className = 'img-copy-b64-btn';
-        copyImgBtn.textContent = '复制图片';
+        const copyImgBtn = document.createElement('button'); copyImgBtn.className = 'img-copy-b64-btn'; copyImgBtn.textContent = '复制图片';
         copyImgBtn.onclick = () => {
-          const canvas = document.createElement('canvas');
-          canvas.width = img.naturalWidth;
-          canvas.height = img.naturalHeight;
+          const canvas = document.createElement('canvas'); canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
           canvas.getContext('2d').drawImage(img, 0, 0);
           canvas.toBlob(async (blob) => {
-            try {
-              await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-              copyImgBtn.textContent = '✓';
-            } catch (_) {
-              copyImgBtn.textContent = '✗';
-            }
+            try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]); copyImgBtn.textContent = '✓'; }
+            catch (_) { copyImgBtn.textContent = '✗'; }
             setTimeout(() => copyImgBtn.textContent = '复制图片', 1500);
           }, 'image/png');
         };
@@ -519,43 +509,111 @@
       });
     }
 
-    function escapeHtml(s) {
-      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    // 格式诊断
+    function updateDiagnosisBtn(filterResult) {
+      const btn = document.getElementById('diagnosis-btn');
+      if (!filterResult || !filterResult.hasIssue) { btn.style.display = 'none'; return; }
+      btn.style.display = 'inline-flex';
+      const hasError = filterResult.report.some(r => r.severity === 'error');
+      btn.className = 'ctrl-shortcut' + (hasError ? ' has-error' : ' has-issue');
+      btn.querySelector('span').textContent = `诊断 (${filterResult.report.length})`;
+      const panel = document.getElementById('diagnosis-panel');
+      if (panel.style.display !== 'none') renderDiagnosisPanel(filterResult);
+    }
+    const sevLabel = { error: '错误', warn: '警告', info: '提示' };
+    function showDiagnosis() {
+      if (!lastFilterResult || !lastFilterResult.report.length) { showToast('未检测到格式问题', 'success'); return; }
+      renderDiagnosisPanel(lastFilterResult);
+      document.getElementById('diagnosis-panel').style.display = 'flex';
+    }
+    function renderDiagnosisPanel(filterResult) {
+      const report = filterResult.report || [];
+      document.getElementById('diagnosis-list').innerHTML = report.map((r, idx) =>
+        `<div class="diagnosis-item" onclick="jumpToLine(${r.line || 1}, ${idx})">
+          <span class="d-sev ${r.severity}">${sevLabel[r.severity] || r.severity}</span>
+          <span class="d-body"><div class="d-msg">${escapeHtml(r.message)}</div>${r.fix ? `<div class="d-fix">建议：<b>${escapeHtml(r.fix)}</b></div>` : ''}</span>
+          <span class="d-line">${r.line ? 'L' + r.line : ''}</span>
+        </div>`
+      ).join('') || '<div style="padding:8px;color:var(--success);font-size:12px;">✓ 未检测到格式问题</div>';
+      const errs = report.filter(r => r.severity === 'error').length;
+      const warns = report.filter(r => r.severity === 'warn').length;
+      document.getElementById('diagnosis-summary').textContent = `共 ${report.length} 项 · 错误 ${errs} · 警告 ${warns}（点击条目定位到原稿对应行）`;
+      document.getElementById('diagnosis-title').textContent = `格式诊断（${report.length} 个问题）`;
+    }
+    function toggleDiagnosisPanel() {
+      const panel = document.getElementById('diagnosis-panel');
+      panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+      if (panel.style.display !== 'none' && lastFilterResult) renderDiagnosisPanel(lastFilterResult);
+    }
+    function jumpToLine(line, reportIdx) {
+      if (!line) return;
+      const lines = input.value.split('\n');
+      let offset = 0;
+      for (let i = 0; i < line - 1; i++) offset += (lines[i] || '').length + 1;
+      const lh = parseFloat(getComputedStyle(input).lineHeight) || 20;
+      input.focus();
+      try { input.setSelectionRange(offset, offset); } catch (_) {}
+      input.scrollTop = Math.max(0, (line - 1) * lh - input.clientHeight * 0.3);
+      document.querySelectorAll('#diagnosis-list .diagnosis-item').forEach((el, i) => { el.style.background = (i === reportIdx) ? 'var(--primary-light)' : ''; });
     }
 
-    async function copyRichText() {
-      const md = input.value.trim();
-      if (!md) { alert('请先粘贴 Markdown 内容'); return; }
-      const previewText = (() => {
-        const card = preview.querySelector('.xhs-card');
-        if (!card) return md;
-        const clone = card.cloneNode(true);
-        clone.querySelectorAll('.img-wrapper').forEach(w => {
-          const img = w.querySelector('img');
-          if (img) w.replaceWith(img);
-        });
-        clone.querySelectorAll('[data-decorated]').forEach(el => el.removeAttribute('data-decorated'));
-        return clone.textContent || md;
-      })();
-      const btn = document.getElementById('copy-btn');
-      try {
-        await navigator.clipboard.write([
-          new ClipboardItem({
-            'text/html': new Blob(['<div style="font-family:-apple-system,BlinkMacSystemFont,\'PingFang SC\',\'Microsoft YaHei\',sans-serif;font-size:14px;line-height:1.75;color:#1a1a2e;white-space:pre-wrap;word-break:break-word;">' + escapeHtml(previewText) + '</div>'], { type: 'text/html' }),
-            'text/plain': new Blob([previewText], { type: 'text/plain' }),
-          })
-        ]);
-        btn.textContent = '✓ 已复制，去小红书粘贴';
-        btn.classList.add('success');
-        setTimeout(() => {
-          btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg> 复制富文本';
-          btn.classList.remove('success');
-        }, 3000);
-      } catch (_) {
-        await navigator.clipboard.writeText(previewText);
-        alert('富文本复制不支持，已复制纯文本');
-      }
+    // 复制：克隆卡片，剔除 UI 元素
+    function buildXhsText() {
+      const card = preview.querySelector('.xhs-card');
+      if (!card) return '';
+      const clone = card.cloneNode(true);
+      clone.querySelectorAll('.img-wrapper').forEach(w => { const img = w.querySelector('img'); if (img) w.replaceWith(img); });
+      clone.querySelectorAll('[data-decorated]').forEach(el => el.removeAttribute('data-decorated'));
+      return clone.textContent || '';
     }
+    function copyRichText() {
+      const md = input.value.trim();
+      if (!md) { showToast('请先粘贴 Markdown 内容', 'info'); return; }
+      const previewText = buildXhsText();
+      const btn = document.getElementById('copy-btn');
+      const btn2 = document.getElementById('copy-btn-2');
+      navigator.clipboard.write([
+        new ClipboardItem({
+          'text/html': new Blob(['<div style="font-family:-apple-system,BlinkMacSystemFont,\'PingFang SC\',\'Microsoft YaHei\',sans-serif;font-size:14px;line-height:1.75;color:#24292e;white-space:pre-wrap;word-break:break-word;">' + escapeHtml(previewText) + '</div>'], { type: 'text/html' }),
+          'text/plain': new Blob([previewText], { type: 'text/plain' }),
+        })
+      ]).then(() => {
+        [btn, btn2].forEach(b => { if (!b) return; b.classList.add('btn-success'); const orig = b.innerHTML; b.innerHTML = '✓ 已复制'; setTimeout(() => { b.innerHTML = orig; b.classList.remove('btn-success'); }, 3000); });
+      }).catch(() => {
+        navigator.clipboard.writeText(previewText);
+        showToast('富文本复制不支持，已复制纯文本', 'info');
+      });
+    }
+
+    function showToast(title, type) {
+      let vp = document.getElementById('toast-viewport');
+      if (!vp) { vp = document.createElement('div'); vp.id = 'toast-viewport'; vp.style.cssText = 'position:fixed;bottom:22px;right:22px;z-index:10000;'; document.body.appendChild(vp); }
+      const el = document.createElement('div');
+      el.style.cssText = 'background:#fff;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-lg);padding:12px 14px;font-size:13px;margin-bottom:10px;';
+      el.style.color = type === 'error' ? 'var(--error)' : type === 'success' ? 'var(--success)' : 'var(--text-primary)';
+      el.textContent = title;
+      vp.appendChild(el);
+      setTimeout(() => el.remove(), 4200);
+    }
+
+    // 卡片背景色
+    function setCardBg(color, btnEl) {
+      document.querySelectorAll('.bg-dot').forEach(b => b.classList.remove('active'));
+      if (btnEl) btnEl.classList.add('active');
+      const card = preview.querySelector('.xhs-card');
+      if (card) card.style.backgroundColor = color;
+    }
+
+    function clearInput() { input.value = ''; render(); }
+    function importMdFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => { input.value = ev.target.result; render(); };
+      reader.readAsText(file);
+      e.target.value = '';
+    }
+    function escapeHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
     async function loadDraft() {
       try {
@@ -566,45 +624,28 @@
         if (jsonM) {
           try {
             const parsed = JSON.parse('{' + jsonM[1].trim().replace(/,$/, '') + '}');
-            if (parsed.changes?.content?.title) {
-              docTitle = parsed.changes.content.title;
-              updateTitleDisplay(docTitle);
-            }
+            if (parsed.changes?.content?.title) { docTitle = parsed.changes.content.title; updateTitleDisplay(docTitle); }
           } catch (_) {}
         }
         const m = text.match(/^## 正文\s*\n([\s\S]*)/m);
-        const body = m
-          ? m[1].replace(/\n---\n\*运行[\s\S]*$/, '').trimEnd()
-          : text.trimEnd();
+        const body = m ? m[1].replace(/\n---\n\*运行[\s\S]*$/, '').trimEnd() : text.trimEnd();
         input.value = body;
       } catch (_) {}
       await render();
     }
-
     loadDraft();
 
     let syncScroll = true;
-    let syncing = false;
-
-    function toggleSync() {
-      syncScroll = !syncScroll;
-      document.getElementById('sync-track').classList.toggle('on', syncScroll);
-    }
-
+    function toggleSync() { syncScroll = !syncScroll; document.getElementById('sync-label').textContent = syncScroll ? '同步' : '不同步'; }
     input.addEventListener('scroll', () => {
-      if (!syncScroll || syncing) return;
-      syncing = true;
+      if (!syncScroll) return;
       const pct = input.scrollTop / (input.scrollHeight - input.clientHeight) || 0;
       preview.scrollTop = pct * (preview.scrollHeight - preview.clientHeight);
-      syncing = false;
     });
-
     preview.addEventListener('scroll', () => {
-      if (!syncScroll || syncing) return;
-      syncing = true;
+      if (!syncScroll) return;
       const pct = preview.scrollTop / (preview.scrollHeight - preview.clientHeight) || 0;
       input.scrollTop = pct * (input.scrollHeight - input.clientHeight);
-      syncing = false;
     });
   </script>
 </body>

@@ -140,6 +140,12 @@
     .ctrl-color-dot.rainbow { background: conic-gradient(#ef4444, #f97316, #eab308, #22c55e, #3b82f6, #8b5cf6, #ef4444); position: relative; overflow: hidden; }
     .ctrl-color-dot.rainbow input[type=color] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; border: none; padding: 0; }
 
+    /* 背景色切换 */
+    .ctrl-color-group { display: flex; align-items: center; gap: 4px; }
+    .bg-dot { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--border); cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
+    .bg-dot:hover { transform: scale(1.15); }
+    .bg-dot.active { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-soft); }
+
     .ctrl-visual-menu { position: relative; }
     .ctrl-visual-btn { display: flex; align-items: center; gap: 4px; padding: 4px 10px; font-size: 11px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text-secondary); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
     .ctrl-visual-btn:hover { border-color: var(--border-hover); color: var(--text-primary); }
@@ -190,6 +196,42 @@
     .statusbar .code-status.active { color: var(--primary); }
     .statusbar .saved-dot { margin-left: auto; }
     .statusbar .saved-dot::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--success); margin-right: 4px; vertical-align: middle; }
+
+    /* ── Diagnosis Panel ── */
+    .diagnosis-panel {
+      flex-shrink: 0; border-top: 1px solid var(--border);
+      background: var(--surface); max-height: 30%; display: flex; flex-direction: column;
+    }
+    .diagnosis-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 16px; border-bottom: 1px solid var(--border);
+      font-size: 11px; font-weight: 700; color: var(--text-secondary); letter-spacing: 0.05em;
+    }
+    .diagnosis-close { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 2px; border-radius: 4px; display: flex; }
+    .diagnosis-close:hover { background: var(--surface-hover); color: var(--text-primary); }
+    .diagnosis-list { overflow-y: auto; padding: 6px 8px; }
+    .diagnosis-item {
+      display: flex; align-items: flex-start; gap: 8px;
+      padding: 6px 8px; border-radius: var(--radius-sm); cursor: pointer;
+      transition: background 0.12s; font-size: 12px;
+    }
+    .diagnosis-item:hover { background: var(--surface-hover); }
+    .diagnosis-item .d-sev {
+      flex-shrink: 0; font-size: 10px; font-weight: 700; padding: 1px 6px;
+      border-radius: var(--radius-full); margin-top: 1px; letter-spacing: 0.03em;
+    }
+    .diagnosis-item .d-sev.error { background: #fee2e2; color: var(--error); }
+    .diagnosis-item .d-sev.warn { background: #fef3c7; color: #b45309; }
+    .diagnosis-item .d-sev.info { background: #e0f2fe; color: #0369a1; }
+    .diagnosis-item .d-body { flex: 1; min-width: 0; }
+    .diagnosis-item .d-msg { color: var(--text-secondary); line-height: 1.4; }
+    .diagnosis-item .d-line { color: var(--text-muted); font-family: var(--font-mono); font-size: 10px; flex-shrink: 0; margin-top: 2px; }
+    .diagnosis-item .d-fix { color: var(--text-muted); font-size: 11px; line-height: 1.4; margin-top: 2px; word-break: break-all; }
+    .diagnosis-item .d-fix b { color: var(--primary); font-weight: 600; }
+    .diagnosis-summary {
+      padding: 6px 16px; border-top: 1px solid var(--border);
+      font-size: 11px; color: var(--text-muted);
+    }
 
     /* ── Preview Pane ── */
     .preview-pane { display: flex; flex-direction: column; overflow: hidden; background: var(--bg); }
@@ -371,11 +413,11 @@
       </a>
       <span class="brand-avatar">S</span>
       <div class="brand-copy">
-        <strong><em>Starline</em>微排</strong>
+        <strong><em>Starline</em> Writer</strong>
         <small>MARKDOWN → WECHAT</small>
       </div>
       <span class="brand-divider"></span>
-      <span class="brand-tag">让每一份好内容，都有一身好排版。</span>
+      <span class="brand-tag">一份内容，三种平台。</span>
     </div>
     <div class="doc-title-wrap" id="doc-title-wrap">
       <span class="doc-title-text" id="doc-title-text"></span>
@@ -526,6 +568,21 @@
 
     <span class="ctrl-divider"></span>
 
+    <!-- Background color theme -->
+    <div class="ctrl-group" title="预览/文章背景色">
+      <span class="ctrl-label">背景</span>
+      <div class="ctrl-color-group">
+        <button class="bg-dot active" style="background:#ffffff" onclick="setAppBg('#ffffff', this)" aria-label="白色背景"></button>
+        <button class="bg-dot" style="background:#f3e8d7" onclick="setAppBg('#f3e8d7', this)" aria-label="米白背景"></button>
+        <button class="bg-dot" style="background:#eef3f9" onclick="setAppBg('#eef3f9', this)" aria-label="淡蓝背景"></button>
+        <button class="bg-dot" style="background:#e6f3ee" onclick="setAppBg('#e6f3ee', this)" aria-label="淡绿背景"></button>
+        <button class="bg-dot" style="background:#fbecec" onclick="setAppBg('#fbecec', this)" aria-label="淡粉背景"></button>
+        <button class="bg-dot" style="background:#1f2937" onclick="setAppBg('#1f2937', this)" aria-label="深色背景"></button>
+      </div>
+    </div>
+
+    <span class="ctrl-divider"></span>
+
     <!-- Table settings -->
     <button class="ctrl-shortcut" onclick="toggleSettingsPanel()" title="表格列设置">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -553,6 +610,16 @@
         </div>
       </div>
       <textarea id="md-input" placeholder="在此粘贴 Markdown 内容…"></textarea>
+      <div class="diagnosis-panel" id="diagnosis-panel" style="display:none;">
+        <div class="diagnosis-head">
+          <span id="diagnosis-title">格式诊断</span>
+          <button class="diagnosis-close" onclick="toggleDiagnosisPanel()" aria-label="关闭诊断">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="diagnosis-list" id="diagnosis-list"></div>
+        <div class="diagnosis-summary" id="diagnosis-summary"></div>
+      </div>
       <div class="statusbar" id="stats">
         <span><span class="stat-num" id="stat-words">0</span> 字</span>
         <span>约 <span class="stat-num" id="stat-read-time">0</span> 分钟阅读</span>
@@ -871,6 +938,9 @@
       const hasError = filterResult.report.some(r => r.severity === 'error');
       btn.className = 'ctrl-shortcut' + (hasError ? ' has-error' : ' has-issue');
       btn.querySelector('span').textContent = `诊断 (${filterResult.report.length})`;
+      // 若面板已打开则实时刷新
+      const panel = document.getElementById('diagnosis-panel');
+      if (panel.style.display !== 'none') renderDiagnosisPanel(filterResult);
     }
 
     // ================================================================
@@ -962,8 +1032,9 @@
         return;
       }
       area.innerHTML = lastFilterResult.report.map(r =>
-        `<div class="diagnosis-item">
+        `<div class="diagnosis-item" style="cursor:pointer;" onclick="jumpToLine(${r.line || 1})">
           <span style="font-weight:600;color:${r.severity === 'error' ? '#dc2626' : r.severity === 'warn' ? '#d97706' : '#0ea5e9'}">[${r.severity.toUpperCase()}]</span>
+          <span style="color:var(--text-muted);font-family:var(--font-mono)">L${r.line || '?'}</span>
           ${escapeHtml(r.message)}
         </div>`
       ).join('');
@@ -974,13 +1045,60 @@
         showToast('未检测到格式问题', { type: 'success' });
         return;
       }
-      const details = lastFilterResult.report.map(r =>
-        `[${r.severity.toUpperCase()}] ${r.message}`
-      ).join('\n');
-      showToast('Markdown 格式诊断', {
-        type: lastFilterResult.report.some(r => r.severity === 'error') ? 'error' : 'info',
-        description: details,
-        duration: 8000,
+      renderDiagnosisPanel(lastFilterResult);
+      // 若编辑器面板被窄屏折叠，此处打开面板可见
+      const panel = document.getElementById('diagnosis-panel');
+      panel.style.display = 'flex';
+    }
+
+    // 渲染编辑器下方的诊断面板（列表 + 汇总 + 点击定位）
+    function renderDiagnosisPanel(filterResult) {
+      const report = filterResult.report || [];
+      const list = document.getElementById('diagnosis-list');
+      const sevLabel = { error: '错误', warn: '警告', info: '提示' };
+      list.innerHTML = report.map((r, idx) =>
+        `<div class="diagnosis-item" onclick="jumpToLine(${r.line || 1}, ${idx})">
+          <span class="d-sev ${r.severity}">${sevLabel[r.severity] || r.severity}</span>
+          <span class="d-body">
+            <div class="d-msg">${escapeHtml(r.message)}</div>
+            ${r.fix ? `<div class="d-fix">建议：<b>${escapeHtml(r.fix)}</b></div>` : ''}
+          </span>
+          <span class="d-line">${r.line ? 'L' + r.line : ''}</span>
+        </div>`
+      ).join('') || '<div style="padding:8px;color:var(--success);font-size:12px;">✓ 未检测到格式问题</div>';
+      const summary = document.getElementById('diagnosis-summary');
+      const errs = report.filter(r => r.severity === 'error').length;
+      const warns = report.filter(r => r.severity === 'warn').length;
+      const infos = report.filter(r => r.severity === 'info').length;
+      summary.textContent = `共 ${report.length} 项 · 错误 ${errs} · 警告 ${warns} · 提示 ${infos}（点击条目定位到原稿对应行）`;
+      document.getElementById('diagnosis-title').textContent = `格式诊断（${report.length} 个问题）`;
+    }
+
+    function toggleDiagnosisPanel() {
+      const panel = document.getElementById('diagnosis-panel');
+      panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+      if (panel.style.display !== 'none' && lastFilterResult) renderDiagnosisPanel(lastFilterResult);
+    }
+
+    // 点击诊断条目 → 定位到左侧 textarea 对应行
+    function jumpToLine(line, reportIdx) {
+      if (!line) return;
+      const lines = input.value.split('\n');
+      const target = Math.min(line - 1, lines.length - 1);
+      // 计算目标行的字符偏移，滚动到该行附近
+      let offset = 0;
+      for (let i = 0; i < target; i++) offset += lines[i].length + 1;
+      const lineHeight = parseFloat(getComputedStyle(input).lineHeight) || 20;
+      const lineNum = Math.max(0, target);
+      const targetScroll = lineNum * lineHeight - input.clientHeight * 0.3;
+      input.focus();
+      try {
+        input.setSelectionRange(offset, offset);
+      } catch (_) {}
+      input.scrollTop = Math.max(0, targetScroll);
+      // 高亮对应诊断条目
+      document.querySelectorAll('#diagnosis-list .diagnosis-item').forEach((el, i) => {
+        el.style.background = (i === reportIdx) ? 'var(--primary-light)' : '';
       });
     }
 
@@ -1355,6 +1473,41 @@
       if (body) {
         body.style.fontSize = val + 'px';
       }
+    }
+
+    // 背景色切换：更新预览区背景（深色时文字自动反白）
+    function setAppBg(color, btnEl) {
+      document.querySelectorAll('.bg-dot').forEach(b => b.classList.remove('active'));
+      if (btnEl) btnEl.classList.add('active');
+      const stage = document.querySelector('.preview-scroll');
+      const phone = document.querySelector('.phone-frame');
+      const body = preview.querySelector('.wechat-body');
+      if (body) {
+        body.style.backgroundColor = color;
+        body.style.color = '';
+        // 深色背景时文字反白，保证可读
+        const isDark = luminance(color) < 0.4;
+        body.style.color = isDark ? '#f3f4f6' : '';
+        body.querySelectorAll('p, li, h1, h2, h3, td').forEach(el => {
+          if (!el.closest('blockquote') && el.tagName !== 'CODE') {
+            el.style.color = isDark ? '#f3f4f6' : '';
+          }
+        });
+      }
+      if (stage) {
+        stage.style.background = color;
+      }
+      try { localStorage.setItem('md2wechat-bg', color); } catch (_) {}
+    }
+
+    // 计算颜色亮度（0-1），用于判断是否需要反白文字
+    function luminance(hex) {
+      let c = hex.replace('#', '');
+      if (c.length === 3) c = c.split('').map(x => x + x).join('');
+      const r = parseInt(c.substring(0, 2), 16) / 255;
+      const g = parseInt(c.substring(2, 4), 16) / 255;
+      const b = parseInt(c.substring(4, 6), 16) / 255;
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
     }
 
     function adjustLineHeight(val) {

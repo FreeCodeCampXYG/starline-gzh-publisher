@@ -265,48 +265,90 @@ ${textElements}
 
   /**
    * 检查常见的 Markdown 格式问题，返回诊断报告
+   * 每个 issue 统一携带 line（行号，1 基）与 fix（修复建议），
+   * 供前端定位到左侧编辑器对应行并高亮提示。
    */
   function diagnose(text) {
     const issues = [];
     const lines = text.split('\n');
 
-    // 检查未闭合的代码块
-    const codeFences = text.match(/```/g);
-    if (codeFences && codeFences.length % 2 !== 0) {
-      issues.push({ severity: 'error', message: '代码块未闭合（``` 数量为奇数）' });
-    }
-
-    // 检查未闭合的强调标记
-    const boldMatches = text.match(/\*\*/g);
-    if (boldMatches && boldMatches.length % 2 !== 0) {
-      issues.push({ severity: 'warn', message: '加粗标记 ** 数量为奇数，可能有未闭合的加粗' });
-    }
-
-    // 检查表格对齐行
+    // 检查未闭合的代码块 —— 定位到第一个开头的行
+    const fenceLines = [];
     lines.forEach((line, i) => {
-      if (/^\|[\s:-]+\|$/.test(line.trim())) {
-        // 检查上一行是否是表头行
+      if (/^\s*```/.test(line)) fenceLines.push(i);
+    });
+    if (fenceLines.length % 2 !== 0) {
+      const openAt = fenceLines[fenceLines.length - 1];
+      issues.push({
+        severity: 'error',
+        line: openAt + 1,
+        message: '代码块未闭合：缺少结束的 ```',
+        fix: '在内容末尾补上 ``` 结束代码块',
+      });
+    }
+
+    // 未闭合的加粗标记 —— 定位到奇数标记所在行
+    let boldOpen = false;
+    let boldCount = 0;
+    lines.forEach((line, i) => {
+      const matches = line.match(/\*\*/g) || [];
+      for (let j = 0; j < matches.length; j++) boldCount++;
+      if (boldCount % 2 !== 0 && !boldOpen) {
+        // 尝试定位未闭合的 ** 是否在本行
+        const openAt = line.lastIndexOf('**');
+        if (openAt >= 0) {
+          issues.push({
+            severity: 'warn',
+            line: i + 1,
+            message: '可能存在未闭合的加粗标记 **',
+            fix: '检查该行，为 ** 补上对应的结束标记',
+          });
+          boldOpen = true;
+        }
+        boldCount = 0;
+      }
+    });
+
+    // 检查表格对齐行前面是否为表头行
+    lines.forEach((line, i) => {
+      if (/^\s*\|[\s:-]+\|\s*$/.test(line.trim()) || /^[\s:-]+\|[\s:-]+$/.test(line.trim())) {
         if (i === 0 || !lines[i - 1].trim().startsWith('|')) {
-          issues.push({ severity: 'warn', message: `第 ${i + 1} 行：表格对齐行前缺少表头行` });
+          issues.push({
+            severity: 'warn',
+            line: i + 1,
+            message: '表格对齐行前缺少表头行',
+            fix: '请在分隔行上方补充以 | 开头的表头行',
+          });
         }
       }
     });
 
-    // 检查无序列表的一致性
-    let listMarkers = new Set();
+    // 检查无序列表标记一致性，并针对每个不同标记行提示
+    const listMarkers = new Map();
     lines.forEach((line, i) => {
       const m = line.match(/^(\s*)([*+-])\s/);
-      if (m) listMarkers.add(m[2]);
+      if (m) listMarkers.set(m[2], (listMarkers.get(m[2]) || 0) + 1);
     });
     if (listMarkers.size > 1) {
-      issues.push({
-        severity: 'info',
-        message: `列表标记不统一（使用了 ${[...listMarkers].join(', ')}），已统一为 -`,
+      // 找出"非主流"标记行（首个出现次数最多的作为基准）
+      const sorted = [...listMarkers.entries()].sort((a, b) => b[1] - a[1]);
+      const mainMarker = sorted[0][0];
+      lines.forEach((line, i) => {
+        const m = line.match(/^(\s*)([*+])\s/);
+        if (m && m[2] !== mainMarker) {
+          issues.push({
+            severity: 'info',
+            line: i + 1,
+            message: `列表标记用 ${m[2]}，与其他列表不一致（基准为 ${mainMarker}）`,
+            fix: `将该行开头的 ${m[2]} 改为 -`,
+          });
+        }
       });
     }
 
-    // 检查标题层级是否跳跃（h2 → h4 跳级）
+    // 检查标题层级跳跃
     let prevLevel = 0;
+    let prevLine = 0;
     lines.forEach((line, i) => {
       const m = line.match(/^(#{1,6})\s/);
       if (m) {
@@ -314,23 +356,51 @@ ${textElements}
         if (prevLevel > 0 && level > prevLevel + 1) {
           issues.push({
             severity: 'info',
-            message: `第 ${i + 1} 行：标题层级跳跃（h${prevLevel} → h${level}），建议使用 h${prevLevel + 1}`,
+            line: i + 1,
+            message: `标题层级跳跃：h${prevLevel} → h${level}（越过 h${prevLevel + 1}）`,
+            fix: `将第 ${i + 1} 行的标题改为 h${prevLevel + 1}（即 ${'#'.repeat(prevLevel + 1)} 后接内容）`,
           });
         }
         prevLevel = level;
+        prevLine = i + 1;
       }
     });
 
-    // 检查中文全角标点（提示但不强制）
-    let cjkCount = 0;
+    // 检查无空格的标题（#标题）
     lines.forEach((line, i) => {
-      const m = line.match(/[，。；：！？（）【】《》]/g);
-      if (m) cjkCount += m.length;
+      if (/^#{1,6}[^\s#]/.test(line)) {
+        issues.push({
+          severity: 'warn',
+          line: i + 1,
+          message: '标题 # 后缺少空格，可能无法被识别为标题',
+          fix: `在 # 后补一个空格：${line.replace(/^(#{1,6})/, '$1 ')}`,
+        });
+      }
+    });
+
+    // 检查引用块 > 后无空格
+    lines.forEach((line, i) => {
+      if (/^>\S/.test(line)) {
+        issues.push({
+          severity: 'info',
+          line: i + 1,
+          message: '引用块 > 后缺少空格',
+          fix: `改为 > 加空格：> ${line.slice(1)}`,
+        });
+      }
+    });
+
+    // 检查全角标点（大量时提示，已自动转换）
+    let cjkCount = 0;
+    lines.forEach((line) => {
+      cjkCount += (line.match(/[，。；：！？（）【】《》]/g) || []).length;
     });
     if (cjkCount > 10) {
       issues.push({
         severity: 'info',
+        line: 1,
         message: `检测到 ${cjkCount} 个全角标点，已自动转换为半角`,
+        fix: '无需处理，系统已自动转换',
       });
     }
 

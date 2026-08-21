@@ -400,6 +400,8 @@
     .doc-title-copy:hover { color: var(--primary); }
   </style>
   <style id="theme-css"></style>
+  <script src="md-components.js"></script>
+  <script src="md-themes.js"></script>
 </head>
 <body>
 
@@ -465,6 +467,18 @@
           <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
         </svg>
         <span>诊断</span>
+      </button>
+      <label class="ctrl-shortcut" id="components-switch" onclick="toggleComponents()" style="cursor:pointer" title="杂志组件排版：封面卡/目录/章节编号/关键词标记/签名区">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+        </svg>
+        <span id="components-label">杂志排版</span>
+      </label>
+      <button class="ctrl-shortcut" id="signature-btn" onclick="openSignaturePanel()" title="设置文章署名与简介（缓存在本机）">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+        </svg>
+        <span>署名</span>
       </button>
     </div>
 
@@ -750,6 +764,77 @@
     let docTitle = '';
     let lastFilterResult = null;
 
+    // 杂志组件排版模式（默认开启）
+    let useComponents = true;
+    try {
+      const saved = localStorage.getItem('md2wechat-components');
+      if (saved !== null) useComponents = saved !== '0';
+    } catch (_) {}
+
+    // 签名/简介（用户自行设置，缓存本机）
+    function getSignature() {
+      try {
+        const raw = localStorage.getItem('md2wechat-signature');
+        if (!raw) return null;
+        const obj = JSON.parse(raw);
+        return (obj && (obj.author || obj.bio)) ? obj : null;
+      } catch (_) { return null; }
+    }
+
+    function toggleComponents() {
+      useComponents = !useComponents;
+      const lbl = document.getElementById('components-label');
+      const sw = document.getElementById('components-switch');
+      if (lbl) lbl.textContent = useComponents ? '杂志排版' : '简单排版';
+      if (sw) sw.classList.toggle('active', useComponents);
+      try { localStorage.setItem('md2wechat-components', useComponents ? '1' : '0'); } catch (_) {}
+      render();
+    }
+
+    // 署名设置面板（模态）
+    function openSignaturePanel() {
+      let modal = document.getElementById('signature-modal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'signature-modal';
+        modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.5);display:flex;align-items:center;justify-content:center;';
+        modal.innerHTML = `<div style="background:#fff;border-radius:14px;padding:28px;width:420px;max-width:92vw;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+          <h3 style="font-size:16px;font-weight:700;color:#111827;margin:0 0 6px;">文章署名设置</h3>
+          <p style="font-size:12px;color:#6B7280;margin:0 0 18px;">填写后自动追加到文章末尾签名区，保存在本机浏览器。</p>
+          <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px;">公众号署名</label>
+          <input id="sig-author" type="text" placeholder="例如：Starline" style="width:100%;padding:9px 12px;border:1px solid #E5E7EB;border-radius:8px;font-size:13px;margin-bottom:14px;outline:none;box-sizing:border-box;" />
+          <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px;">一句话简介</label>
+          <input id="sig-bio" type="text" placeholder="例如：专注内容创作工具与效率方法论" style="width:100%;padding:9px 12px;border:1px solid #E5E7EB;border-radius:8px;font-size:13px;margin-bottom:20px;outline:none;box-sizing:border-box;" />
+          <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button onclick="closeSignaturePanel()" style="padding:8px 16px;border:1px solid #E5E7EB;border-radius:8px;background:#fff;color:#374151;font-size:13px;cursor:pointer;">取消</button>
+            <button onclick="saveSignature()" style="padding:8px 16px;border:none;border-radius:8px;background:var(--primary);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">保存</button>
+          </div>
+        </div>`;
+        document.body.appendChild(modal);
+      }
+      const sig = getSignature() || {};
+      modal.querySelector('#sig-author').value = sig.author || '';
+      modal.querySelector('#sig-bio').value = sig.bio || '';
+      modal.style.display = 'flex';
+    }
+    function closeSignaturePanel() {
+      const modal = document.getElementById('signature-modal');
+      if (modal) modal.style.display = 'none';
+    }
+    function saveSignature() {
+      const author = document.getElementById('sig-author').value.trim();
+      const bio = document.getElementById('sig-bio').value.trim();
+      try {
+        if (author || bio) localStorage.setItem('md2wechat-signature', JSON.stringify({ author, bio }));
+        else localStorage.removeItem('md2wechat-signature');
+      } catch (_) {}
+      closeSignaturePanel();
+      showToast('署名已保存，重新渲染预览', { type: 'success' });
+      render();
+    }
+    window.closeSignaturePanel = closeSignaturePanel;
+    window.saveSignature = saveSignature;
+
     // ================================================================
     // 2. Toast 通知系统
     // ================================================================
@@ -906,6 +991,39 @@
       lastFilterResult = filterResult;
       const md = filterResult.md;
       updateTitleDisplay(extractTitle(rawMd));
+
+      // ── 杂志组件排版模式（默认开启）──
+      if (useComponents && typeof MdComponents !== 'undefined') {
+        const theme = (typeof MdThemes !== 'undefined') ? MdThemes.get(currentThemeKey) : null;
+        if (theme) {
+          const sig = getSignature();
+          const comp = MdComponents.render(md, theme, {
+            cover: true,
+            toc: true,
+            underline: true,
+            signature: sig,
+            date: new Date().getFullYear() + '.' + String(new Date().getMonth() + 1).padStart(2, '0'),
+            brand: sig && sig.author ? sig.author : 'Starline Writer',
+            subtitle: (sig && sig.bio) ? sig.bio : '一份内容，多种输出。',
+            topLabel: 'STARLINE · 原创',
+            tag1: '原创',
+            tag2: '深度',
+          });
+          preview.innerHTML = comp.html;
+          const wordCount = rawMd.replace(/\s/g, '').length;
+          const lineCount = rawMd.split('\n').length;
+          const readTime = Math.max(1, Math.round(wordCount / 400));
+          const codeBlocks = (rawMd.match(/```/g) || []).length / 2;
+          updateStats(wordCount, lineCount, readTime, codeBlocks);
+          updateSettingsPanel(md);
+          updateDiagnosisBtn(filterResult);
+          await inlineImages();
+          decorateImages();
+          return;
+        }
+      }
+
+      // ── 传统 CSS 渲染模式 ──
       const parsedHtml = marked.parse(md);
       const finalHtml = MdFilter.injectSVG(parsedHtml, filterResult.svgBlocks);
       preview.innerHTML = `<div class="wechat-body">${finalHtml}</div>`;
@@ -1179,31 +1297,16 @@
     // 7. 主题风格管理
     // ================================================================
 
-    const THEME_DATA = {"themes":[{"id":"apple","name":"Mac","description":"留白干净、字距舒展，写什么都不出错的日常底色","styles":{"container":"max-width: 100%; margin: 0 auto; padding: 24px 20px 48px 20px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif; font-size: 16px; line-height: 1.7 !important; color: #1d1d1f !important; background-color: #ffffff !important; word-wrap: break-word;","h1":"font-size: 32px; font-weight: 700; color: #111 !important; line-height: 1.3 !important; margin: 38px 0 16px; letter-spacing: -0.015em; ","h2":"font-size: 26px; font-weight: 600; color: #111 !important; line-height: 1.35 !important; margin: 32px 0 16px;","h3":"font-size: 21px; font-weight: 600; color: #1d1d1f !important; line-height: 1.4 !important; margin: 28px 0 14px; border-left: 3px solid #0066cc; padding-left: 11px;","h4":"font-size: 18px; font-weight: 600; color: #1d1d1f !important; line-height: 1.4 !important; margin: 24px 0 12px;","p":"margin: 18px 0 !important; line-height: 1.7 !important; color: #1d1d1f !important;","strong":"font-weight: 700; color: #000 !important; ","em":"font-style: italic; color: #666 !important;","a":"color: #0066cc !important; text-decoration: none; border-bottom: 1px solid #0066cc; padding-bottom: 1px;","ul":"margin: 16px 0; padding-left: 28px;","ol":"margin: 16px 0; padding-left: 28px;","li":"margin: 8px 0; line-height: 1.7 !important; color: #1d1d1f !important;","blockquote":"margin: 24px 0; padding: 16px 20px; background-color: #f5f5f7 !important; border-left: 4px solid #0066cc; color: #555 !important; border-radius: 4px; ","code":"font-family: \"SF Mono\", Consolas, monospace; padding: 3px 6px; background-color: #f5f5f7 !important; color: #0066cc !important; border-radius: 4px; font-size: 12px !important; line-height: 1.5 !important;","pre":"margin: 24px 0; padding: 20px; background-color: #f5f5f7 !important; border-radius: 8px; overflow-x: auto; font-size: 12px !important; line-height: 1.5 !important;","hr":"margin: 32px 0; border: 0; height: 1px; background: #e5e5ea;","img":"max-width: 100%; height: auto; display: block; margin: 24px 0; border-radius: 4px;","table":"width: 100%; margin: 16px 0; border-collapse: collapse; font-size: 14px;","th":"padding: 10px 12px; background-color: #f5f5f7; font-weight: 600; color: #1d1d1f; border: 1px solid #e5e5ea; font-size: 14px;","td":"padding: 8px 12px; color: #3a3a3c; border: 1px solid #e5e5ea; font-size: 13px;","tr":"","pre code":"background: none; padding: 0;"}}],"groups":[{"label":"精选","ids":["apple","claude","notion","github","newsletter","blue-sky","warm-coffee","moyu-green","tech-cobalt","red-white","graphite-minimal","apple-open-course","zen-whitespace","moyu-ticket","olive-journal","klein-blue"]},{"label":"星痕推荐","ids":["moyu-green","tech-cobalt","red-white","graphite-minimal","apple-open-course","zen-whitespace","moyu-ticket","olive-journal","klein-blue"]},{"label":"经典","ids":["mac","simple","wechat","wechat-original","wechat-news","wechat-note","wechat-tech","wechat-clean","wechat-quote","wechat-simple","wechat-card","wechat-story","wechat-minimal","wechat-newsletter","wechat-dark","wechat-document","wechat-paper","wechat-magazine","wechat-timeline","wechat-fresh","blue-sky","warm-coffee","cyan-ink","forest","sunset","charcoal","blush","slate","paper","ocean","lavender","midnight","mint","coral","plum","sakura","coffee","ink","chrome","warm"]}]};
-    const THEMES = THEME_DATA.themes;
-    const THEME_GROUPS = THEME_DATA.groups;
+    const THEMES = (typeof MdThemes !== 'undefined') ? MdThemes.all() : [];
+    const THEME_GROUPS = [
+      { label: '全部主题', ids: THEMES.map(t => t.id) },
+    ];
     const THEME_MAP = Object.fromEntries(THEMES.map(t => [t.id, t]));
-    const DEFAULT_THEME = 'claude';
+    const DEFAULT_THEME = THEMES.length ? THEMES[0].id : 'moyu-green';
 
-    function themeBg(t) {
-      const m = t.styles.container.match(/background-color:\s*([^;!]+)/i);
-      return m ? m[1].trim() : '#ffffff';
-    }
-
-    function buildPreviewCss(t) {
-      const s = t.styles;
-      const sel = (tag, css) => css ? `.wechat-body ${tag}{${css}}` : '';
-      return [
-        `.wechat-body{${s.container}}`,
-        sel('h1', s.h1), sel('h2', s.h2), sel('h3', s.h3), sel('h4', s.h4),
-        sel('p', s.p), sel('strong', s.strong), sel('em', s.em), sel('a', s.a),
-        sel('ul', s.ul), sel('ol', s.ol), sel('li', s.li),
-        sel('blockquote', s.blockquote), sel('code', s.code), sel('pre', s.pre),
-        `.wechat-body pre code{background:none !important;color:inherit !important;padding:0 !important;font-size:inherit !important;border-radius:0 !important;}`,
-        sel('hr', s.hr), sel('img', s.img), sel('table', s.table),
-        sel('th', s.th), sel('td', s.td), sel('tr', s.tr),
-        `.empty-hint{background:${themeBg(t)};}`,
-      ].join('\n');
+    function themeSwatchColors(t) {
+      // 组件模式下色板直接取主色/次色/下划线色
+      return { primary: t.primary, secondary: t.secondary, underline: t.underline, deep: t.deep };
     }
 
     let currentThemeKey = DEFAULT_THEME;
@@ -1212,28 +1315,28 @@
       if (!THEME_MAP[key]) key = DEFAULT_THEME;
       currentThemeKey = key;
       const t = THEME_MAP[key];
-      document.getElementById('theme-css').textContent = buildPreviewCss(t);
       document.getElementById('style-current').textContent = t.name;
       document.querySelectorAll('.style-menu-item').forEach(i => i.classList.toggle('active', i.dataset.theme === key));
       try { localStorage.setItem('md2wechat-theme', key); } catch (_) {}
-      rerenderTables();
-    }
-
-    function cssVal(style, prop) {
-      const m = (style || '').match(new RegExp(prop + '\\s*:\\s*([^;!]+)', 'i'));
-      return m ? m[1].trim() : '';
+      // 组件模式下重新渲染预览
+      if (typeof useComponents !== 'undefined' && useComponents) {
+        render();
+      } else {
+        rerenderTables();
+      }
     }
 
     function buildSwatch(t) {
-      const s = t.styles;
-      const bg = themeBg(t);
-      const title = cssVal(s.h1, 'color') || '#111';
-      const text = cssVal(s.p, 'color') || cssVal(s.container, 'color') || '#333';
-      const accent = cssVal(s.strong, 'color') || cssVal(s.a, 'color') || title;
       const sw = document.createElement('div');
       sw.className = 'style-sw';
-      sw.style.background = bg;
-      [[title, '66%'], [text, '90%'], [accent, '44%']].forEach(([c, w]) => {
+      sw.style.background = '#ffffff';
+      const bars = [
+        [t.primary, '44%'],
+        [t.ink || '#111827', '90%'],
+        [t.secondary, '66%'],
+        [t.underline, '100%'],
+      ];
+      bars.forEach(([c, w]) => {
         const bar = document.createElement('div');
         bar.className = 'bar';
         bar.style.background = c;
@@ -1245,6 +1348,7 @@
 
     function buildStyleMenu() {
       const menu = document.getElementById('style-menu');
+      if (!menu) return;
       menu.innerHTML = '';
       THEME_GROUPS.forEach(g => {
         const lbl = document.createElement('div');
@@ -1270,22 +1374,17 @@
       });
     }
 
-    function toggleStyleMenu(e) {
-      if (e) e.stopPropagation();
-      document.getElementById('style-select').classList.toggle('open');
-    }
-    function closeStyleMenu() {
-      document.getElementById('style-select').classList.remove('open');
-    }
-    document.addEventListener('click', e => {
-      if (!e.target.closest('#style-select')) closeStyleMenu();
-    });
 
     buildStyleMenu();
     (function () {
       let saved = DEFAULT_THEME;
       try { saved = localStorage.getItem('md2wechat-theme') || DEFAULT_THEME; } catch (_) {}
       applyTheme(saved);
+      // 同步组件开关 UI 状态（不触发重复渲染）
+      const sw = document.getElementById('components-switch');
+      const lbl = document.getElementById('components-label');
+      if (sw) sw.classList.toggle('active', useComponents);
+      if (lbl) lbl.textContent = useComponents ? '杂志排版' : '简单排版';
     })();
 
     // ================================================================
@@ -1293,6 +1392,20 @@
     // ================================================================
 
     function buildWechatHTML() {
+      // 组件排版模式：直接克隆预览中的组件化 <section>（已内联样式 + leaf）
+      if (useComponents) {
+        const rootEl = preview.querySelector('section[style*="max-width:677px"]');
+        if (rootEl) {
+          const clone = rootEl.cloneNode(true);
+          clone.querySelectorAll('.img-overlay-left, .img-copy-b64-btn, .img-copy-alt-btn, .img-alt-label').forEach(el => el.remove());
+          clone.querySelectorAll('.img-wrapper').forEach(wrapper => {
+            const img = wrapper.querySelector('img');
+            if (img) wrapper.replaceWith(img);
+          });
+          clone.querySelectorAll('[data-decorated]').forEach(el => el.removeAttribute('data-decorated'));
+          return clone.outerHTML;
+        }
+      }
       const body = preview.querySelector('.wechat-body');
       if (!body) return '';
       const clone = body.cloneNode(true);

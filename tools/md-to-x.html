@@ -6,6 +6,8 @@
   <title>Markdown → X 文章</title>
   <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
   <script src="md-filter.js"></script>
+  <script src="md-components.js"></script>
+  <script src="md-themes.js"></script>
   <style>
     :root {
       --primary: #3B82F6;
@@ -218,6 +220,29 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         <span>诊断</span>
       </button>
+      <label class="ctrl-shortcut" id="components-switch" onclick="toggleComponents()" style="cursor:pointer" title="杂志组件排版：封面卡/目录/章节编号/关键词标记/签名区">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        <span id="components-label">杂志排版</span>
+      </label>
+      <button class="ctrl-shortcut" id="signature-btn" onclick="openSignaturePanel()" title="设置文章署名与简介（缓存在本机）">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        <span>署名</span>
+      </button>
+    </div>
+    <span class="ctrl-divider"></span>
+    <div class="ctrl-group">
+      <span class="ctrl-label">主题</span>
+      <select class="ctrl-select" id="theme-select" onchange="changeXTheme(this.value)">
+        <option value="graphite-minimal">石墨极简</option>
+        <option value="moyu-green">摸鱼绿</option>
+        <option value="tech-cobalt">科技钴蓝</option>
+        <option value="red-white">红白</option>
+        <option value="apple-open-course">苹果公开课</option>
+        <option value="zen-whitespace">留白禅意</option>
+        <option value="moyu-ticket">摸鱼票据</option>
+        <option value="olive-journal">橄榄手记</option>
+        <option value="klein-blue">克莱因蓝</option>
+      </select>
     </div>
     <span class="ctrl-divider"></span>
     <div class="ctrl-group">
@@ -302,6 +327,85 @@
 
     let docTitle = '';
     let lastFilterResult = null;
+
+    // 组件排版模式（默认开启）
+    let useComponents = true;
+    try {
+      const saved = localStorage.getItem('md2x-components');
+      if (saved !== null) useComponents = saved !== '0';
+    } catch (_) {}
+
+    // X 平台默认石墨极简主题
+    let currentThemeKey = 'graphite-minimal';
+    try { currentThemeKey = localStorage.getItem('md2x-theme') || 'graphite-minimal'; } catch (_) {}
+
+    function getSignature() {
+      try {
+        const raw = localStorage.getItem('md2x-signature');
+        if (!raw) return null;
+        const obj = JSON.parse(raw);
+        return (obj && (obj.author || obj.bio)) ? obj : null;
+      } catch (_) { return null; }
+    }
+
+    function toggleComponents() {
+      useComponents = !useComponents;
+      const lbl = document.getElementById('components-label');
+      const sw = document.getElementById('components-switch');
+      if (lbl) lbl.textContent = useComponents ? '杂志排版' : '简单排版';
+      if (sw) sw.classList.toggle('active', useComponents);
+      try { localStorage.setItem('md2x-components', useComponents ? '1' : '0'); } catch (_) {}
+      render();
+    }
+
+    function openSignaturePanel() {
+      let modal = document.getElementById('signature-modal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'signature-modal';
+        modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.5);display:flex;align-items:center;justify-content:center;';
+        modal.innerHTML = `<div style="background:#fff;border-radius:14px;padding:28px;width:420px;max-width:92vw;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+          <h3 style="font-size:16px;font-weight:700;color:#111827;margin:0 0 6px;">文章署名设置</h3>
+          <p style="font-size:12px;color:#6B7280;margin:0 0 18px;">填写后自动追加到文章末尾签名区，保存在本机浏览器。</p>
+          <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px;">署名</label>
+          <input id="sig-author" type="text" placeholder="例如：Starline" style="width:100%;padding:9px 12px;border:1px solid #E5E7EB;border-radius:8px;font-size:13px;margin-bottom:14px;outline:none;box-sizing:border-box;" />
+          <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px;">一句话简介</label>
+          <input id="sig-bio" type="text" placeholder="例如：专注内容创作工具与效率方法论" style="width:100%;padding:9px 12px;border:1px solid #E5E7EB;border-radius:8px;font-size:13px;margin-bottom:20px;outline:none;box-sizing:border-box;" />
+          <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button onclick="closeSignaturePanel()" style="padding:8px 16px;border:1px solid #E5E7EB;border-radius:8px;background:#fff;color:#374151;font-size:13px;cursor:pointer;">取消</button>
+            <button onclick="saveSignature()" style="padding:8px 16px;border:none;border-radius:8px;background:var(--primary);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">保存</button>
+          </div>
+        </div>`;
+        document.body.appendChild(modal);
+      }
+      const sig = getSignature() || {};
+      modal.querySelector('#sig-author').value = sig.author || '';
+      modal.querySelector('#sig-bio').value = sig.bio || '';
+      modal.style.display = 'flex';
+    }
+    function closeSignaturePanel() {
+      const modal = document.getElementById('signature-modal');
+      if (modal) modal.style.display = 'none';
+    }
+    function saveSignature() {
+      const author = document.getElementById('sig-author').value.trim();
+      const bio = document.getElementById('sig-bio').value.trim();
+      try {
+        if (author || bio) localStorage.setItem('md2x-signature', JSON.stringify({ author, bio }));
+        else localStorage.removeItem('md2x-signature');
+      } catch (_) {}
+      closeSignaturePanel();
+      showToast('署名已保存，重新渲染预览', 'success');
+      render();
+    }
+    window.closeSignaturePanel = closeSignaturePanel;
+    window.saveSignature = saveSignature;
+
+    function changeXTheme(id) {
+      currentThemeKey = id;
+      try { localStorage.setItem('md2x-theme', id); } catch (_) {}
+      render();
+    }
 
     function extractTitle(md) {
       const m = md.match(/^# (.+)$/m);
@@ -391,6 +495,33 @@
       lastFilterResult = filterResult;
       const md = filterResult.md;
       updateTitleDisplay(extractTitle(rawMd));
+
+      // ── 组件排版模式（默认开启）──
+      if (useComponents && typeof MdComponents !== 'undefined') {
+        const theme = (typeof MdThemes !== 'undefined') ? MdThemes.get(currentThemeKey) : MdThemes.get('graphite-minimal');
+        const sig = getSignature();
+        const comp = MdComponents.render(md, theme, {
+          cover: true,
+          toc: true,
+          underline: true,
+          signature: sig,
+          date: new Date().getFullYear() + '.' + String(new Date().getMonth() + 1).padStart(2, '0'),
+          brand: (sig && sig.author) ? sig.author : 'Starline Writer',
+          subtitle: (sig && sig.bio) ? sig.bio : '一份内容，多种输出。',
+          topLabel: 'STARLINE · 原创',
+          tag1: '原创',
+          tag2: '深度',
+        });
+        preview.innerHTML = `<div class="x-content">${comp.html}</div>`;
+        const charCount = rawMd.replace(/\s/g, '').length;
+        const readTime = Math.max(1, Math.round(charCount / 400));
+        updateStats(charCount, readTime);
+        updateDiagnosisBtn(filterResult);
+        await inlineImages();
+        decorateImages();
+        return;
+      }
+
       let html = marked.parse(md);
       html = MdFilter.injectSVG(html, filterResult.svgBlocks);
       // 包裹在 x-content 容器中，X 风格
@@ -576,6 +707,15 @@
       await render();
     }
     loadDraft();
+    // 同步组件开关 + 主题下拉 UI 状态
+    (function () {
+      const sw = document.getElementById('components-switch');
+      const lbl = document.getElementById('components-label');
+      if (sw) sw.classList.toggle('active', useComponents);
+      if (lbl) lbl.textContent = useComponents ? '杂志排版' : '简单排版';
+      const sel = document.getElementById('theme-select');
+      if (sel) sel.value = currentThemeKey;
+    })();
 
     let syncScroll = true;
     function toggleSync() {
